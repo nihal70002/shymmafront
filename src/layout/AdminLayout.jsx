@@ -25,13 +25,14 @@ export default function AdminLayout() {
       <aside className="w-56 hidden lg:flex flex-col bg-[#F1F5FF] border-r border-blue-100 shrink-0">
         
         {/* LOGO */}
-        <div className="p-5 border-b border-blue-100">
-          <img
-            src="/logo/logo.png"
-            alt="Logo"
-            className="h-8 w-auto object-contain"
-          />
-        </div>
+        <div className="p-5 border-b border-blue-100 flex justify-center">
+  <img
+    src="/logo/logo.png"
+    alt="Logo"
+    className="h-20 w-auto object-contain"
+  />
+</div>
+
 
         {/* NAV */}
         <nav className="flex-1 px-2 py-3 space-y-1">
@@ -56,12 +57,7 @@ export default function AdminLayout() {
             onClick={() => navigate("/admin/products")}
           />
 
-          <SidebarItem
-            icon={<Users size={16} />}
-            label="Sales Executive"
-            active={location.pathname.startsWith("/admin/sales-executives")}
-            onClick={() => navigate("/admin/sales-executives")}
-          />
+         
 
           <SidebarItem
             icon={<Users size={16} />}
@@ -70,13 +66,7 @@ export default function AdminLayout() {
             onClick={() => navigate("/admin/customers")}
           />
 
-          {/* ✅ WAREHOUSE (NEW) */}
-          <SidebarItem
-            icon={<Warehouse size={16} />}
-            label="Warehouse"
-            active={location.pathname.startsWith("/admin/warehouse")}
-            onClick={() => navigate("/admin/warehouse")}
-          />
+         
 
           <SidebarItem
             icon={<BarChart3 size={16} />}

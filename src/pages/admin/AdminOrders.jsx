@@ -18,10 +18,7 @@ const [confirmModal, setConfirmModal] = useState(null);
 
   const currentStatus = searchParams.get("status") || "All";
 
-  const statusMap = {
-  WaitingSalesApproval: "PendingSalesApproval",
-  WaitingWarehouseApproval: "PendingWarehouseApproval",
-};
+
 
 const formatSAR = (amount) =>
   new Intl.NumberFormat("en-SA", {
@@ -38,8 +35,9 @@ const formatSAR = (amount) =>
       setLoading(true);
       const params = { page, pageSize: PAGE_SIZE };
       if (currentStatus !== "All") {
-        params.status = statusMap[currentStatus] || currentStatus;
-      }
+  params.status = currentStatus;
+}
+
       const res = await api.get("/admin/orders", { params });
       setOrders(res.data.items || []);
       setTotalCount(res.data.totalCount || 0);
@@ -62,10 +60,10 @@ const formatSAR = (amount) =>
   try {
     setUpdatingId(orderId);
 
-    await api.put(
-      `/admin/orders/${orderId}/${action}`,
-      { isConfirmed }
-    );
+    await api.post(
+  `/orders/${orderId}/${action}`
+);
+
 
     fetchOrders();
   } catch (err) {
@@ -79,51 +77,11 @@ const formatSAR = (amount) =>
   }
 };
 
-  // NEW: Action for Sales Approval
- const doSalesAction = async (orderId, action) => {
-  try {
-    setUpdatingId(orderId);
 
-    if (action === "approve") {
-      await api.put(`/sales/orders/${orderId}/approve`);
-    } else {
-      await api.post(`/sales/cancel/${orderId}`);
-    }
-
-    fetchOrders();
-  } catch (err) {
-    console.error(err);
-    alert("Sales action failed");
-  } finally {
-    setUpdatingId(null);
-  }
-};
 
 
   // NEW: Action for Warehouse Approval
- const doWarehouseAction = async (orderId, action) => {
-  try {
-    setUpdatingId(orderId);
 
-    const actionMap = {
-      confirm: "approve",
-      reject: "reject",
-      dispatch: "dispatch",
-      deliver: "deliver",
-    };
-
-    await api.post(
-      `/warehouse/orders/${orderId}/${actionMap[action]}`
-    );
-
-    fetchOrders();
-  } catch (err) {
-    console.error(err);
-    alert("Warehouse action failed");
-  } finally {
-    setUpdatingId(null);
-  }
-};
 
 
 
@@ -135,7 +93,7 @@ const formatSAR = (amount) =>
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-  const statusOptions = ["All", "WaitingSalesApproval", "WaitingWarehouseApproval", "Confirmed", "Dispatched", "Delivered", "Cancelled"];
+  const statusOptions = ["All", "Pending", "Confirmed", "Dispatched", "Delivered", "Cancelled"];
 
   return (
     <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
@@ -209,46 +167,27 @@ const formatSAR = (amount) =>
                 </td>
                 <td className="px-4 py-4">
                   <div className="flex gap-2 items-center flex-wrap">
-                    {/* SALES APPROVAL BUTTONS */}
-                    {o.status === "PendingSalesApproval" && (
-                      <>
-                        <ActionBtn
-                          label="Approve"
-                          variant="success"
-                          onClick={() => doSalesAction(o.orderId, "approve")}
-                          disabled={updatingId === o.orderId}
-                        />
-        
-
-                      </>
-                    )}
-
-                    {/* ADMIN APPROVAL BUTTONS */}
-                    {o.status === "PendingWarehouseApproval" && (
-  <>
-    <ActionBtn
-      label="Confirm"
-      variant="success"
-      onClick={() => doWarehouseAction(o.orderId, "confirm")}
-      disabled={updatingId === o.orderId}
-    />
-    
-  </>
+                   
+                   {o.status === "Pending" && (
+  <ActionBtn
+    label="Confirm"
+    variant="success"
+    onClick={() => doAction(o.orderId, "confirm")}
+    disabled={updatingId === o.orderId}
+  />
 )}
 
 
                     {/* WAREHOUSE APPROVAL BUTTONS */}
                     {o.status === "Confirmed" && (
-                      <>
-                        <ActionBtn
-                          label="Dispatch"
-                          variant="info"
-                          onClick={() => doWarehouseAction(o.orderId, "dispatch")}
-                          disabled={updatingId === o.orderId}
-                        />
-                       
-                      </>
-                    )}
+  <ActionBtn
+    label="Dispatch"
+    variant="info"
+    onClick={() => doAction(o.orderId, "dispatch")}
+    disabled={updatingId === o.orderId}
+  />
+)}
+
                     {confirmModal && (
   <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
     <div className="bg-white rounded-2xl p-6 w-80 shadow-2xl">
@@ -373,18 +312,14 @@ const ActionBtn = ({ label, variant, onClick, disabled }) => {
 };
 
 function StatusBadge({ status }) {
-  const config = {
-    PendingSalesApproval: { label: "Pending", class: "bg-amber-100 text-amber-600 border-amber-200" },
-    PendingWarehouseApproval: {
-  label: "Warehouse Review",
-  class: "bg-purple-100 text-purple-600 border-purple-200"
-},
+ const config = {
+  Pending: { label: "Pending", class: "bg-amber-100 text-amber-600 border-amber-200" },
+  Confirmed: { label: "Confirmed", class: "bg-emerald-100 text-emerald-600 border-emerald-200" },
+  Dispatched: { label: "In Transit", class: "bg-blue-100 text-blue-600 border-blue-200" },
+  Delivered: { label: "Delivered", class: "bg-slate-100 text-slate-500 border-slate-200" },
+  Cancelled: { label: "Cancelled", class: "bg-rose-100 text-rose-600 border-rose-200" },
+};
 
-    Confirmed: { label: "Confirmed", class: "bg-emerald-100 text-emerald-600 border-emerald-200" },
-    Dispatched: { label: "In Transit", class: "bg-blue-100 text-blue-600 border-blue-200" },
-    Delivered: { label: "Delivered", class: "bg-slate-100 text-slate-500 border-slate-200" },
-    Cancelled: { label: "Cancelled", class: "bg-rose-100 text-rose-600 border-rose-200" },
-  };
 
   const s = config[status];
 

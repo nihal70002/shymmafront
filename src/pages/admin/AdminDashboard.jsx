@@ -13,10 +13,17 @@ import {
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [monthlyData, setMonthlyData] = useState([]);
-  const [stats, setStats] = useState({
-    total: 0, salesPending: 0, adminPending: 0, confirmed: 0, 
-    dispatched: 0, delivered: 0, lowStock: 0, totalRevenue: 0
-  });
+ const [stats, setStats] = useState({
+  total: 0,
+  pending: 0,
+  confirmed: 0,
+  dispatched: 0,
+  delivered: 0,
+  lowStock: 0,
+  todayOrders: 0,
+  totalRevenue: 0
+});
+
        const formatSAR = (amount) =>
   new Intl.NumberFormat("en-SA", {
     style: "currency",
@@ -27,61 +34,48 @@ export default function AdminDashboard() {
   const [topProducts, setTopProducts] = useState([]);
   const [topCustomers, setTopCustomers] = useState([]);
 
-  useEffect(() => {
-    const loadDashboard = async () => {
-      try {
-        setLoading(true);
-        const year = new Date().getFullYear();
-        const [ordersRes, recentRes, lowStockRes, summaryRes, topProdRes, topCustRes, monthlyRes] = await Promise.all([
-          api.get("/admin/orders", { params: { page: 1, pageSize: 1000 } }),
-          api.get("/admin/orders/recent"),
-          api.get("/admin/products/low-stock", { params: { threshold: 10 } }),
-          api.get("/admin/reports/summary"),
+useEffect(() => {
+  const loadDashboard = async () => {
+    try {
+      setLoading(true);
+
+      const year = new Date().getFullYear();
+
+      const [summaryRes, topProdRes, topCustRes, monthlyRes] =
+        await Promise.all([
+          api.get("/admin/dashboard/summary"),
           api.get("/admin/reports/top-products"),
           api.get("/admin/reports/top-customers"),
           api.get(`/admin/reports/monthly?year=${year}`)
         ]);
 
+      const summary = summaryRes.data;
 
+      setStats({
+        total: summary.totalOrders || 0,
+        pending: summary.placedOrders || 0,   // Placed = Pending
+        confirmed: summary.confirmedOrders || 0,
+        dispatched: summary.dispatchedOrders || 0,
+        delivered: summary.deliveredOrders || 0,
+        todayOrders: summary.todayOrders || 0,
+        lowStock: summary.outOfStockVariants || 0,
+        totalRevenue: summary.totalRevenue || 0
+      });
 
+      setMonthlyData(monthlyRes.data || []);
+      setTopProducts(topProdRes.data || []);
+      setTopCustomers(topCustRes.data || []);
 
- 
+    } catch (error) {
+      console.error("Dashboard Sync Error", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  loadDashboard();
+}, []);
 
-        setMonthlyData(monthlyRes.data || []);
-        const orders = ordersRes.data.items || [];
-        const counts = orders.reduce((acc, order) => {
-          const status = order.status?.trim();
-          if (status === "PendingSalesApproval") acc.salesPending++;
-          else if (status === "PendingAdminApproval") acc.adminPending++;
-          else if (status === "Confirmed") acc.confirmed++;
-          else if (status === "Dispatched") acc.dispatched++;
-          else if (status === "Delivered") acc.delivered++;
-          return acc;
-        }, { salesPending: 0, adminPending: 0, confirmed: 0, dispatched: 0, delivered: 0 });
-
-        setStats({
-          total: ordersRes.data.totalCount || 0,
-          salesPending: counts.salesPending,
-          adminPending: counts.adminPending,
-          confirmed: counts.confirmed,
-          dispatched: counts.dispatched,
-          delivered: counts.delivered,
-          lowStock: lowStockRes.data.length,
-          totalRevenue: summaryRes.data?.totalRevenue || 0
-        });
-
-        setRecentOrders(recentRes.data || []);
-        setTopProducts(topProdRes.data || []);
-        setTopCustomers(topCustRes.data || []);
-      } catch (error) {
-        console.error("Dashboard Sync Error", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadDashboard();
-  }, []);
 
   if (loading) return (
     <div className="h-screen w-full flex items-center justify-center bg-[#F8FAFC]">
@@ -98,16 +92,11 @@ export default function AdminDashboard() {
     <div className="flex items-center gap-6">
       <div className="flex flex-col items-center">
         <h1 className="text-[18px] font-bold tracking-tight leading-none">
-          <span className="text-[#0097D7]">Safa Al-Tamayyuz</span>{" "}
-          <span className="text-black">Trading Co</span>
+          <span className="text-[#0097D7]">Shymma Surgicals</span>{" "}
+          
         </h1>
         
-        {/* Arabic Name matching the photo's dual-color style */}
-        <div className="flex items-center gap-1 mt-1 font-bold text-[16px]" dir="rtl">
-          <span className="text-black">شـركة صفـا</span>
-          <span className="text-[#0097D7]">التـميز</span>
-          <span className="text-black">التـجـارية</span>
-        </div>
+       
       </div>
     </div>
   </div>
@@ -134,9 +123,19 @@ export default function AdminDashboard() {
               theme="indigo" 
               onClick={() => navigate("/admin/reports")} 
             />
-            <MiniStat label="Sales Pending" value={stats.salesPending} theme="amber" onClick={() => navigate("/admin/orders?status=PendingSalesApproval")} />
-            <MiniStat label="Admin Pending" value={stats.adminPending} theme="amber" onClick={() => navigate("/admin/orders?status=PendingAdminApproval")} />
-            
+            <MiniStat 
+  label="Today's Orders" 
+  value={stats.todayOrders} 
+  theme="amber" 
+/>
+
+            <MiniStat 
+  label="Pending Orders" 
+  value={stats.pending} 
+  theme="amber" 
+  onClick={() => navigate("/admin/orders?status=Placed")} 
+/>
+
           </section>
 
           {/* MIDDLE SECTION - Chart and Products */}

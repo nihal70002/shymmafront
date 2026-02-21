@@ -14,6 +14,13 @@ import { useCart } from "../../context/CartContext"; // ✅ already there
 
 export default function ProductDetail() {
   const { id } = useParams();
+
+
+
+  useEffect(() => {
+  window.scrollTo(0, 0);
+}, [id]);
+
   const navigate = useNavigate();
   const { setCartFromApi } = useCart();
 
@@ -26,6 +33,11 @@ export default function ProductDetail() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
 const [showToast, setShowToast] = useState(false);
+const [selectedClass, setSelectedClass] = useState(null);
+const [selectedStyle, setSelectedStyle] = useState(null);
+const [selectedMaterial, setSelectedMaterial] = useState(null);
+const [selectedColor, setSelectedColor] = useState(null);
+
 
 const hasImages = product?.images?.length > 0;
 
@@ -44,7 +56,7 @@ const prevImage = () => {
 };
 
 
-  useEffect(() => {
+ useEffect(() => {
   const loadProduct = async () => {
     try {
       const res = await getProductById(id);
@@ -67,19 +79,31 @@ const prevImage = () => {
         primaryImage: res.data.primaryImageUrl,
 
         // ✅ SAFE VARIANT MAP
-        variants: (res.data.sizes || []).map(s => ({
-          id: s.variantId,
-          size: s.size,
-          price: s.price,
-          stock: s.availableStock
+        variants: (res.data.sizes || []).map(v => ({
+          id: v.variantId,
+          class: v.class,
+          style: v.style,
+          material: v.material,
+          color: v.color,
+          size: v.size,
+          price: v.price,
+          stock: v.availableStock
         }))
       };
 
       setProduct(mappedProduct);
 
-      // ✅ RESET IMAGE + VARIANT SAFELY
+      // ✅ Reset image + variant safely
       setSelectedImage(0);
-      setSelectedVariant(mappedProduct.variants[0] || null);
+      if (mappedProduct.variants.length > 0) {
+  const first = mappedProduct.variants[0];
+  setSelectedClass(first.class || null);
+  setSelectedStyle(first.style || null);
+  setSelectedMaterial(first.material || null);
+  setSelectedColor(first.color || null);
+  setSelectedVariant(first);
+}
+
 
     } catch (err) {
       console.error("Failed to load product", err);
@@ -91,6 +115,42 @@ const prevImage = () => {
 
   loadProduct();
 }, [id]);
+
+
+// 🔥 Helper to extract unique option values
+const getUniqueValues = (key) => {
+  return [...new Set(
+    product?.variants
+      ?.map(v => v[key])
+      ?.filter(Boolean)
+  )];
+};
+
+// 🔥 Extract dynamic options
+const classOptions = getUniqueValues("class");
+const styleOptions = getUniqueValues("style");
+const materialOptions = getUniqueValues("material");
+const colorOptions = getUniqueValues("color");
+
+const filteredVariants = product?.variants?.filter(v =>
+  (!selectedClass || v.class === selectedClass) &&
+  (!selectedStyle || v.style === selectedStyle) &&
+  (!selectedMaterial || v.material === selectedMaterial) &&
+  (!selectedColor || v.color === selectedColor)
+) || [];
+
+
+useEffect(() => {
+  if (filteredVariants.length > 0) {
+    setSelectedVariant(filteredVariants[0]);
+  } else {
+    setSelectedVariant(null);
+  }
+}, [selectedClass, selectedStyle, selectedMaterial, selectedColor, product]);
+
+
+
+
 
 const handleAddToCart = async () => {
   if (!selectedVariant) return;
@@ -144,7 +204,8 @@ const decreaseQuantity = () => {
     );
   }
 
-  if (!product || !selectedVariant) {
+  if (!product)
+ {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-white">
         <div className="text-5xl mb-3">😕</div>
@@ -177,15 +238,15 @@ const decreaseQuantity = () => {
       </div>
 
       {/* PRODUCT CONTENT */}
-      <div className="max-w-screen-2xl mx-auto flex bg-white my-4 shadow-sm">
+      <div className="max-w-screen-2xl mx-auto flex flex-col lg:flex-row bg-white lg:my-4 shadow-sm">
         {showToast && (
         <div className="fixed top-20 right-6 z-[99999] bg-teal-600 text-white px-5 py-2.5 rounded-md shadow-lg font-medium text-sm">
           ✓ {quantity} item(s) added to bag
         </div>
       )}
         {/* LEFT: IMAGES */}
-        <div className="w-1/3 p-4 border-r border-gray-100">
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+        <div className="w-full lg:w-[60%] p-0 lg:p-4 border-b lg:border-b-0 lg:border-r border-gray-100">
+          <div className="relative overflow-hidden lg:rounded-lg border-b lg:border border-gray-200 bg-white h-[65vh] lg:h-[700px] w-full">
  <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-white group">
   
   {/* LEFT ARROW */}
@@ -270,7 +331,7 @@ const decreaseQuantity = () => {
         </div>
 
         {/* RIGHT: PRODUCT INFO */}
-        <div className="w-3/5 px-8 py-6 border-l border-gray-100">
+        <div className="w-full lg:w-[40%] px-4 py-6 lg:px-8 lg:py-10">
           {/* Brand & Name */}
           <div className="mb-1">
             <h2 className="text-xl font-bold text-gray-900">{product.category}</h2>
@@ -289,41 +350,94 @@ const decreaseQuantity = () => {
           {/* Price */}
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-2xl font-bold text-gray-900">₹{selectedVariant.price}</span>
+              <span className="text-2xl font-bold text-gray-900">₹{selectedVariant?.price ?? "--"}
+</span>
              
             </div>
             <p className="text-sm font-semibold text-teal-700">inclusive of all taxes</p>
           </div>
+
+          {classOptions.length > 0 && (
+  <div className="mb-6">
+    <h3 className="text-sm font-bold uppercase mb-3">Select Class</h3>
+    <div className="flex gap-3 flex-wrap">
+      {classOptions.map(option => (
+        <button
+          key={option}
+          onClick={() => setSelectedClass(option)}
+          className={`px-4 py-2 border rounded-md ${
+            selectedClass === option
+              ? "border-teal-600 bg-teal-50 text-teal-600"
+              : "border-gray-300"
+          }`}
+        >
+          {option}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
+
+
+
+{styleOptions.length > 0 && (
+  <div className="mb-6">
+    <h3 className="text-sm font-bold uppercase mb-3">Select Style</h3>
+    <div className="flex gap-3 flex-wrap">
+      {styleOptions.map(option => (
+        <button
+          key={option}
+          onClick={() => setSelectedStyle(option)}
+          className={`px-4 py-2 border rounded-md ${
+            selectedStyle === option
+              ? "border-teal-600 bg-teal-50 text-teal-600"
+              : "border-gray-300"
+          }`}
+        >
+          {option}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
+
+
           
 
           {/* Select Size */}
-          <div className="mb-6 pb-6 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-gray-900 uppercase">Select Size</h3>
-              
-            </div>
-            
-            <div className="flex gap-3">
-              {product.variants.map(v => (
-                <button
-                  key={v.id}
-                  disabled={false}
-                  onClick={() => {
-                    setSelectedVariant(v);
-                    setQuantity(1); // Reset quantity when size changes
-                  }}
-                  className={`w-14 h-14 rounded-full border-2 font-bold text-sm transition ${
-  selectedVariant.id === v.id
-    ? "border-teal-600 text-teal-600 bg-teal-50"
-    : "border-gray-300 text-gray-900 hover:border-teal-400"
-}`}
+         <div className="mb-6 pb-6 border-b border-gray-200">
+  <div className="flex items-center justify-between mb-3">
+    <h3 className="text-sm font-bold text-gray-900 uppercase">
+      Select Size
+    </h3>
+  </div>
 
-                >
-                  {v.size}
-                </button>
-              ))}
-            </div>
-          </div>
+  {filteredVariants.length === 0 ? (
+    <p className="text-sm text-red-500">
+      This combination is not available.
+    </p>
+  ) : (
+    <div className="flex gap-3">
+      {filteredVariants.map(v => (
+        <button
+          key={v.id}
+          onClick={() => {
+            setSelectedVariant(v);
+            setQuantity(1);
+          }}
+          className={`w-14 h-14 rounded-full border-2 font-bold text-sm transition ${
+            selectedVariant?.id === v.id
+              ? "border-teal-600 text-teal-600 bg-teal-50"
+              : "border-gray-300 text-gray-900 hover:border-teal-400"
+          }`}
+        >
+          {v.size}
+        </button>
+      ))}
+    </div>
+  )}
+</div>
+
 
           {/* Quantity Selector */}
           <div className="mb-6">
@@ -354,25 +468,23 @@ const decreaseQuantity = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3 mb-6">
-            <button
-  disabled={addingToCart}
-  onClick={handleAddToCart}
-  className={`flex-1 py-3.5 rounded-md font-bold text-sm transition shadow-sm ${
-    addingToCart
-      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-      : "bg-teal-600 text-white hover:bg-teal-700"
-  }`}
->
-  <ShoppingCart size={18} className="inline mr-2 mb-0.5" />
-  {addingToCart ? "ADDING..." : "ADD TO BAG"}
-</button>
+         {/* Action Buttons - Sticky for Mobile, Static for Desktop */}
+<div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t flex gap-3 z-[50] lg:static lg:p-0 lg:border-0 lg:mb-6">
+  <button
+    disabled={addingToCart}
+    onClick={handleAddToCart}
+    className={`flex-[2] py-4 rounded-md font-bold text-sm transition shadow-md flex items-center justify-center ${
+      addingToCart
+        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+        : "bg-teal-600 text-white hover:bg-teal-700"
+    }`}
+  >
+    <ShoppingCart size={18} className="mr-2" />
+    {addingToCart ? "ADDING..." : "ADD TO BAG"}
+  </button>
 
-
-            <button className="px-5 py-3.5 border-2 border-gray-300 rounded-md hover:border-teal-400 hover:bg-teal-50 transition group">
-              <Heart size={18} className="text-gray-700 group-hover:text-teal-600" />
-            </button>
-          </div>
+  
+</div>
 
         
 

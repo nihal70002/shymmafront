@@ -35,16 +35,11 @@ console.log("ROLE 👉", res.data.role);
       if (role === "Admin") {
   console.log("NAVIGATING TO 👉 /admin");
   navigate("/admin", { replace: true });
-} else if (role === "SalesExecutive") {
-  console.log("NAVIGATING TO 👉 /sales-executive");
-  navigate("/sales-executive", { replace: true });
-} else if (role === "Customer") {
-  console.log("NAVIGATING TO 👉 /products");
-  navigate("/products", { replace: true });
-} else if (role === "Warehouse") {
-  console.log("NAVIGATING TO 👉 /warehouse/dashboard");
-  navigate("/warehouse/dashboard", { replace: true });
-} else {
+} else if (role === "Customer" || role === "User") {
+  console.log("NAVIGATING TO 👉 /landing");
+  navigate("/landing", { replace: true });
+}
+ else {
   console.log("UNKNOWN ROLE 👉", role);
 }
 

@@ -86,7 +86,7 @@ const [showPassword, setShowPassword] = useState(false);
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await api.post("/admin/customers", {
+      await api.post("/admin/users", {
         ...formData,
         salesExecutiveId: Number(formData.salesExecutiveId)
       });
@@ -396,13 +396,7 @@ const [showPassword, setShowPassword] = useState(false);
                   <input required className="w-full px-4 py-2.5 bg-slate-50 rounded-lg text-sm font-bold border border-slate-200" value={formData.phoneNumber} onChange={e => setFormData({...formData, phoneNumber: e.target.value})} />
                 </div>
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-slate-400">Assigned Manager</label>
-                <select required className="w-full px-4 py-2.5 bg-slate-50 rounded-lg text-sm font-bold border border-slate-200 outline-none" value={formData.salesExecutiveId} onChange={e => setFormData({...formData, salesExecutiveId: e.target.value})} >
-                  <option value="">Select Executive</option>
-                  {salesExecutives.map(se => <option key={se.id} value={se.id}>{se.name}</option>)}
-                </select>
-              </div>
+             
               <button disabled={isSubmitting} className="w-full bg-slate-900 text-white py-3.5 rounded-xl text-sm font-black hover:bg-indigo-600 transition-all mt-2">
                 {isSubmitting ? "PROCESSING..." : "SAVE PROFILE"}
               </button>
