@@ -36,7 +36,9 @@ const [showAllCategories, setShowAllCategories] = useState(false);
 
 const observer = useRef();
 
-
+// Use the exact case-sensitive name from your pgAdmin screenshot: ParentCategoryId
+const parentCategories = allCategories.filter(cat => cat.parentCategoryId === null);
+const allSubCategories = allCategories.filter(cat => cat.parentCategoryId !== null);
 
 const loadProducts = useCallback(async (pageNo, reset = false) => {
   try {
@@ -163,6 +165,7 @@ useEffect(() => {
   const loadCategories = async () => {
     try {
       const res = await api.get("/categories");
+      console.log("CATEGORIES:", res.data);
       setAllCategories(res.data || []);
     } catch (err) {
       console.error("Failed to load categories", err);
@@ -172,7 +175,13 @@ useEffect(() => {
   loadCategories();
 }, []);
 
-
+const toggleSubCategory = (subId) => {
+  setSelectedCategories(prev =>
+    prev.includes(subId)
+      ? prev.filter(id => id !== subId)
+      : [...prev, subId]
+  );
+};
 
 
 
@@ -283,64 +292,71 @@ console.log(allCategories);
   </div>
 
   {/* CATEGORIES */}
-  <div className="mb-6 pb-6 border-b border-gray-100">
-    <div className="flex items-center justify-between mb-4">
-      <h4 className="text-xs font-bold text-gray-900">CATEGORIES</h4>
-      <button
-        onClick={() => setShowCategorySearch(prev => !prev)}
-        className="text-gray-400 hover:text-teal-600"
-      >
-        <Search size={14} />
-      </button>
-    </div>
+{/* --- PARENT CATEGORIES SECTION --- */}
+<div className="mb-6">
+  <h4 className="text-xs font-bold text-gray-900 mb-4 uppercase tracking-wider">Main Categories</h4>
+  <div className="space-y-2">
+    {parentCategories.map((cat) => (
+  <label key={cat.id} className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:text-teal-700">
+    <input
+      type="checkbox"
+      checked={selectedCategories.includes(cat.id)}
+      onChange={() => toggleCategory(cat.id)}
+      className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+    />
+    <span className="font-medium">{cat.name}</span>
+  </label>
+))}
+  </div>
+</div>
 
-    {showCategorySearch && (
-      <input
-        autoFocus
-        type="text"
-        placeholder="Search category"
-        value={categorySearch}
-        onChange={(e) => setCategorySearch(e.target.value)}
-        className="w-full mb-3 px-2 py-1 text-xs border rounded-md"
-      />
-    )}
+{/* --- SUBCATEGORIES SECTION --- */}
+<div className="mt-6 pt-4 border-t border-gray-50">
+  <div className="flex items-center justify-between mb-4">
+    <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Sub Categories</h4>
+    <button onClick={() => setShowCategorySearch(!showCategorySearch)} className="text-gray-400 hover:text-teal-600">
+      <Search size={14} />
+    </button>
+  </div>
 
-    <div className="space-y-1">
-  {(showAllCategories
-    ? allCategories
-    : allCategories.slice(0, 8))
-    .filter(cat =>
-  (cat?.name || "")
+  {showCategorySearch && (
+    <input
+      type="text"
+      placeholder="Search sub-categories..."
+      value={categorySearch}
+      onChange={(e) => setCategorySearch(e.target.value)}
+      className="w-full mb-3 px-2 py-1 text-xs border rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500"
+    />
+  )}
 
-    .toLowerCase()
-    .includes(categorySearch.toLowerCase())
-)
-
-    .map((cat) => (
+  <div className="space-y-1">
+  {(showAllCategories ? allSubCategories : allSubCategories.slice(0, 8))
+    .filter(sub =>
+      (sub?.name || "")
+        .toLowerCase()
+        .includes(categorySearch.toLowerCase())
+    )
+    .map((sub) => (
       <label
-        key={cat.id}
-
-        className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:text-teal-700 transition-colors"
+        key={sub.id}
+        className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer hover:text-teal-700"
       >
         <input
           type="checkbox"
-          checked={selectedCategories.includes(cat.id)}
-          onChange={() => toggleCategory(cat.id)}
-          className="w-4 h-4 rounded border-gray-300 text-teal-600"
+          checked={selectedCategories.includes(sub.id)}
+          onChange={() => toggleSubCategory(sub.id)}
+          className="w-3.5 h-3.5 rounded border-gray-300 text-teal-600"
         />
-        <span className="leading-snug">
-          {cat.name}
-        </span>
+        <span className="leading-snug">{sub.name}</span>
       </label>
     ))}
 
-  {/* 👇 ADD THIS BUTTON RIGHT HERE */}
-  {allCategories.length > 8 && (
+  {allSubCategories.length > 8 && (
     <button
       onClick={() => setShowAllCategories(!showAllCategories)}
-      className="text-xs font-semibold text-teal-600 mt-2"
+      className="text-[10px] font-bold text-teal-600 mt-2 uppercase"
     >
-      {showAllCategories ? "Show Less" : "More"}
+      {showAllCategories ? "- Show Less" : `+ ${allSubCategories.length - 8} More`}
     </button>
   )}
 </div>
@@ -373,9 +389,9 @@ console.log(allCategories);
     <div className="space-y-2">
       {brands
         .filter(brand =>
-          brand.brandName
-            .toLowerCase()
-            .includes(brandSearch.toLowerCase())
+          (brand?.brandName || "")
+  .toLowerCase()
+  .includes(brandSearch.toLowerCase())
         )
         .map((brand) => (
           <label
@@ -567,7 +583,7 @@ console.log(allCategories);
         </div>
       </footer>
 
-      <style jsx>{`
+      <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
         }

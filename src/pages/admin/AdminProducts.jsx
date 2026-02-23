@@ -18,11 +18,16 @@ import Papa from "papaparse";
 
 /* ================= CONSTANTS ================= */
 const DEFAULT_VARIANT = {
-  size: "M",
-  price: 100,
+  class: "",
+  style: "",
+  material: "",
+  color: "",
+  size: "",
+  price: "",
   stock: 0,
   productCode: ""
 };
+
 
 const EMPTY_FORM = {
   name: "",
@@ -36,6 +41,7 @@ const EMPTY_FORM = {
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [parentCategoryId, setParentCategoryId] = useState("");
   const [brands, setBrands] = useState([]);
   const [filter, setFilter] = useState("ALL");
   const [selectedCatFilter, setSelectedCatFilter] = useState("ALL");
@@ -73,6 +79,8 @@ export default function AdminProducts() {
       console.error("Failed to fetch data", err);
     }
   };
+
+  const mainCategories = categories.filter(c => !c.parentCategoryId);
 
   /* ================= HANDLERS ================= */
   const handleToggleActive = async (productId) => {
@@ -183,7 +191,10 @@ export default function AdminProducts() {
   const addCategory = async () => {
     if (!newCategory.trim()) return alert("Name required");
     try {
-      await api.post("/categories", { name: newCategory.trim() });
+      await api.post("/categories", {
+  name: newCategory.trim(),
+  parentCategoryId: parentCategoryId || null
+});
       setNewCategory(""); 
       setShowCatModal(false); 
       loadData();
@@ -215,116 +226,128 @@ export default function AdminProducts() {
       currency: "SAR",
     }).format(amount);
 
-  const saveProduct = async () => {
-    if (!form.name || !form.categoryId || !form.brandId) {
-      alert("Product name, category and brand are required");
+ const saveProduct = async () => {
+  /* ================= 1. VALIDATION ================= */
+  if (!form.name || !form.categoryId || !form.brandId) {
+    toast.error("Product name, category and brand are required");
+    return;
+  }
+
+  if (!form.variants || form.variants.length === 0) {
+    toast.error("At least one variant is required");
+    return;
+  }
+
+  const combinations = new Set();
+  const skus = new Set();
+
+  for (const v of form.variants) {
+    const size = v.size?.trim();
+    const sku = v.productCode?.trim();
+
+    if (!size) {
+      toast.error("Variant size cannot be empty");
+      return;
+    }
+    if (!sku) {
+      toast.error("SKU is required for each variant");
       return;
     }
 
-    if (!form.variants || form.variants.length === 0) {
-      alert("At least one variant is required");
+    const comboKey = [
+      v.class?.trim().toLowerCase() || "",
+      v.style?.trim().toLowerCase() || "",
+      v.material?.trim().toLowerCase() || "",
+      v.color?.trim().toLowerCase() || "",
+      size.toLowerCase()
+    ].join("|");
+
+    if (combinations.has(comboKey)) {
+      toast.error(`Duplicate variant: ${size}`);
+      return;
+    }
+    if (skus.has(sku.toLowerCase())) {
+      toast.error(`Duplicate SKU: ${sku}`);
       return;
     }
 
-    const sizes = new Set();
-    const skus = new Set();
+    combinations.add(comboKey);
+    skus.add(sku.toLowerCase());
+  }
 
-    for (const v of form.variants) {
-      const size = v.size?.trim();
-      const sku = v.productCode?.trim();
+  /* ================= 2. IMAGE REORDERING ================= */
+  const orderedImages = [...form.images];
+  if (primaryImageIndex > 0 && orderedImages.length > primaryImageIndex) {
+    const [primary] = orderedImages.splice(primaryImageIndex, 1);
+    orderedImages.unshift(primary);
+  }
 
-      if (!size) {
-        alert("Variant size cannot be empty");
-        return;
-      }
+  /* ================= 3. PAYLOAD PREPARATION ================= */
+  // We prepare the base product data (matches AdminUpdateProductDto)
+  const productPayload = {
+    name: form.name.trim(),
+    categoryId: Number(form.categoryId),
+    brandId: Number(form.brandId),
+    description: form.description?.trim() || "",
+    imageUrls: orderedImages,
+  };
 
-      if (!sku) {
-        alert("SKU / Product Code is required for each variant");
-        return;
-      }
-
-      const sizeKey = size.toLowerCase();
-      const skuKey = sku.toLowerCase();
-
-      if (sizes.has(sizeKey)) {
-        alert(`Duplicate size not allowed: ${size}`);
-        return;
-      }
-
-      if (skus.has(skuKey)) {
-        alert(`Duplicate SKU not allowed: ${sku}`);
-        return;
-      }
-
-      sizes.add(sizeKey);
-      skus.add(skuKey);
-    }
-
-// ✅ REORDER IMAGES SO SELECTED PRIMARY GOES FIRST
-const orderedImages = [...form.images];
-
-if (primaryImageIndex > 0) {
-  const [primary] = orderedImages.splice(primaryImageIndex, 1);
-  orderedImages.unshift(primary);
-}
-
-    
-
- const payload = {
-  name: form.name,
-  categoryId: Number(form.categoryId),
-  brandId: Number(form.brandId),
-  description: form.description,
-  imageUrls: orderedImages,
-// 👈 THIS IS THE KEY
-  variants: form.variants.map(v => ({
-    ...v,
+  // Prepare variants separately for the loop
+  const variantData = form.variants.map(v => ({
+    class: v.class?.trim() || "",
+    style: v.style?.trim() || "",
+    material: v.material?.trim() || "",
+    color: v.color?.trim() || "",
     size: v.size.trim(),
     productCode: v.productCode.trim(),
     price: Number(v.price) || 0,
-    stock: Number(v.stock) || 0
-  }))
-};
+    stock: Number(v.stock) || 0,
+    variantId: v.variantId // Important for updates
+  }));
+  console.log("Variants before save:", form.variants);
 
 
-   try {
-  if (editingId) {
-    await api.put(`/admin/products/${editingId}`, payload);
+  /* ================= 4. API EXECUTION ================= */
+  try {
+    if (editingId) {
+      // STEP A: Update the main product details
+      // (Note: productPayload does NOT include the variants array here)
+      await api.put(`/admin/products/${editingId}`, productPayload);
 
-    for (const v of payload.variants) {
-      if (v.variantId) {
-        await api.put(`/admin/products/variant/${v.variantId}`, v);
-      } else {
-        await api.post(`/admin/products/${editingId}/variant`, v);
+      // STEP B: Update/Create variants one by one
+      // We use a regular for-loop to avoid concurrency issues on the server
+      for (const v of variantData) {
+        if (v.variantId) {
+          await api.put(`/admin/products/variant/${v.variantId}`, v);
+        } else {
+          await api.post(`/admin/products/${editingId}/variant`, v);
+        }
       }
+    } else {
+      // For NEW products, we send everything in one POST
+      const createPayload = { ...productPayload, variants: variantData };
+      await api.post("/admin/products", createPayload);
     }
-  } else {
-    await api.post("/admin/products", payload);
+
+    /* ================= 5. UI REFRESH ================= */
+    toast.success(editingId ? "Product updated" : "Product added");
+    closeModal();
+    loadData(); // Safer to reload everything to sync with DB state
+
+  } catch (err) {
+    console.error("Save Error:", err);
+    let msg = "Error saving product";
+
+    if (err?.response?.data?.errors) {
+      const firstError = Object.values(err.response.data.errors)[0];
+      msg = Array.isArray(firstError) ? firstError[0] : firstError;
+    } else if (err?.response?.data) {
+      msg = typeof err.response.data === 'string' ? err.response.data : (err.response.data.title || msg);
+    }
+
+    toast.error(String(msg));
   }
-
-  // ✅ ADD THIS EXACTLY HERE
-  toast.success(
-    editingId
-      ? "Product updated successfully"
-      : "Product added successfully"
-  );
-
-  closeModal();
-  loadData();
-} catch (err) {
-  const msg =
-    err?.response?.data?.message ||
-    err?.response?.data ||
-    "Error saving product";
-
-  // ❌ remove alert
-  // alert(msg);
-
-  // ✅ ADD THIS
-  toast.error(msg);
-}
-
-  }
+};
   const deleteProduct = async () => {
     if (!deleteTarget) return;
 
@@ -344,6 +367,37 @@ if (primaryImageIndex > 0) {
   setPrimaryImageIndex(0);
 };
 
+const deleteCategory = async (id) => {
+  if (!window.confirm("Delete this category?")) return;
+
+  try {
+    await api.delete(`/categories/${id}`);
+    toast.success("Category deleted");
+    loadData();
+  } catch (err) {
+    toast.error(err?.response?.data || "Cannot delete category");
+  }
+};
+
+
+const updateCategory = async (id, name, parentId) => {
+  try {
+    await api.put(`/categories/${id}`, {
+      name,
+      isActive: true,
+      parentCategoryId: parentId
+    });
+
+    toast.success("Category updated");
+    loadData();
+  } catch (err) {
+    toast.error("Update failed");
+  }
+};
+
+
+
+
 
   const filteredProducts = products.filter(p => {
     const term = searchTerm.toLowerCase();
@@ -355,7 +409,7 @@ if (primaryImageIndex > 0) {
         ? p.isActive
         : !p.isActive;
 
-       console.log("PRODUCT IMAGES:", p.imageUrls);
+    
 
 
     const matchesCategory =
@@ -755,50 +809,91 @@ if (primaryImageIndex > 0) {
       )}
 
       {/* ADD CATEGORY/BRAND MODAL */}
-      {(showCatModal || showBrandModal) && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-slate-900">
-                {showCatModal ? "Add Category" : "Add Brand"}
-              </h3>
-              <button 
-                onClick={() => {
-                  setShowCatModal(false); 
-                  setShowBrandModal(false);
-                }} 
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                <X size={24} className="text-slate-500" />
-              </button>
-            </div>
-            <input
-              type="text"
-              placeholder={showCatModal ? "Enter category name" : "Enter brand name"}
-              value={showCatModal ? newCategory : newBrand}
-              onChange={(e) => showCatModal ? setNewCategory(e.target.value) : setNewBrand(e.target.value)}
-              className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 mb-6 focus:bg-white focus:border-blue-500 outline-none transition-all text-sm font-medium"
-              autoFocus
-            />
-            <button
-              onClick={showCatModal ? addCategory : async () => {
-                if (!newBrand.trim()) return alert("Brand name required");
-                try {
-                  await api.post("/brands", { brandName: newBrand.trim() });
-                  setNewBrand(""); 
-                  setShowBrandModal(false); 
-                  loadData();
-                } catch { 
-                  alert("Failed to add brand"); 
-                }
-              }}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/30 transition-all"
-            >
-              {showCatModal ? "Add Category" : "Add Brand"}
-            </button>
-          </div>
-        </div>
+      {/* ADD CATEGORY / BRAND MODAL */}
+{(showCatModal || showBrandModal) && (
+  <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
+      
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-2xl font-bold text-slate-900">
+          {showCatModal ? "Add Category" : "Add Brand"}
+        </h3>
+        <button
+          onClick={() => {
+            setShowCatModal(false);
+            setShowBrandModal(false);
+            setParentCategoryId("");
+          }}
+          className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+        >
+          <X size={24} className="text-slate-500" />
+        </button>
+      </div>
+
+      {/* CATEGORY NAME INPUT */}
+      <input
+        type="text"
+        placeholder={showCatModal ? "Enter category name" : "Enter brand name"}
+        value={showCatModal ? newCategory : newBrand}
+        onChange={(e) =>
+          showCatModal
+            ? setNewCategory(e.target.value)
+            : setNewBrand(e.target.value)
+        }
+        className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 mb-4 focus:bg-white focus:border-blue-500 outline-none transition-all text-sm font-medium"
+        autoFocus
+      />
+
+      {/* 🔥 PARENT CATEGORY DROPDOWN (ONLY FOR CATEGORY) */}
+      {showCatModal && (
+        <select
+          value={parentCategoryId}
+          onChange={(e) => setParentCategoryId(e.target.value)}
+          className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 mb-6 focus:bg-white focus:border-blue-500 outline-none transition-all text-sm font-medium"
+        >
+          <option value="">Main Category (No Parent)</option>
+          {categories
+            .filter(c => !c.parentCategoryId) // only first-level categories
+            .map(c => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+        </select>
       )}
+
+      <button
+        onClick={
+          showCatModal
+            ? addCategory
+            : async () => {
+                if (!newBrand.trim())
+                  return alert("Brand name required");
+
+                try {
+                  await api.post("/brands", {
+                    brandName: newBrand.trim()
+                  });
+
+                  setNewBrand("");
+                  setShowBrandModal(false);
+                  loadData();
+                } catch {
+                  alert("Failed to add brand");
+                }
+              }
+        }
+        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/30 transition-all"
+      >
+        {showCatModal ? "Add Category" : "Add Brand"}
+      </button>
+    </div>
+  </div>
+)}
+
+
+
+
 
       {/* ADD/EDIT PRODUCT MODAL */}
       {showModal && (
@@ -965,9 +1060,17 @@ if (primaryImageIndex > 0) {
               onChange={e => setForm({ ...form, categoryId: e.target.value })}
             >
               <option value="">Select category</option>
-              {categories.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
+              {categories
+  .filter(c => c.parentCategoryId !== null)
+  .map(c => {
+    const parent = categories.find(p => p.id === c.parentCategoryId);
+    return (
+      <option key={c.id} value={c.id}>
+        {parent ? parent.name + " → " : ""}
+        {c.name}
+      </option>
+    );
+  })}
             </select>
           </div>
 
@@ -1026,7 +1129,82 @@ if (primaryImageIndex > 0) {
                   <div className="space-y-3">
                     {form.variants.map((v, i) => (
                       <div key={i} className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
+
+                          <div>
+  <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+    Class
+  </label>
+  <input
+    type="text"
+    placeholder="e.g., Class 1"
+    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
+    value={v.class || ""}
+    onChange={e => {
+      const vs = [...form.variants];
+      vs[i].class = e.target.value;
+      setForm({ ...form, variants: vs });
+    }}
+  />
+</div>
+
+
+<div>
+  <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+    Style
+  </label>
+  <input
+    type="text"
+    placeholder="e.g., AD / AF"
+    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
+    value={v.style || ""}
+    onChange={e => {
+      const vs = [...form.variants];
+      vs[i].style = e.target.value;
+      setForm({ ...form, variants: vs });
+    }}
+  />
+</div>
+
+
+<div>
+  <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+    Material
+  </label>
+  <input
+    type="text"
+    placeholder="e.g., Cotton"
+    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
+    value={v.material || ""}
+    onChange={e => {
+      const vs = [...form.variants];
+      vs[i].material = e.target.value;
+      setForm({ ...form, variants: vs });
+    }}
+  />
+</div>
+
+<div>
+  <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+    Color
+  </label>
+  <input
+    type="text"
+    placeholder="e.g., Beige"
+    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
+    value={v.color || ""}
+    onChange={e => {
+      const vs = [...form.variants];
+      vs[i].color = e.target.value;
+      setForm({ ...form, variants: vs });
+    }}
+  />
+</div>
+
+
+
+
+
                           
                           <div>
                             <label className="text-xs font-semibold text-slate-600 mb-1.5 block">

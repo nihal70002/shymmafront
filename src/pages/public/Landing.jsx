@@ -1,6 +1,14 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, ShoppingCart, User } from "lucide-react";
+import { 
+  Search, 
+  ShoppingCart, 
+  User,
+  ShieldCheck,
+  Truck,
+  Clock,
+  Award
+} from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import "swiper/css";
@@ -47,35 +55,41 @@ useEffect(() => {
 
 
   
-  const newArrivals = [
-    {
-      id: 1,
-      name: "NewMom Maternity Pad",
-      desc: "Designed for maximum absorbency and gentle care, Newmom Maternity Pads offer superior protection and comfort during the postpartum period. Perfect for new mothers.",
-      img: "/products/maternity-pad.jpg", // Replace with your actual path
-      link: "/products/maternity-pad"
-    },
-    {
-      id: 2,
-      name: "Dyna Hinged Knee Brace",
-      desc: "A premium wrap-around knee brace featuring dual metal hinges for superior medial-lateral stability with soft neoprene construction that delivers comfortable compression.",
-      img: "/products/kneebrace.jpg", // Replace with your actual path
-      link: "/products/knee-brace"
-    }
-  ];
+ const newArrivals = [
+  {
+    id: 1,
+    name: "Multifix Humeral Nail",
+    desc: "A precision-engineered intramedullary fixation system designed to provide superior stability and anatomical alignment in humeral fracture management. Built with high-strength titanium alloy for long-term durability.",
+    img: "/products/multifix.jpg",
+    link: "/products/multifix-humeral-nail"
+  },
+  {
+    id: 2,
+    name: "Femoral Neck System",
+    desc: "An advanced fixation solution offering controlled compression and enhanced rotational stability for effective treatment of femoral neck fractures, supporting faster mobilization and reliable clinical outcomes.",
+    img: "/products/walk.jpg",
+    link: "/products/femoral-neck-system"
+  }
+];
 
  const categories = [
-  { id: 1, name: "Supports & Braces", img: "/categories/supports.jpg" },
-  { id: 3, name: "Lumbo Sacral (Back) and Abdominal Supports", img: "/categories/lumbo.jpg" },
-  { id: 4, name: "Cervical (Neck) Care", img: "/categories/cervical.jpg" },
-  { id: 5, name: "Mobility Aids", img: "/categories/mobility.jpg" },
-  { id: 6, name: "Traction Kits", img: "/categories/traction.jpg" },
-  { id: 7, name: "Compression Therapy", img: "/categories/compression.jpg" },
-  { id: 8, name: "Exercise Essentials", img: "/categories/exercise.jpg" },
-  { id: 9, name: "Wound Care/Bandages", img: "/categories/wound.jpg" },
-  { id: 10, name: "Casting Aids", img: "/categories/casting.jpg" },
-  { id: 11, name: "Foot Care", img: "/categories/foot.jpg" },
+  { id: 2, name: "Locking Plate System", slug: "locking-plate-system", img: "/categories/locking-plate.jpg" },
+  { id: 3, name: "Locking Hand System", slug: "locking-hand-system", img: "/categories/locking-hand.jpg" },
+  { id: 4, name: "Locking System", slug: "locking-system", img: "/categories/locking-system.jpg" },
+  { id: 5, name: "Radial Head Prosthesis", slug: "radial-head-prosthesis", img: "/categories/radial-head.jpg" },
+  { id: 6, name: "Bipolar Prosthesis", slug: "bipolar-prosthesis", img: "/categories/bipolar.jpg" },
+  { id: 7, name: "PFNA Nailing System", slug: "pfna-nailing-system", img: "/categories/pfna.jpg" },
+  { id: 8, name: "Cannulated Compression System", slug: "cannulated-compression-system", img: "/categories/cannulated.jpg" },
 ];
+
+
+
+  const stats = [
+    { icon: <ShieldCheck className="text-cyan-600" />, title: "ISO Certified", desc: "Quality guaranteed" },
+    { icon: <Truck className="text-cyan-600" />, title: "Global Shipping", desc: "Fast & reliable delivery" },
+    { icon: <Clock className="text-cyan-600" />, title: "24/7 Support", desc: "Expert medical assistance" },
+    { icon: <Award className="text-cyan-600" />, title: "Premium Grade", desc: "Medical-grade titanium" },
+  ];
 
 
 
@@ -85,11 +99,11 @@ useEffect(() => {
 
       {/* ================= NAVBAR ================= */}
       <nav className="sticky top-0 z-50 bg-white shadow-sm ">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-4">
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <img src="/logo/logo.png" className="h-9" alt="logo" />
+            <img src="/logo/logo.png" className="h-20 w-24" alt="logo" />
            
           </Link>
 
@@ -189,55 +203,111 @@ lg:aspect-[1660/490]"
 
 
 
+ {/* Adjusted margin: -mt-4 on mobile, -mt-8 on desktop */}
+<div className="max-w-7xl mx-auto px-4 -mt-4 sm:-mt-8 relative z-10">
+  {/* Grid adjustment: 
+      - p-4 on mobile to save space
+      - gap-2 on mobile vs gap-4 on desktop 
+  */}
+  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 bg-white p-4 sm:p-6 rounded-2xl shadow-xl border border-gray-100">
+    {stats.map((stat, i) => (
+      <div key={i} className="flex items-center gap-2 sm:gap-4 p-1 sm:p-2">
+        {/* Smaller icon container on mobile */}
+        <div className="p-2 sm:p-3 bg-cyan-50 rounded-lg shrink-0">
+          {/* Ensure the icon itself is smaller on mobile if possible, e.g., size={18} */}
+          <div className="text-cyan-600 scale-75 sm:scale-100">
+            {stat.icon}
+          </div>
+        </div>
+        
+        <div className="min-w-0"> {/* min-w-0 prevents text overflow issues */}
+          {/* Smaller text on mobile: text-[10px] or text-xs */}
+          <h4 className="font-bold text-[11px] sm:text-sm text-gray-900 truncate sm:whitespace-normal">
+            {stat.title}
+          </h4>
+          <p className="text-[9px] sm:text-xs text-gray-500 line-clamp-1 sm:line-clamp-none">
+            {stat.desc}
+          </p>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
+
 
 
       {/* ================= CATEGORIES ================= */}
     {/* ================= CATEGORIES ================= */}
-      <section className="py-12 sm:py-16 bg-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.2, ease: "easeOut" }} // Slowed title reveal
-            className="text-2xl sm:text-3xl font-bold text-center mb-10"
-          >
-            Shop By Category
-          </motion.h2>
+    <section className="py-20 bg-white">
+  <style>{`
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin-slow {
+      animation: spin-slow 6s linear infinite;
+    }
+  `}</style>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
-            {categories.map((cat, i) => (
-              <motion.div
-                key={cat.id}
-                initial={{ opacity: 0, x: -50 }} // Increased distance for a more noticeable slide
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-20px" }}
-                transition={{ 
-                  duration: 0.8,      // Increased duration (was 0.5)
-                  delay: i * 0.2,     // Increased stagger time (was 0.1)
-                  ease: [0.21, 0.45, 0.32, 0.9] // Custom cubic-bezier for a "smooth stop" feel
-                }}
-              >
-                <Link
-                  to={`/products?categoryId=${cat.id}`}
-                  className="group block bg-white rounded-2xl border border-gray-200 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden"
-                >
-                  <img
-                    src={cat.img}
-                    alt={cat.name}
-                    className="h-32 sm:h-40 w-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="p-4 text-center font-semibold text-sm sm:text-base">
-                    {cat.name}
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+  <div className="max-w-7xl mx-auto px-6">
+    {/* Company Branding Section */}
+    <div className="text-center mb-16">
+      <h2 className="text-3xl md:text-4xl font-serif text-[#3a96a5] uppercase tracking-[0.2em] mb-3">
+        Our Products
+      </h2>
+      <div className="flex justify-center mb-8">
+        <div className="h-1 w-20 bg-red-600 rounded-full" />
+      </div>
+      <p className="max-w-4xl mx-auto text-gray-600 text-base md:text-lg leading-relaxed">
+        We at <span className="font-bold text-gray-900">Shymma Surgicals</span> offer quality stainless steel and Titanium Orthopaedic Trauma Implants in a wide range. Our company ensures top-tier quality for every product.
+      </p>
+    </div>
+
+    {/* Product Grid */}
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-12 md:gap-16">
+      {categories.map((cat) => (
+        <Link
+          key={cat.id}
+          to={`/category/${cat.slug}`}
+          className="group flex flex-col items-center"
+        >
+          {/* The Animated Circle System */}
+          <div className="relative w-44 h-44 md:w-56 md:h-56 flex items-center justify-center">
+            
+            {/* 1. The 3/4 Spinning Line (Non-dotted, Solid) */}
+            <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-[#3a96a5] border-r-[#3a96a5] border-l-[#3a96a5] animate-spin-slow" />
+            
+            {/* 2. Static Inner Decorative Ring */}
+            <div className="absolute inset-[6px] rounded-full border border-gray-100 shadow-sm" />
+
+            {/* 3. Product Image Container */}
+            <div className="relative w-[85%] h-[85%] rounded-full overflow-hidden bg-white shadow-inner">
+              <img
+                src={cat.img}
+                alt={cat.name}
+                // Zoomed to 160% to crop out poster text and focus on hardware
+                className="w-full h-full object-cover scale-[1.6] group-hover:scale-[1.8] transition-transform duration-700 ease-in-out"
+              />
+            </div>
           </div>
-        </div>
-      </section>
 
-      {/* ================= FEATURED PRODUCTS ================= */}
+          {/* Product Labeling */}
+          <div className="mt-8 text-center">
+            <h3 className="text-[11px] font-black text-[#3a96a5] uppercase tracking-[0.3em] mb-2">
+              SHYMMA®
+            </h3>
+            <p className="text-base md:text-xl font-bold text-slate-800 group-hover:text-[#3a96a5] transition-colors duration-300 uppercase leading-tight">
+              {cat.name}
+            </p>
+          </div>
+        </Link>
+      ))}
+    </div>
+  </div>
+</section>
+
+    
       {/* ================= FEATURED PRODUCTS ================= */}
       <section className="bg-gray-50 py-12 sm:py-16 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -329,62 +399,78 @@ lg:aspect-[1660/490]"
 
       {/* ================= NEW PRODUCTS ================= */}
 <section className="py-20 bg-white">
-  <div className="w-full px-6 lg:px-12">
+  <div className="max-w-7xl mx-auto px-6">
+    
+    {/* Header - More Professional Typography */}
+    <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-4">
+      <div className="space-y-2">
+        <span className="text-cyan-600 font-bold tracking-widest text-xs uppercase">Premium Range</span>
+        <h2 className="text-3xl md:text-4xl font-serif text-slate-900 leading-tight">
+          Advanced <span className="italic text-slate-500">Trauma</span> Solutions
+        </h2>
+      </div>
 
-    {/* Header */}
-    <div className="flex justify-between items-center mb-16">
-      <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
-        New Arrivals
-      </h2>
       <Link
-        to="/products?sort=new"
-        className="text-cyan-600 font-semibold hover:text-cyan-700 transition-colors flex items-center gap-1"
+        to="/products"
+        className="group flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-900 hover:text-cyan-600 transition-all"
       >
-        View All <span className="text-xl">→</span>
+        View All Products 
+        <span className="w-8 h-[1px] bg-slate-900 group-hover:bg-cyan-600 group-hover:w-12 transition-all"></span>
       </Link>
     </div>
 
-    {/* 2 Column Layout */}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24">
-
+    {/* Layout: Switch to 1 column on mobile, 2 on desktop */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
       {newArrivals.map((product, index) => (
         <motion.div
           key={product.id}
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ delay: index * 0.2, duration: 0.6 }}
-          className="group cursor-pointer"
+          transition={{ duration: 0.8, delay: index * 0.1 }}
+          className="group"
         >
-          <Link to={product.link}>
-
-            {/* Bigger Image Container */}
-            <div className="relative overflow-hidden rounded-xl bg-gray-50 h-[420px]">
-              <img
-                src={product.img}
-                alt={product.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-              />
-            </div>
-
-            {/* Text */}
-            <div className="space-y-4 mt-6">
-              <h3 className="text-2xl font-bold text-blue-900 group-hover:text-cyan-600 transition-colors">
-                {product.name}
-              </h3>
-
-              <p className="text-gray-600 leading-relaxed">
-                {product.desc}
-                <span className="text-cyan-600 font-medium ml-1 hover:underline">
-                  Read More
+          <Link to={product.link} className="block">
+            {/* Image Container: Fixed height for mobile, larger for desktop */}
+            <div className="relative aspect-[4/3] md:aspect-[16/10] overflow-hidden rounded-3xl bg-slate-50 border border-slate-100 shadow-sm group-hover:shadow-2xl transition-all duration-700">
+              
+              {/* Product Badge */}
+              <div className="absolute top-6 left-6 z-10">
+                <span className="bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm border border-slate-100">
+                  New Arrival
                 </span>
-              </p>
+              </div>
+
+             <img
+  src={product.img}
+  alt={product.name}
+  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-in-out"
+/>
+              {/* Subtle Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </div>
 
+            {/* Text Content */}
+            <div className="mt-8 space-y-3 px-2">
+              <div className="flex items-center gap-3">
+                <div className="h-[2px] w-8 bg-cyan-500"></div>
+                <h3 className="text-xl md:text-2xl font-bold text-slate-900 group-hover:text-cyan-600 transition-colors">
+                  {product.name}
+                </h3>
+              </div>
+
+              <p className="text-slate-600 text-sm md:text-base leading-relaxed line-clamp-2 md:line-clamp-none">
+                {product.desc}
+              </p>
+
+              <div className="pt-2 flex items-center text-cyan-600 text-xs font-black uppercase tracking-widest group-hover:gap-4 transition-all">
+                Technical Specifications 
+                <span className="ml-2">→</span>
+              </div>
+            </div>
           </Link>
         </motion.div>
       ))}
-
     </div>
   </div>
 </section>

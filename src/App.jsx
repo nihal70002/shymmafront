@@ -10,6 +10,7 @@ import Landing from "./pages/public/Landing";
 /* PRODUCTS */
 import Products from "./pages/public/Products";
 import ProductDetails from "./pages/public/ProductDetails";
+import CategoryPage from "./pages/public/CategoryPage";
 
 /* USER */
 import Cart from "./pages/user/Cart";
@@ -32,9 +33,12 @@ import AdminLowStock from "./pages/admin/AdminLowStock";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminCustomers from "./pages/admin/AdminCustomers";
 
+
 /* GUARDS */
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import AdminRoute from "./components/common/AdminRoute";
+import AdminCategories from "./pages/admin/AdminCategories";
+
 
 export default function App() {
   return (
@@ -72,6 +76,7 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/addresses" element={<Addresses />} />
           <Route path="/profile/change-password" element={<ChangePassword />} />
+          <Route path="/category/:slug" element={<CategoryPage />} />
         </Route>
 
         {/* ================= ADMIN ================= */}
@@ -91,6 +96,11 @@ export default function App() {
           <Route path="low-stock" element={<AdminLowStock />} />
           <Route path="reports" element={<AdminReports />} />
           <Route path="customers" element={<AdminCustomers />} />
+          <Route path="categories" element={<AdminCategories />} />
+
+
+
+          
         </Route>
       </Routes>
     </>

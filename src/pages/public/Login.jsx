@@ -84,8 +84,8 @@ if (typeof backendError === "string") {
           </div>
           
           <h1 className="text-5xl font-black text-slate-900 leading-tight">
-            Safa Al-Tamayyez <br />
-            <span className="text-[#004d40]">Trading Co.</span>
+            Shymma <br />
+            <span className="text-[#004d40]">Surgicals</span>
           </h1>
           
           <p className="mt-6 text-slate-600 text-lg leading-relaxed">

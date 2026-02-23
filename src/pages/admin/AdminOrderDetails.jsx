@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { 
-  ChevronLeft, Printer, Package, Truck, 
-  CheckCircle2, XCircle, Undo2, Calendar, 
-  User, Building2, Phone, CreditCard 
+  ChevronLeft, Printer, Package, Truck, CheckCircle2, 
+  Calendar, Building2, Phone, CreditCard, User, 
+  MapPin, Hash, ArrowUpRight
 } from "lucide-react";
 import api from "../../api/axios";
 
@@ -11,232 +11,206 @@ export default function AdminOrderDetails() {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
-    api.get(`/admin/orders/${orderId}`).then(res => {
-      setOrder(res.data);
-    });
+    fetchOrder();
   }, [orderId]);
 
-  const doAction = async (action) => {
+  const fetchOrder = async () => {
     try {
-      let url = `/admin/orders/${orderId}/${action}`;
-      if (action === "revert") url = `/admin/orders/${orderId}/revert`;
-
-      await api.put(url);
       const res = await api.get(`/admin/orders/${orderId}`);
       setOrder(res.data);
     } catch (err) {
-      console.error(err);
-      alert("Action failed");
+      console.error("Failed to fetch order");
     }
   };
 
-  const confirmAction = (msg, fn) => {
-    if (window.confirm(msg)) fn();
+  const doAction = async (action) => {
+    setIsUpdating(true);
+    try {
+      await api.put(`/admin/orders/${orderId}/${action}`);
+      await fetchOrder();
+    } catch {
+      alert("Action failed");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
-  if (!order) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
-        <div className="animate-spin h-6 w-6 border-2 border-indigo-600 border-t-transparent rounded-full" />
-      </div>
-    );
-  }
+  if (!order) return <LoadingScreen />;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] px-6 pt-4 pb-10 font-sans antialiased text-slate-900">
-      <div className="max-w-6xl mx-auto space-y-4">
-
-        {/* COMPACT TOP NAV */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => navigate(-1)}
-            className="group flex items-center gap-1.5 text-slate-400 hover:text-indigo-600 transition-colors"
-          >
-            <ChevronLeft size={16} />
-            <span className="text-[11px] font-bold uppercase tracking-widest">Back to Orders</span>
-          </button>
-          <button className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-all text-xs font-bold shadow-sm">
-            <Printer size={14} /> Print Invoice
-          </button>
-        </div>
-
-        {/* HEADER SECTION */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+    <div className="min-h-screen bg-[#F1F5F9] text-slate-900 pb-12 overflow-y-auto">
+      
+      {/* HEADERBAR */}
+      <nav className="sticky top-0 z-30 bg-white border-b border-slate-200 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <div className={`p-3 rounded-xl text-white shadow-lg ${getStatusColor(order.status).iconBg}`}>
-              <Package size={24} />
-            </div>
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-xl font-black tracking-tight">Order #{order.orderId}</h1>
-                <StatusBadge status={order.status} />
-              </div>
-              <div className="flex items-center gap-3 mt-1 text-[11px] text-slate-400 font-bold uppercase tracking-tighter">
-                <span className="flex items-center gap-1"><Calendar size={12}/> {new Date(order.orderDate).toLocaleDateString()}</span>
-                <span>•</span>
-                <span className="flex items-center gap-1"><CreditCard size={12}/> {order.paymentMethod || 'Credit Account'}</span>
-              </div>
-            </div>
+            <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+              <ChevronLeft size={20} className="text-slate-500" />
+            </button>
+            <h1 className="text-lg font-bold tracking-tight">Order <span className="text-slate-400 font-medium">#{order.orderId}</span></h1>
           </div>
-
-          {/* DYNAMIC ACTIONS BAR */}
-          <div className="flex flex-wrap gap-2 pt-4 md:pt-0 border-t md:border-t-0 border-slate-50">
+          <div className="flex gap-3">
+            <button className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">
+              <Printer size={14} /> Print Invoice
+            </button>
             {order.status === "PendingAdminApproval" && (
-              <>
-                <ActionBtn label="Confirm Order" icon={<CheckCircle2 size={14}/>} variant="success" onClick={() => confirmAction("Confirm this order?", () => doAction("confirm"))} />
-                <ActionBtn label="Cancel" icon={<XCircle size={14}/>} variant="danger" onClick={() => confirmAction("Cancel this order?", () => doAction("cancel"))} />
-              </>
-            )}
-            {order.status === "Confirmed" && (
-              <>
-                <ActionBtn label="Dispatch" icon={<Truck size={14}/>} variant="info" onClick={() => confirmAction("Dispatch this order?", () => doAction("dispatch"))} />
-                <ActionBtn label="Revert" icon={<Undo2 size={14}/>} variant="warning" onClick={() => confirmAction("Revert to Approval?", () => doAction("revert"))} />
-              </>
-            )}
-            {order.status === "Dispatched" && (
-              <ActionBtn label="Mark Delivered" icon={<CheckCircle2 size={14}/>} variant="primary" onClick={() => confirmAction("Mark as delivered?", () => doAction("deliver"))} />
+              <button
+                onClick={() => doAction("confirm")}
+                disabled={isUpdating}
+                className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm transition-all"
+              >
+                Approve Order
+              </button>
             )}
           </div>
         </div>
+      </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <main className="max-w-7xl mx-auto px-6 pt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* LEFT COLUMN */}
+        <div className="lg:col-span-8 space-y-6">
           
-          {/* LEFT: ORDER ITEMS (Main Content) */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Line Items</h2>
-                <span className="text-[11px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">{order.items.length} Products</span>
-              </div>
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-50 text-[10px] text-slate-400 uppercase font-bold">
-                    <th className="px-5 py-3">Product</th>
-                    <th className="px-5 py-3 text-center">Qty</th>
-                    <th className="px-5 py-3 text-right">Total</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {order.items.map((item, index) => (
-                    <tr key={index} className="text-sm">
-                      <td className="px-5 py-3">
-                        <p className="font-bold text-slate-700">{item.productName}</p>
-                        <p className="text-[10px] text-slate-400 font-medium">Size: {item.size} • ₹{item.unitPrice} / unit</p>
-                      </td>
-                      <td className="px-5 py-3 text-center font-bold text-slate-600">×{item.quantity}</td>
-                      <td className="px-5 py-3 text-right font-black text-slate-800">₹{(item.quantity * item.unitPrice).toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="bg-slate-50/80">
-                    <td colSpan="2" className="px-5 py-4 text-right text-xs font-bold text-slate-500">Order Grand Total:</td>
-                    <td className="px-5 py-4 text-right text-lg font-black text-indigo-600">₹{order.totalAmount.toLocaleString()}</td>
-                  </tr>
-                </tfoot>
-              </table>
+          {/* TRACKER */}
+          <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm">
+            <div className="flex justify-between items-start gap-4">
+              <StatusItem label="Placed" active={true} icon={<Hash size={16}/>} />
+              <StatusItem label="Confirmed" active={order.status !== "PendingAdminApproval"} icon={<CheckCircle2 size={16}/>} />
+              <StatusItem label="Dispatched" active={["Shipped", "Delivered"].includes(order.status)} icon={<Truck size={16}/>} />
+              <StatusItem label="Delivered" active={order.status === "Delivered"} icon={<Package size={16}/>} isLast />
+            </div>
+          </div>
+
+          {/* ITEM CARD */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between bg-slate-50/50">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Order Contents</span>
+              <span className="text-[10px] font-bold text-slate-500 bg-white border px-2 py-0.5 rounded shadow-sm">{order.items.length} Items</span>
+            </div>
+            
+            <div className="divide-y divide-slate-100">
+              {order.items.map((item, i) => (
+                <div key={i} className="p-6 flex flex-col sm:flex-row justify-between items-start gap-4 hover:bg-slate-50/30 transition-colors">
+                  <div className="space-y-1.5">
+                    <h4 className="text-sm font-bold text-slate-800">{item.productName}</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {item.size && <Badge label="Size" val={item.size} color="blue" />}
+                      {item.color && <Badge label="Color" val={item.color} color="slate" />}
+                      {item.material && <Badge label="Mat" val={item.material} color="indigo" />}
+                    </div>
+                  </div>
+                  <div className="sm:text-right w-full sm:w-auto pt-4 sm:pt-0 border-t sm:border-0 border-slate-100">
+                    <p className="text-xs text-slate-400 font-medium">₹{item.unitPrice} × {item.quantity}</p>
+                    <p className="text-sm font-black text-slate-900 mt-0.5">₹{(item.unitPrice * item.quantity).toLocaleString()}</p>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {order.status === "Cancelled" && order.rejectedReason && (
-              <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 flex gap-3">
-                <XCircle className="text-rose-500 shrink-0" size={20} />
-                <div>
-                  <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">Cancellation Reason</p>
-                  <p className="text-sm font-bold text-rose-800 mt-0.5">{order.rejectedReason}</p>
+            {/* TOTAL SECTION - Replaced the Black Footer with this */}
+            <div className="p-6 bg-[#F8FAFC] border-t border-slate-200">
+              <div className="flex justify-between items-center">
+                <div className="space-y-0.5">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Grand Total</p>
+                  <p className="text-[10px] text-slate-400 italic">Taxes and shipping included</p>
+                </div>
+                <div className="text-right">
+                   <span className="text-2xl font-black text-slate-900 tracking-tight">₹{order.totalAmount.toLocaleString()}</span>
                 </div>
               </div>
-            )}
+            </div>
           </div>
+        </div>
 
-          {/* RIGHT: CUSTOMER & SALES INFO (Sidebar) */}
-          <div className="space-y-4">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-4">
-              <SectionHeader title="Customer Details" icon={<User size={14}/>} />
-              <div className="space-y-3">
-                <DetailRow icon={<User size={14}/>} label="Contact" value={order.customerName} />
-                <DetailRow icon={<Building2 size={14}/>} label="Company" value={order.companyName} />
-                <DetailRow icon={<Phone size={14}/>} label="Phone" value={order.phoneNumber} />
+        {/* SIDEBAR */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
+               <User size={12} /> Customer Information
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-bold text-slate-900">{order.customerName}</p>
+                <p className="text-xs text-slate-500 mt-1">{order.companyName}</p>
               </div>
-              
-              <div className="pt-4 border-t border-slate-100">
-                <SectionHeader title="Assigned Sales" icon={<Truck size={14}/>} />
-                {order.salesExecutiveName ? (
-                   <div className="mt-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                      <p className="text-xs font-bold text-slate-700">{order.salesExecutiveName}</p>
-                      <p className="text-[10px] text-slate-500 font-medium mt-0.5">{order.salesExecutivePhone}</p>
-                   </div>
-                ) : (
-                  <p className="text-[10px] text-slate-400 italic mt-2">No executive assigned</p>
-                )}
+              <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg text-xs font-semibold text-slate-600 border border-slate-100">
+                <Phone size={14} className="text-slate-400" /> {order.phoneNumber}
               </div>
             </div>
           </div>
 
+          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+             <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">Payment & Sales</h3>
+             <div className="space-y-6">
+               <SidebarItem icon={<CreditCard size={14}/>} label="Payment Method" val={order.paymentMethod || "Internal Credit"} />
+               {order.salesExecutiveName && (
+                 <div className="pt-4 border-t border-slate-100">
+                   <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">Executive</p>
+                   <div className="flex items-center gap-3">
+                     <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 text-xs uppercase">{order.salesExecutiveName[0]}</div>
+                     <div>
+                        <p className="text-xs font-bold text-slate-800">{order.salesExecutiveName}</p>
+                        <p className="text-[10px] text-slate-400 font-medium">{order.salesExecutivePhone}</p>
+                     </div>
+                   </div>
+                 </div>
+               )}
+             </div>
+          </div>
         </div>
+      </main>
+    </div>
+  );
+}
+
+// STYLED HELPERS
+function StatusItem({ label, active, icon, isLast }) {
+  return (
+    <div className={`flex-1 flex flex-col items-center group relative`}>
+      <div className={`h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-500 ${
+        active ? 'bg-emerald-500 text-white shadow-md shadow-emerald-100' : 'bg-slate-100 text-slate-400'
+      }`}>
+        {icon}
       </div>
+      <p className={`text-[10px] font-black uppercase mt-3 tracking-tighter ${active ? 'text-slate-900' : 'text-slate-400'}`}>{label}</p>
+      {!isLast && <div className={`absolute top-5 left-[60%] w-[80%] h-0.5 -z-10 hidden md:block ${active ? 'bg-emerald-100' : 'bg-slate-50'}`} />}
     </div>
   );
 }
 
-// --- HELPER COMPONENTS ---
-
-function SectionHeader({ title, icon }) {
+function Badge({ label, val, color }) {
+  const styles = {
+    blue: "bg-blue-50 text-blue-600 border-blue-100",
+    slate: "bg-slate-50 text-slate-600 border-slate-200",
+    indigo: "bg-indigo-50 text-indigo-600 border-indigo-100"
+  };
   return (
-    <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-      {icon} {title}
+    <div className={`flex items-center border rounded-md text-[10px] font-bold overflow-hidden ${styles[color]}`}>
+      <span className="px-1.5 py-0.5 bg-black/5 uppercase tracking-tighter opacity-70">{label}</span>
+      <span className="px-2 py-0.5">{val}</span>
     </div>
   );
 }
 
-function DetailRow({ icon, label, value }) {
+function SidebarItem({ icon, label, val }) {
   return (
-    <div className="flex items-start gap-3">
-      <div className="mt-0.5 text-slate-300">{icon}</div>
+    <div className="flex gap-3">
+      <div className="text-slate-300 mt-0.5">{icon}</div>
       <div>
-        <p className="text-[10px] font-bold text-slate-400 leading-none">{label}</p>
-        <p className="text-xs font-bold text-slate-700 mt-1">{value || "N/A"}</p>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{label}</p>
+        <p className="text-xs font-bold text-slate-700 mt-0.5">{val}</p>
       </div>
     </div>
   );
 }
 
-function ActionBtn({ label, variant, onClick, icon }) {
-  const variants = {
-    success: "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100",
-    danger: "bg-rose-600 hover:bg-rose-700 shadow-rose-100",
-    info: "bg-blue-600 hover:bg-blue-700 shadow-blue-100",
-    primary: "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100",
-    warning: "bg-amber-500 hover:bg-amber-600 shadow-amber-100",
-  };
-
+function LoadingScreen() {
   return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 text-xs font-bold text-white rounded-lg shadow-md transition-all active:scale-95 ${variants[variant]}`}
-    >
-      {icon} {label}
-    </button>
+    <div className="h-screen w-full flex items-center justify-center bg-slate-50 animate-pulse">
+      <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin" />
+    </div>
   );
-}
-
-function StatusBadge({ status }) {
-  const config = getStatusColor(status);
-  return (
-    <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${config.bg} ${config.text} ${config.border}`}>
-      {status}
-    </span>
-  );
-}
-
-function getStatusColor(status) {
-  const map = {
-    PendingAdminApproval: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200", iconBg: "bg-amber-500" },
-    Confirmed: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", iconBg: "bg-emerald-500" },
-    Dispatched: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", iconBg: "bg-blue-500" },
-    Delivered: { bg: "bg-indigo-50", text: "text-indigo-700", border: "border-indigo-200", iconBg: "bg-indigo-500" },
-    Cancelled: { bg: "bg-rose-50", text: "text-rose-700", border: "border-rose-200", iconBg: "bg-rose-500" },
-  };
-  return map[status] || { bg: "bg-slate-50", text: "text-slate-700", border: "border-slate-200", iconBg: "bg-slate-500" };
 }

@@ -66,6 +66,13 @@ export default function AdminLayout() {
             onClick={() => navigate("/admin/customers")}
           />
 
+          <SidebarItem
+  icon={<Warehouse size={16} />}
+  label="Categories"
+  active={location.pathname.startsWith("/admin/categories")}
+  onClick={() => navigate("/admin/categories")}
+/>
+
          
 
           <SidebarItem
