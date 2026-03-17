@@ -1,13 +1,13 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL, // e.g. https://localhost:7188/api
+  baseURL: import.meta.env.VITE_API_URL, // ✅ correct env name
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Attach JWT token automatically
+// 🔐 Attach JWT token automatically
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -21,7 +21,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Optional: auto logout if token expired
+// 🚨 Auto logout if token expired
 api.interceptors.response.use(
   (response) => response,
   (error) => {
