@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
 /* PUBLIC */
@@ -7,12 +7,12 @@ import ForgotPassword from "./pages/public/ForgotPassword";
 import ResetPassword from "./pages/public/ResetPassword";
 import Landing from "./pages/public/Landing";
 
-/* PRODUCTS */
+/* PRODUCTS (PUBLIC) */
 import Products from "./pages/public/Products";
 import ProductDetails from "./pages/public/ProductDetails";
 import CategoryPage from "./pages/public/CategoryPage";
 
-/* USER */
+/* USER (PROTECTED) */
 import Cart from "./pages/user/Cart";
 import MyOrders from "./pages/user/MyOrders";
 import OrderDetails from "./pages/user/OrderDetails";
@@ -32,34 +32,32 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminLowStock from "./pages/admin/AdminLowStock";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminCustomers from "./pages/admin/AdminCustomers";
-
+import AdminCategories from "./pages/admin/AdminCategories";
 
 /* GUARDS */
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import AdminRoute from "./components/common/AdminRoute";
-import AdminCategories from "./pages/admin/AdminCategories";
-
 
 export default function App() {
   return (
     <>
-      <Toaster
-        position="top-right"
-        toastOptions={{ style: { zIndex: 99999 } }}
-      />
+      <Toaster position="top-right" toastOptions={{ style: { zIndex: 99999 } }} />
 
       <Routes>
         {/* ================= PUBLIC ================= */}
-       <Route path="/" element={<Landing />} />
-<Route path="/login" element={<Login />} />
-
-
-
-
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* ================= USER ================= */}
+        {/* PUBLIC PRODUCT ROUTES (NO LOGIN) */}
+        <Route element={<UserLayout />}>
+          <Route path="/products" element={<Products />} />
+          <Route path="/products/:id" element={<ProductDetails />} />
+          <Route path="/category/:slug" element={<CategoryPage />} />
+        </Route>
+
+        {/* ================= USER (PROTECTED) ================= */}
         <Route
           element={
             <ProtectedRoute>
@@ -67,15 +65,12 @@ export default function App() {
             </ProtectedRoute>
           }
         >
-          <Route path="/products" element={<Products />} />
-          <Route path="/products/:id" element={<ProductDetails />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/orders" element={<MyOrders />} />
           <Route path="/orders/:id" element={<OrderDetails />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/addresses" element={<Addresses />} />
           <Route path="/profile/change-password" element={<ChangePassword />} />
-          <Route path="/category/:slug" element={<CategoryPage />} />
         </Route>
 
         {/* ================= ADMIN ================= */}
@@ -96,10 +91,6 @@ export default function App() {
           <Route path="reports" element={<AdminReports />} />
           <Route path="customers" element={<AdminCustomers />} />
           <Route path="categories" element={<AdminCategories />} />
-
-
-
-          
         </Route>
       </Routes>
     </>
