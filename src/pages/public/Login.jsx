@@ -16,9 +16,10 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      const res = await api.post("/api/auth/login", {
-        loginId: loginId.trim(),
-        password: password.trim(),
+      const res = await api.post("/auth/login", {
+    loginId: loginId.trim(),
+    password: password.trim(),
+      
       });
 
       console.log("LOGIN RESPONSE 👉", res.data);
@@ -37,7 +38,7 @@ console.log("ROLE 👉", res.data.role);
   navigate("/admin", { replace: true });
 } else if (role === "Customer" || role === "User") {
   console.log("NAVIGATING TO 👉 /landing");
-  navigate("/landing", { replace: true });
+  navigate("/", { replace: true });
 }
  else {
   console.log("UNKNOWN ROLE 👉", role);
