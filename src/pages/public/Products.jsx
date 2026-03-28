@@ -51,13 +51,16 @@ const loadProducts = useCallback(async (pageNo, reset = false) => {
       search: searchQuery
     });
 
-    const res = await getProducts(
-      pageNo,
-      PAGE_SIZE,
-      selectedCategories,
-      selectedBrand,
-      searchQuery
-    );
+    const res = await api.get("/products", {
+  params: {
+    page: pageNo || 1,
+    pageSize: PAGE_SIZE,
+    categoryId: categoryIdFromUrl,
+    categories: selectedCategories,
+    brandId: selectedBrand,
+    search: searchQuery
+  }
+});
 
     const items = res.data.items || [];
 
