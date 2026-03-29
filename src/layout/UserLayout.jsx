@@ -16,7 +16,15 @@ const isCartPage = location.pathname === "/cart";
   const { cartCount, setCartFromApi } = useCart();
 
   // ✅ Hydrate cart count from backend on refresh
- useEffect(() => {
+  useEffect(() => {
+  const token = localStorage.getItem("token");
+
+  // 🚫 Don't call cart API if user is not logged in
+  if (!token) {
+    setCartFromApi(0);
+    return;
+  }
+
   const fetchCartCount = async () => {
     try {
       const res = await api.get("/cart");
@@ -30,7 +38,9 @@ const isCartPage = location.pathname === "/cart";
   };
 
   fetchCartCount();
-}, [location.pathname]); // 🔥 THIS IS THE FIX
+}, [location.pathname]);
+
+// 🔥 THIS IS THE FIX
 const handleSearch = (e) => {
   if (e.key === "Enter") {
     const query = searchQuery.trim();

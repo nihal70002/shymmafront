@@ -80,6 +80,11 @@ useEffect(() => {
   { id: 6, name: "Bipolar Prosthesis", slug: "bipolar-prosthesis", img: "/categories/bipolar.jpg" },
   { id: 7, name: "PFNA Nailing System", slug: "pfna-nailing-system", img: "/categories/pfna.jpg" },
   { id: 8, name: "Cannulated Compression System", slug: "cannulated-compression-system", img: "/categories/cannulated.jpg" },
+  { id: 9, name: "Femoral Neck System", slug: "femoral-neck-system", img: "/categories/fns.jpg" },
+
+{ id: 10, name: "Maxillofacial Internal Fixation System", slug: "maxillofacial-internal-fixation-system", img: "/categories/maxillofacial.jpg" },
+
+{ id: 11, name: "Tibia System", slug: "tibia-system", img: "/categories/tibia.jpg" }
 ];
 
 

@@ -53,13 +53,14 @@ const loadProducts = useCallback(async (pageNo, reset = false) => {
 
     const res = await api.get("/products", {
   params: {
-    page: pageNo || 1,
-    pageSize: PAGE_SIZE,
-    categoryId: categoryIdFromUrl,
-    categories: selectedCategories,
-    brandId: selectedBrand,
-    search: searchQuery
-  }
+  page: pageNo || 1,
+  pageSize: PAGE_SIZE,
+  categoryIds: categoryIdFromUrl
+    ? [Number(categoryIdFromUrl), ...selectedCategories]
+    : selectedCategories,
+  brandId: selectedBrand,
+  search: searchQuery
+}
 });
 
     const items = res.data.items || [];
@@ -76,7 +77,7 @@ const loadProducts = useCallback(async (pageNo, reset = false) => {
   } finally {
     setLoading(false);
   }
-}, [selectedCategories, selectedBrand, searchQuery]);
+}, [selectedCategories, selectedBrand, searchQuery, categoryIdFromUrl]);
 
 
 
@@ -107,11 +108,21 @@ useEffect(() => {
   loadProducts(1, true);
 }, [selectedCategories, selectedBrand, searchQuery, loadProducts]);
 
+useEffect(() => {
+  if (categoryIdFromUrl) {
+    setSelectedCategories([Number(categoryIdFromUrl)]);
+  }
+}, [categoryIdFromUrl]);
+
 
 
 
 // Keep loadCart separate so it only runs once on mount
 useEffect(() => {
+  const token = localStorage.getItem("token");
+
+  if (!token) return; // 🚫 skip cart API if not logged in
+
   loadCart();
 }, []);
 
@@ -299,25 +310,36 @@ console.log(allCategories);
 <div className="mb-6">
   <h4 className="text-xs font-bold text-gray-900 mb-4 uppercase tracking-wider">Main Categories</h4>
   <div className="space-y-2">
-    {parentCategories.map((cat) => (
-  <label key={cat.id} className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:text-teal-700">
-    <input
-      type="checkbox"
-      checked={selectedCategories.includes(cat.id)}
-      onChange={() => toggleCategory(cat.id)}
-      className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-    />
-    <span className="font-medium">{cat.name}</span>
-  </label>
-))}
+  {[
+    ...parentCategories.filter(cat => selectedCategories.includes(cat.id)),
+    ...parentCategories.filter(cat => !selectedCategories.includes(cat.id))
+  ].map((cat) => (
+    <label
+      key={cat.id}
+      className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:text-teal-700"
+    >
+      <input
+        type="checkbox"
+        checked={selectedCategories.includes(cat.id)}
+        onChange={() => toggleCategory(cat.id)}
+        className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+      />
+      <span className="font-medium">{cat.name}</span>
+    </label>
+  ))}
   </div>
 </div>
 
 {/* --- SUBCATEGORIES SECTION --- */}
 <div className="mt-6 pt-4 border-t border-gray-50">
   <div className="flex items-center justify-between mb-4">
-    <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Sub Categories</h4>
-    <button onClick={() => setShowCategorySearch(!showCategorySearch)} className="text-gray-400 hover:text-teal-600">
+    <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">
+      Sub Categories
+    </h4>
+    <button
+      onClick={() => setShowCategorySearch(!showCategorySearch)}
+      className="text-gray-400 hover:text-teal-600"
+    >
       <Search size={14} />
     </button>
   </div>
@@ -333,36 +355,46 @@ console.log(allCategories);
   )}
 
   <div className="space-y-1">
-  {(showAllCategories ? allSubCategories : allSubCategories.slice(0, 8))
-    .filter(sub =>
-      (sub?.name || "")
-        .toLowerCase()
-        .includes(categorySearch.toLowerCase())
-    )
-    .map((sub) => (
-      <label
-        key={sub.id}
-        className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer hover:text-teal-700"
-      >
-        <input
-          type="checkbox"
-          checked={selectedCategories.includes(sub.id)}
-          onChange={() => toggleSubCategory(sub.id)}
-          className="w-3.5 h-3.5 rounded border-gray-300 text-teal-600"
-        />
-        <span className="leading-snug">{sub.name}</span>
-      </label>
-    ))}
+    {[
+      ...allSubCategories.filter(sub =>
+        selectedCategories.includes(sub.id)
+      ),
+      ...allSubCategories.filter(sub =>
+        !selectedCategories.includes(sub.id)
+      )
+    ]
+      .filter(sub =>
+        (sub?.name || "")
+          .toLowerCase()
+          .includes(categorySearch.toLowerCase())
+      )
+      .slice(0, showAllCategories ? undefined : 8)
+      .map((sub) => (
+        <label
+          key={sub.id}
+          className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer hover:text-teal-700"
+        >
+          <input
+            type="checkbox"
+            checked={selectedCategories.includes(sub.id)}
+            onChange={() => toggleSubCategory(sub.id)}
+            className="w-3.5 h-3.5 rounded border-gray-300 text-teal-600"
+          />
+          <span className="leading-snug">{sub.name}</span>
+        </label>
+      ))}
 
-  {allSubCategories.length > 8 && (
-    <button
-      onClick={() => setShowAllCategories(!showAllCategories)}
-      className="text-[10px] font-bold text-teal-600 mt-2 uppercase"
-    >
-      {showAllCategories ? "- Show Less" : `+ ${allSubCategories.length - 8} More`}
-    </button>
-  )}
-</div>
+    {allSubCategories.length > 8 && (
+      <button
+        onClick={() => setShowAllCategories(!showAllCategories)}
+        className="text-[10px] font-bold text-teal-600 mt-2 uppercase"
+      >
+        {showAllCategories
+          ? "- Show Less"
+          : `+ ${allSubCategories.length - 8} More`}
+      </button>
+    )}
+  </div>
 </div>
 
 

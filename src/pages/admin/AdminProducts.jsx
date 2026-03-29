@@ -222,23 +222,32 @@ const removeComponentRow = (index) => {
     }
   };
 
-  const openEditModal = (product) => {
+ const openEditModal = async (product) => {
+  try {
+    const res = await api.get(`/admin/products/${product.productId}`);
+
+    const fullProduct = res.data;
+
     setEditingId(product.productId);
+
     setForm({
-      name: product.name,
-      categoryId: product.categoryId.toString(),
-      brandId: product.brandId?.toString() || "",
-      description: product.description || "",
-      images: product.imageUrls || [],
-
-
-      variants: product.variants.map(v => ({ ...v })),
-components: product.components || []
+      name: fullProduct.name,
+      categoryId: fullProduct.categoryId.toString(),
+      brandId: fullProduct.brandId?.toString() || "",
+      description: fullProduct.description || "",
+      images: fullProduct.imageUrls || [],
+      variants: fullProduct.sizes || [],
+      components: fullProduct.components || []
     });
-    setShowModal(true);
-    setPrimaryImageIndex(0);
 
-  };
+    setPrimaryImageIndex(0);
+    setShowModal(true);
+
+  } catch (err) {
+    console.error("Failed loading product details", err);
+    toast.error("Failed to load product details");
+  }
+};
 
   const formatSAR = (amount) =>
     new Intl.NumberFormat("en-SA", {
@@ -248,16 +257,25 @@ components: product.components || []
 
  const saveProduct = async () => {
   /* ================= 1. VALIDATION ================= */
-  if (!form.name || !form.categoryId || !form.brandId) {
-    toast.error("Product name, category and brand are required");
-    return;
-  }
+  if (!form.name?.trim()) {
+  toast.error("Product name is required");
+  return;
+}
 
-  if (!form.variants || form.variants.length === 0) {
-    toast.error("At least one variant is required");
-    return;
-  }
-
+if (!editingId && (!form.variants || form.variants.length === 0)) {
+  form.variants = [
+    {
+      class: "",
+      style: "",
+      material: "",
+      color: "",
+      size: "Standard",
+      productCode: `AUTO-${Date.now()}`,
+      price: 0,
+      stock: 0
+    }
+  ];
+}
   const combinations = new Set();
   const skus = new Set();
 
@@ -271,20 +289,20 @@ components: product.components || []
       v.style?.trim().toLowerCase() || "",
       v.material?.trim().toLowerCase() || "",
       v.color?.trim().toLowerCase() || "",
-      size.toLowerCase()
+      (size || "").toLowerCase()
     ].join("|");
 
     if (combinations.has(comboKey)) {
       toast.error(`Duplicate variant: ${size}`);
       return;
     }
-    if (skus.has(sku.toLowerCase())) {
+    if (skus.has((sku || "").toLowerCase())) {
       toast.error(`Duplicate SKU: ${sku}`);
       return;
     }
 
     combinations.add(comboKey);
-    skus.add(sku.toLowerCase());
+    skus.add((sku || "").toLowerCase());
   }
 
   /* ================= 2. IMAGE REORDERING ================= */
@@ -306,16 +324,18 @@ components: product.components || []
 };
 
   // Prepare variants separately for the loop
-  const variantData = form.variants.map(v => ({
-    class: v.class?.trim() || "",
-    style: v.style?.trim() || "",
-    material: v.material?.trim() || "",
-    color: v.color?.trim() || "",
-    size: v.size?.trim() || "",
-    productCode: v.productCode.trim(),
-    price: Number(v.price) || 0,
-    stock: Number(v.stock) || 0,
-    variantId: v.variantId // Important for updates
+  const variantData = form.variants
+  .filter(v => v?.size || v?.productCode)
+  .map(v => ({
+    class: v?.class?.trim() || "",
+    style: v?.style?.trim() || "",
+    material: v?.material?.trim() || "",
+    color: v?.color?.trim() || "",
+    size: v?.size?.trim() || "",
+    productCode: v?.productCode?.trim() || "",
+    price: Number(v?.price) || 0,
+    stock: Number(v?.stock) || 0,
+    variantId: v?.variantId
   }));
   console.log("Variants before save:", form.variants);
 
@@ -323,13 +343,18 @@ components: product.components || []
   /* ================= 4. API EXECUTION ================= */
   try {
     if (editingId) {
+
+      console.log("editingId =", editingId);
       // STEP A: Update the main product details
       // (Note: productPayload does NOT include the variants array here)
       await api.put(`/admin/products/${editingId}`, productPayload);
 
+      
+
       // STEP B: Update/Create variants one by one
       // We use a regular for-loop to avoid concurrency issues on the server
-      for (const v of variantData) {
+      if (variantData.length > 0) 
+  for (const v of variantData)  {
         if (v.variantId) {
           await api.put(`/admin/products/variant/${v.variantId}`, v);
         } else {
@@ -1125,6 +1150,90 @@ const updateCategory = async (id, name, parentId) => {
       </div>
     </div>
 
+
+{/* Components Section */}
+<div className="border-t border-slate-200 pt-6">
+
+  <div className="flex justify-between items-center mb-4">
+    <div>
+      <h4 className="text-lg font-bold text-slate-900">
+        Product Components
+      </h4>
+      <p className="text-sm text-slate-500">
+        Add instrument set contents (Cat No, Name, Units)
+      </p>
+    </div>
+
+    <button
+      type="button"
+      onClick={addComponentRow}
+      className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-sm font-semibold"
+    >
+      <Plus size={16} className="inline mr-1" />
+      Add Component
+    </button>
+  </div>
+
+  <div className="space-y-3">
+    {form.components?.map((c, i) => (
+      <div key={i} className="bg-slate-50 rounded-xl p-4 border">
+        <div className="grid grid-cols-3 gap-3">
+
+          <input
+            placeholder="Cat No"
+            className="border rounded px-3 py-2"
+            value={c.catNo || ""}
+            onChange={(e) => {
+              const updated = [...form.components];
+              updated[i].catNo = e.target.value;
+              setForm({ ...form, components: updated });
+            }}
+          />
+
+          <input
+            placeholder="Instrument Name"
+            className="border rounded px-3 py-2"
+            value={c.instrumentName || ""}
+            onChange={(e) => {
+              const updated = [...form.components];
+              updated[i].instrumentName = e.target.value;
+              setForm({ ...form, components: updated });
+            }}
+          />
+
+          <div className="flex gap-2">
+            <input
+              type="number"
+              placeholder="Units"
+              className="border rounded px-3 py-2 flex-1"
+              value={c.units || 1}
+              onChange={(e) => {
+                const updated = [...form.components];
+                updated[i].units = Number(e.target.value);
+                setForm({ ...form, components: updated });
+              }}
+            />
+
+            <button
+              type="button"
+              onClick={() => removeComponentRow(i)}
+              className="text-red-500"
+            >
+              <Trash2 size={18} />
+            </button>
+
+          </div>
+
+        </div>
+      </div>
+    ))}
+  </div>
+
+</div>
+
+
+
+
     {/* Variants Section (unchanged) */}
     <div className="border-t border-slate-200 pt-6">
                   <div className="flex justify-between items-center mb-4">
@@ -1170,79 +1279,7 @@ const updateCategory = async (id, name, parentId) => {
 
 
 {/* Components Section */}
-<div className="border-t border-slate-200 pt-6">
-  <div className="flex justify-between items-center mb-4">
-    <div>
-      <h4 className="text-lg font-bold text-slate-900">Product Components</h4>
-      <p className="text-sm text-slate-500">
-        Add instrument set contents (Cat No, Name, Units)
-      </p>
-    </div>
 
-    <button
-      type="button"
-      onClick={addComponentRow}
-      className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-sm font-semibold"
-    >
-      <Plus size={16} className="inline mr-1" />
-      Add Component
-    </button>
-  </div>
-
-  <div className="space-y-3">
-    {form.components?.map((c, i) => (
-      <div key={i} className="bg-slate-50 rounded-xl p-4 border">
-        <div className="grid grid-cols-3 gap-3">
-
-          <input
-            placeholder="Cat No"
-            className="border rounded px-3 py-2"
-            value={c.catNo}
-            onChange={(e) => {
-              const updated = [...form.components];
-              updated[i].catNo = e.target.value;
-              setForm({ ...form, components: updated });
-            }}
-          />
-
-          <input
-            placeholder="Instrument Name"
-            className="border rounded px-3 py-2"
-            value={c.instrumentName}
-            onChange={(e) => {
-              const updated = [...form.components];
-              updated[i].instrumentName = e.target.value;
-              setForm({ ...form, components: updated });
-            }}
-          />
-
-          <div className="flex gap-2">
-            <input
-              type="number"
-              placeholder="Units"
-              className="border rounded px-3 py-2 flex-1"
-              value={c.units}
-              onChange={(e) => {
-                const updated = [...form.components];
-                updated[i].units = Number(e.target.value);
-                setForm({ ...form, components: updated });
-              }}
-            />
-
-            <button
-              type="button"
-              onClick={() => removeComponentRow(i)}
-              className="text-red-500"
-            >
-              <Trash2 size={18} />
-            </button>
-          </div>
-
-        </div>
-      </div>
-    ))}
-  </div>
-</div>
 
 
 <div>
@@ -1432,6 +1469,7 @@ const updateCategory = async (id, name, parentId) => {
             </div>
           </div>
         </div>
+        
       )}
     </div>
   );
