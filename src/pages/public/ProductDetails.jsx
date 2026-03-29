@@ -380,29 +380,10 @@ const decreaseQuantity = () => {
 
 
 
-{styleOptions.length > 0 && (
-  <div className="mb-6">
-    <h3 className="text-sm font-bold uppercase mb-3">Select Style</h3>
-    <div className="flex gap-3 flex-wrap">
-      {styleOptions.map(option => (
-        <button
-          key={option}
-          onClick={() => setSelectedStyle(option)}
-          className={`px-4 py-2 border rounded-md ${
-            selectedStyle === option
-              ? "border-teal-600 bg-teal-50 text-teal-600"
-              : "border-gray-300"
-          }`}
-        >
-          {option}
-        </button>
-      ))}
-    </div>
-  </div>
-)}
 
 
-          
+
+
 
           {/* Select Size */}
          <div className="mb-6 pb-6 border-b border-gray-200">
@@ -492,34 +473,63 @@ const decreaseQuantity = () => {
 
           {/* Product Details */}
           <div className="mb-6">
-            <h3 className="text-sm font-bold text-gray-900 mb-3 uppercase">Product Details</h3>
-            <ul className="list-disc pl-5 text-sm text-gray-700 space-y-2 mb-4">
-  {(product.description || "")
-    .split("\n")
-    .filter(line => line.trim() !== "")
-    .map((line, index) => (
-      <li key={index}>{line}</li>
-    ))}
-</ul>
+  <h3 className="text-sm font-bold text-gray-900 mb-3 uppercase">
+    Product Details
+  </h3>
 
-            <div className="bg-gray-50 rounded-md p-4 space-y-2">
-              <div className="flex text-sm">
-                <span className="w-28 text-gray-600 font-medium">Category:</span>
-                <span className="text-gray-900">{product.category}</span>
-              </div>
-              <div className="flex text-sm">
-                <span className="w-28 text-gray-600 font-medium">Material:</span>
-                <span className="text-gray-900">Premium Quality</span>
-              </div>
-              <div className="flex text-sm">
-                <span className="w-28 text-gray-600 font-medium">Warranty:</span>
-                <span className="text-gray-900">1 Year Manufacturer</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div className="overflow-hidden border border-gray-200 rounded-md">
+    <table className="w-full text-sm">
+      <tbody>
+
+        {(product.description || "")
+          .split("\n")
+          .filter(line => line.trim() !== "")
+          .map((line, index) => {
+            const parts = line.split(":");
+
+            return (
+              <tr key={index} className="border-b">
+                <td className="bg-gray-50 px-4 py-2 font-medium w-40">
+                  {parts[0] || "Detail"}
+                </td>
+                <td className="px-4 py-2">
+                  {parts.slice(1).join(":") || ""}
+                </td>
+              </tr>
+            );
+          })}
+
+        <tr className="border-b">
+          <td className="bg-gray-50 px-4 py-2 font-medium">
+            Category
+          </td>
+          <td className="px-4 py-2">
+            {product.category}
+          </td>
+        </tr>
+
+        <tr className="border-b">
+          <td className="bg-gray-50 px-4 py-2 font-medium">
+            Material
+          </td>
+          <td className="px-4 py-2">
+            Premium Quality
+          </td>
+        </tr>
+
+        <tr>
+          <td className="bg-gray-50 px-4 py-2 font-medium">
+            Warranty
+          </td>
+          <td className="px-4 py-2">
+            1 Year Manufacturer
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+</div>
     
     
   );

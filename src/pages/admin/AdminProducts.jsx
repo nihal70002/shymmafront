@@ -245,15 +245,7 @@ export default function AdminProducts() {
     const size = v.size?.trim();
     const sku = v.productCode?.trim();
 
-    if (!size) {
-      toast.error("Variant size cannot be empty");
-      return;
-    }
-    if (!sku) {
-      toast.error("SKU is required for each variant");
-      return;
-    }
-
+    
     const comboKey = [
       v.class?.trim().toLowerCase() || "",
       v.style?.trim().toLowerCase() || "",
@@ -298,7 +290,7 @@ export default function AdminProducts() {
     style: v.style?.trim() || "",
     material: v.material?.trim() || "",
     color: v.color?.trim() || "",
-    size: v.size.trim(),
+    size: v.size?.trim() || "",
     productCode: v.productCode.trim(),
     price: Number(v.price) || 0,
     stock: Number(v.stock) || 0,
