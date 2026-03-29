@@ -35,7 +35,8 @@ const EMPTY_FORM = {
   brandId: "",
   description: "",
   images: [],
-  variants: [{ ...DEFAULT_VARIANT }]
+  variants: [{ ...DEFAULT_VARIANT }],
+  components: []
 };
 
 export default function AdminProducts() {
@@ -150,6 +151,22 @@ export default function AdminProducts() {
   });
 };
 
+const addComponentRow = () => {
+  setForm(prev => ({
+    ...prev,
+    components: [
+      ...prev.components,
+      { catNo: "", instrumentName: "", units: 1 }
+    ]
+  }));
+};
+
+const removeComponentRow = (index) => {
+  setForm(prev => ({
+    ...prev,
+    components: prev.components.filter((_, i) => i !== index)
+  }));
+};
 
 
   const bulkCreateProducts = async (rows) => {
@@ -159,15 +176,17 @@ export default function AdminProducts() {
   for (const r of rows) {
     if (!grouped[r.name]) {
       grouped[r.name] = {
-        name: r.name,
-        categoryId: Number(r.categoryId),
-        brandId: Number(r.brandId),
-        description: r.description,
-        imageUrls: r.imageUrls
-          ? r.imageUrls.split("|").map(i => i.trim())
-          : [],
-        variants: []
-      };
+  name: r.name,
+  categoryId: Number(r.categoryId),
+  brandId: Number(r.brandId),
+  description: r.description,
+  imageUrls: r.imageUrls
+    ? r.imageUrls.split("|").map(i => i.trim())
+    : [],
+  variants: [],
+  components: []
+};
+    
     }
 
     grouped[r.name].variants.push({
@@ -213,7 +232,8 @@ export default function AdminProducts() {
       images: product.imageUrls || [],
 
 
-      variants: product.variants.map(v => ({ ...v }))
+      variants: product.variants.map(v => ({ ...v })),
+components: product.components || []
     });
     setShowModal(true);
     setPrimaryImageIndex(0);
@@ -277,12 +297,13 @@ export default function AdminProducts() {
   /* ================= 3. PAYLOAD PREPARATION ================= */
   // We prepare the base product data (matches AdminUpdateProductDto)
   const productPayload = {
-    name: form.name.trim(),
-    categoryId: Number(form.categoryId),
-    brandId: Number(form.brandId),
-    description: form.description?.trim() || "",
-    imageUrls: orderedImages,
-  };
+  name: form.name.trim(),
+  categoryId: Number(form.categoryId),
+  brandId: Number(form.brandId),
+  description: form.description?.trim() || "",
+  imageUrls: orderedImages,
+  components: form.components || []
+};
 
   // Prepare variants separately for the loop
   const variantData = form.variants.map(v => ({
@@ -317,7 +338,11 @@ export default function AdminProducts() {
       }
     } else {
       // For NEW products, we send everything in one POST
-      const createPayload = { ...productPayload, variants: variantData };
+      const createPayload = {
+  ...productPayload,
+  variants: variantData,
+  components: form.components || []
+};
       await api.post("/admin/products", createPayload);
     }
 
@@ -987,6 +1012,8 @@ const updateCategory = async (id, name, parentId) => {
       </div>
     )}
 
+    
+
     {/* REMOVE IMAGE BUTTON */}
     <button
       type="button"
@@ -1138,6 +1165,83 @@ const updateCategory = async (id, name, parentId) => {
       setForm({ ...form, variants: vs });
     }}
   />
+</div>
+
+
+
+{/* Components Section */}
+<div className="border-t border-slate-200 pt-6">
+  <div className="flex justify-between items-center mb-4">
+    <div>
+      <h4 className="text-lg font-bold text-slate-900">Product Components</h4>
+      <p className="text-sm text-slate-500">
+        Add instrument set contents (Cat No, Name, Units)
+      </p>
+    </div>
+
+    <button
+      type="button"
+      onClick={addComponentRow}
+      className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-sm font-semibold"
+    >
+      <Plus size={16} className="inline mr-1" />
+      Add Component
+    </button>
+  </div>
+
+  <div className="space-y-3">
+    {form.components?.map((c, i) => (
+      <div key={i} className="bg-slate-50 rounded-xl p-4 border">
+        <div className="grid grid-cols-3 gap-3">
+
+          <input
+            placeholder="Cat No"
+            className="border rounded px-3 py-2"
+            value={c.catNo}
+            onChange={(e) => {
+              const updated = [...form.components];
+              updated[i].catNo = e.target.value;
+              setForm({ ...form, components: updated });
+            }}
+          />
+
+          <input
+            placeholder="Instrument Name"
+            className="border rounded px-3 py-2"
+            value={c.instrumentName}
+            onChange={(e) => {
+              const updated = [...form.components];
+              updated[i].instrumentName = e.target.value;
+              setForm({ ...form, components: updated });
+            }}
+          />
+
+          <div className="flex gap-2">
+            <input
+              type="number"
+              placeholder="Units"
+              className="border rounded px-3 py-2 flex-1"
+              value={c.units}
+              onChange={(e) => {
+                const updated = [...form.components];
+                updated[i].units = Number(e.target.value);
+                setForm({ ...form, components: updated });
+              }}
+            />
+
+            <button
+              type="button"
+              onClick={() => removeComponentRow(i)}
+              className="text-red-500"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
+
+        </div>
+      </div>
+    ))}
+  </div>
 </div>
 
 
