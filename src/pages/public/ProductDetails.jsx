@@ -204,21 +204,21 @@ const decreaseQuantity = () => {
     );
   }
 
-  if (!product)
- {
-    return (
-      <div className="flex h-screen flex-col items-center justify-center bg-white">
-        <div className="text-5xl mb-3">😕</div>
-        <p className="text-lg text-gray-700 font-medium">Product not found</p>
-        <button
-          onClick={() => navigate("/products")}
-          className="mt-6 px-6 py-2.5 bg-teal-600 text-white rounded font-bold text-sm hover:bg-teal-700"
-        >
-          Back to Products
-        </button>
-      </div>
-    );
-  }
+if (!product) {
+  return (
+    <div className="flex h-screen flex-col items-center justify-center bg-white">
+      <div className="text-5xl mb-3">😕</div>
+      <p className="text-lg text-gray-700 font-medium">Product not found</p>
+
+      <button
+        onClick={() => navigate("/products")}
+        className="mt-6 px-6 py-2.5 bg-teal-600 text-white rounded font-bold text-sm hover:bg-teal-700"
+      >
+        Back to Products
+      </button>
+    </div>
+  );
+}
 
 
 
@@ -472,65 +472,66 @@ const decreaseQuantity = () => {
    
 
           {/* Product Details */}
-          <div className="mb-6">
-  <h3 className="text-sm font-bold text-gray-900 mb-3 uppercase">
-    Product Details
-  </h3>
+       <div className="mb-6">
+        <h3 className="text-sm font-bold text-gray-900 mb-3 uppercase">
+          Product Details
+        </h3>
 
-  <div className="overflow-hidden border border-gray-200 rounded-md">
-    <table className="w-full text-sm">
-      <tbody>
+        <div className="overflow-hidden border border-gray-200 rounded-md">
+          <table className="w-full text-sm">
+            <tbody>
 
-        {(product.description || "")
-          .split("\n")
-          .filter(line => line.trim() !== "")
-          .map((line, index) => {
-            const parts = line.split(":");
+              {(product.description || "")
+                .split("\n")
+                .filter(line => line.trim() !== "")
+                .map((line, index) => {
+                  const parts = line.split(":");
 
-            return (
-              <tr key={index} className="border-b">
-                <td className="bg-gray-50 px-4 py-2 font-medium w-40">
-                  {parts[0] || "Detail"}
+                  return (
+                    <tr key={index} className="border-b">
+                      <td className="bg-gray-50 px-4 py-2 font-medium w-40">
+                        {parts[0] || "Detail"}
+                      </td>
+                      <td className="px-4 py-2">
+                        {parts.slice(1).join(":") || ""}
+                      </td>
+                    </tr>
+                  );
+                })}
+
+              <tr className="border-b">
+                <td className="bg-gray-50 px-4 py-2 font-medium">
+                  Category
                 </td>
                 <td className="px-4 py-2">
-                  {parts.slice(1).join(":") || ""}
+                  {product.category}
                 </td>
               </tr>
-            );
-          })}
 
-        <tr className="border-b">
-          <td className="bg-gray-50 px-4 py-2 font-medium">
-            Category
-          </td>
-          <td className="px-4 py-2">
-            {product.category}
-          </td>
-        </tr>
+              <tr className="border-b">
+                <td className="bg-gray-50 px-4 py-2 font-medium">
+                  Material
+                </td>
+                <td className="px-4 py-2">
+                  Premium Quality
+                </td>
+              </tr>
 
-        <tr className="border-b">
-          <td className="bg-gray-50 px-4 py-2 font-medium">
-            Material
-          </td>
-          <td className="px-4 py-2">
-            Premium Quality
-          </td>
-        </tr>
+              <tr>
+                <td className="bg-gray-50 px-4 py-2 font-medium">
+                  Warranty
+                </td>
+                <td className="px-4 py-2">
+                  1 Year Manufacturer
+                </td>
+              </tr>
 
-        <tr>
-          <td className="bg-gray-50 px-4 py-2 font-medium">
-            Warranty
-          </td>
-          <td className="px-4 py-2">
-            1 Year Manufacturer
-          </td>
-        </tr>
-
-      </tbody>
-    </table>
-  </div>
-</div>
-    
-    
+            </tbody>
+          </table>
+        </div>
+        </div>
+             </div>
+      </div>
+    </div>
   );
 }
