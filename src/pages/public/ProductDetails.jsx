@@ -2,10 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "../../api/products.api";
 import { addToCartApi } from "../../api/cart.api";
-import {
-  ChevronLeft, ShoppingCart, Star, ChevronRight, Plus, Minus
-} from "lucide-react";
-
+import { ChevronLeft, ShoppingCart, Star, ChevronRight, Plus, Minus, Shield, Award, ChevronDown } from "lucide-react";
 import api from "../../api/axios";
 import { useCart } from "../../context/CartContext";
 
@@ -22,10 +19,9 @@ export default function ProductDetail() {
   const [addingToCart, setAddingToCart] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [selectedClass, setSelectedClass] = useState(null);
+  const [descExpanded, setDescExpanded] = useState(false);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [id]);
+  useEffect(() => { window.scrollTo(0, 0); }, [id]);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -33,25 +29,19 @@ export default function ProductDetail() {
         const res = await getProductById(id);
         const images = res.data.imageUrls?.length
           ? res.data.imageUrls
-          : res.data.primaryImageUrl
-            ? [res.data.primaryImageUrl]
-            : [];
-
+          : res.data.primaryImageUrl ? [res.data.primaryImageUrl] : [];
         const mappedProduct = {
           id: res.data.productId,
           name: res.data.name,
           category: res.data.categoryName,
           description: res.data.description,
+          components: res.data.components || [],
           images,
           variants: (res.data.sizes || []).map(v => ({
-            id: v.variantId,
-            class: v.class,
-            size: v.size,
-            price: v.price,
-            stock: v.availableStock
+            id: v.variantId, class: v.class, size: v.size,
+            price: v.price, stock: v.availableStock
           }))
         };
-
         setProduct(mappedProduct);
         setSelectedImage(0);
         if (mappedProduct.variants.length > 0) {
@@ -70,15 +60,10 @@ export default function ProductDetail() {
   }, [id]);
 
   const classOptions = [...new Set(product?.variants?.map(v => v.class).filter(Boolean))];
-
-  const filteredVariants = product?.variants?.filter(v => 
-    !selectedClass || v.class === selectedClass
-  ) || [];
+  const filteredVariants = product?.variants?.filter(v => !selectedClass || v.class === selectedClass) || [];
 
   useEffect(() => {
-    if (filteredVariants.length > 0) {
-      setSelectedVariant(filteredVariants[0]);
-    }
+    if (filteredVariants.length > 0) setSelectedVariant(filteredVariants[0]);
   }, [selectedClass, product]);
 
   const handleAddToCart = async () => {
@@ -98,94 +83,143 @@ export default function ProductDetail() {
   };
 
   if (loading) return (
-    <div className="flex h-screen items-center justify-center bg-white">
-      <div className="h-12 w-12 animate-spin rounded-full border-3 border-teal-600 border-t-transparent mx-auto"></div>
+    <div style={styles.loadingScreen}>
+      <div style={styles.loadingRing} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 
-  if (!product) return <div className="p-20 text-center">Product not found</div>;
+  if (!product) return <div style={{ padding: "80px", textAlign: "center", fontFamily: "Georgia, serif" }}>Product not found.</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-10">
-      {/* TOAST NOTIFICATION */}
+    <div style={styles.page}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .thumb-btn:hover { border-color: #0d5e5e !important; }
+        .nav-btn:hover { background: #f0fafa !important; }
+        .class-btn:hover { border-color: #0d5e5e !important; background: #f0fafa !important; }
+        .qty-btn:hover { background: #f7f7f7; }
+        .add-btn:hover { background: #0d5e5e !important; letter-spacing: 3px !important; }
+        .back-link:hover { color: #0d5e5e !important; }
+        .table-row:hover td { background: #f9fefe !important; }
+        .accordion-toggle:hover { color: #0d5e5e !important; }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #f4f4f4; } ::-webkit-scrollbar-thumb { background: #c8d8d8; border-radius: 3px; }
+      `}</style>
+
+      {/* TOAST */}
       {showToast && (
-        <div className="fixed top-24 right-6 z-[9999] bg-teal-600 text-white px-6 py-3 rounded-md shadow-2xl font-bold animate-bounce">
-          ✓ {quantity} item(s) added to bag
+        <div style={styles.toast}>
+          <span style={{ marginRight: 8 }}>✓</span> {quantity} item{quantity > 1 ? "s" : ""} added to bag
         </div>
       )}
 
       {/* BREADCRUMB */}
-      <div className="bg-white border-b">
-        <div className="max-w-screen-2xl mx-auto px-4 py-3 text-xs flex items-center gap-2 text-gray-500">
-          <span className="cursor-pointer hover:text-teal-600" onClick={() => navigate("/")}>Home</span>
-          <ChevronRight size={12} />
-          <span>{product.category}</span>
-          <ChevronRight size={12} />
-          <span className="text-gray-900 font-medium">{product.name}</span>
+      <div style={styles.breadcrumbBar}>
+        <div style={styles.breadcrumbInner}>
+          <button className="back-link" onClick={() => navigate("/")} style={styles.backLink}>
+            <ChevronLeft size={14} style={{ marginRight: 2 }} /> Home
+          </button>
+          <span style={styles.breadcrumbSep}>/</span>
+          <span style={styles.breadcrumbMid}>{product.category}</span>
+          <span style={styles.breadcrumbSep}>/</span>
+          <span style={styles.breadcrumbCurrent}>{product.name}</span>
         </div>
       </div>
 
-      <div className="max-w-screen-2xl mx-auto lg:mt-4">
-        {/* TOP SECTION: IMAGE & BUYING CONTROLS */}
-        <div className="flex flex-col lg:flex-row bg-white shadow-sm border-b lg:border-b-0">
-          
-          {/* LEFT: IMAGES */}
-          <div className="w-full lg:w-[60%] p-4 lg:p-8 border-r border-gray-100">
-            <div className="relative h-[400px] lg:h-[600px] w-full bg-white rounded-xl border border-gray-100 overflow-hidden flex items-center justify-center">
-              <img 
-                src={product.images[selectedImage]} 
-                alt={product.name} 
-                className="max-h-full max-w-full object-contain transition-transform duration-500 hover:scale-105" 
+      {/* MAIN CONTENT */}
+      <div style={styles.container}>
+        <div style={styles.mainGrid}>
+
+          {/* LEFT: IMAGE PANEL */}
+          <div style={styles.imagePanel}>
+            <div style={styles.mainImageWrap}>
+              <img
+                src={product.images[selectedImage]}
+                alt={product.name}
+                style={styles.mainImage}
               />
               {product.images.length > 1 && (
                 <>
-                  <button onClick={() => setSelectedImage(prev => prev === 0 ? product.images.length-1 : prev-1)} className="absolute left-4 p-2 bg-white/80 rounded-full shadow-md hover:bg-white"><ChevronLeft /></button>
-                  <button onClick={() => setSelectedImage(prev => prev === product.images.length-1 ? 0 : prev+1)} className="absolute right-4 p-2 bg-white/80 rounded-full shadow-md hover:bg-white"><ChevronRight /></button>
+                  <button className="nav-btn" style={{ ...styles.navBtn, left: 16 }}
+                    onClick={() => setSelectedImage(p => p === 0 ? product.images.length - 1 : p - 1)}>
+                    <ChevronLeft size={18} color="#0d5e5e" />
+                  </button>
+                  <button className="nav-btn" style={{ ...styles.navBtn, right: 16 }}
+                    onClick={() => setSelectedImage(p => p === product.images.length - 1 ? 0 : p + 1)}>
+                    <ChevronRight size={18} color="#0d5e5e" />
+                  </button>
                 </>
               )}
+              {/* image index dots */}
+              {product.images.length > 1 && (
+                <div style={styles.dots}>
+                  {product.images.map((_, i) => (
+                    <button key={i} onClick={() => setSelectedImage(i)}
+                      style={{ ...styles.dot, background: i === selectedImage ? "#0d5e5e" : "#ccdada" }} />
+                  ))}
+                </div>
+              )}
             </div>
+
             {/* THUMBNAILS */}
-            <div className="flex gap-3 mt-4 justify-center">
-              {product.images.map((img, i) => (
-                <button 
-                  key={i} 
-                  onClick={() => setSelectedImage(i)}
-                  className={`w-16 h-16 border-2 rounded-lg overflow-hidden ${selectedImage === i ? "border-teal-600 shadow-md" : "border-gray-200"}`}
-                >
-                  <img src={img} className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
+            {product.images.length > 1 && (
+              <div style={styles.thumbRow}>
+                {product.images.map((img, i) => (
+                  <button key={i} className="thumb-btn" onClick={() => setSelectedImage(i)}
+                    style={{ ...styles.thumbBtn, borderColor: i === selectedImage ? "#0d5e5e" : "#e2e2e2", boxShadow: i === selectedImage ? "0 0 0 2px #d0eaea" : "none" }}>
+                    <img src={img} alt="" style={styles.thumbImg} />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* RIGHT: PRICING & SELECTION */}
-          <div className="w-full lg:w-[40%] p-6 lg:p-10 flex flex-col">
-            <h2 className="text-teal-600 font-bold uppercase tracking-widest text-sm mb-1">{product.category}</h2>
-            <h1 className="text-2xl lg:text-3xl font-extrabold text-gray-900 mb-4">{product.name}</h1>
-            
-            <div className="flex items-center gap-2 mb-6">
-              <div className="bg-teal-600 text-white px-2 py-1 rounded flex items-center gap-1 text-sm font-bold">
-                4.8 <Star size={12} className="fill-white" />
+          {/* RIGHT: DETAILS PANEL */}
+          <div style={styles.detailPanel}>
+            {/* Category tag */}
+            <div style={styles.categoryTag}>{product.category}</div>
+
+            {/* Product name */}
+            <h1 style={styles.productName}>{product.name}</h1>
+
+            {/* Badges */}
+            <div style={styles.badgeRow}>
+              <div style={styles.ratingBadge}>
+                <Star size={12} fill="#fff" color="#fff" style={{ marginRight: 4 }} />
+                4.8
               </div>
-              <span className="text-gray-400 text-sm border-l pl-2">Medical Grade Certified</span>
+              <div style={styles.certBadge}>
+                <Shield size={12} color="#0d5e5e" style={{ marginRight: 5 }} />
+                Medical Grade Certified
+              </div>
+              <div style={styles.certBadge}>
+                <Award size={12} color="#0d5e5e" style={{ marginRight: 5 }} />
+                ISO Approved
+              </div>
             </div>
 
-            <div className="mb-8">
-              <div className="text-3xl font-black text-gray-900">₹{selectedVariant?.price ?? "--"}</div>
-              <div className="text-teal-700 text-sm font-semibold mt-1">Inclusive of all taxes</div>
+            {/* DIVIDER */}
+            <div style={styles.divider} />
+
+            {/* PRICE */}
+            <div style={styles.priceBlock}>
+              <div style={styles.price}>₹{selectedVariant?.price ?? "--"}</div>
+              <div style={styles.taxNote}>Inclusive of all taxes &amp; duties</div>
             </div>
 
             {/* CLASS SELECTOR */}
             {classOptions.length > 0 && (
-              <div className="mb-6">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Select Class</label>
-                <div className="flex gap-2 flex-wrap">
+              <div style={styles.selectorBlock}>
+                <div style={styles.selectorLabel}>Select Class</div>
+                <div style={styles.selectorRow}>
                   {classOptions.map(opt => (
-                    <button 
-                      key={opt}
+                    <button key={opt} className="class-btn"
                       onClick={() => setSelectedClass(opt)}
-                      className={`px-4 py-2 rounded-md border-2 font-bold text-sm transition-all ${selectedClass === opt ? "border-teal-600 bg-teal-50 text-teal-700" : "border-gray-200 text-gray-600 hover:border-teal-200"}`}
-                    >
+                      style={{ ...styles.classBtn, borderColor: selectedClass === opt ? "#0d5e5e" : "#ddd", background: selectedClass === opt ? "#eef8f8" : "#fff", color: selectedClass === opt ? "#0d5e5e" : "#555", fontWeight: selectedClass === opt ? 600 : 400 }}>
                       {opt}
                     </button>
                   ))}
@@ -193,93 +227,302 @@ export default function ProductDetail() {
               </div>
             )}
 
-            {/* QUANTITY & ADD TO BAG */}
-            <div className="mt-auto">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Quantity</label>
-              <div className="flex gap-4 items-center">
-                <div className="flex items-center border-2 border-gray-200 rounded-lg overflow-hidden h-12">
-                  <button onClick={() => setQuantity(q => Math.max(1, q-1))} className="px-4 hover:bg-gray-50"><Minus size={16}/></button>
-                  <span className="w-12 text-center font-bold">{quantity}</span>
-                  <button onClick={() => setQuantity(q => q+1)} className="px-4 hover:bg-gray-50"><Plus size={16}/></button>
-                </div>
-                <button 
-                  disabled={addingToCart}
-                  onClick={handleAddToCart}
-                  className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold h-12 rounded-lg flex items-center justify-center gap-2 shadow-lg shadow-teal-100 transition-all disabled:opacity-50"
-                >
-                  <ShoppingCart size={20} />
-                  {addingToCart ? "ADDING..." : "ADD TO BAG"}
+            {/* DESCRIPTION ACCORDION */}
+            {product.description && (
+              <div style={styles.accordionBlock}>
+                <button className="accordion-toggle" style={styles.accordionToggle} onClick={() => setDescExpanded(e => !e)}>
+                  <span>Product Description</span>
+                  <ChevronDown size={16} style={{ transform: descExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s" }} />
+                </button>
+                {descExpanded && (
+                  <p style={styles.descText}>{product.description}</p>
+                )}
+              </div>
+            )}
+
+            <div style={styles.divider} />
+
+            {/* QUANTITY + ADD TO CART */}
+            <div style={styles.purchaseRow}>
+              <div style={styles.qtyLabel}>Qty</div>
+              <div style={styles.qtyControl}>
+                <button className="qty-btn" style={styles.qtyBtn} onClick={() => setQuantity(q => Math.max(1, q - 1))}>
+                  <Minus size={14} color="#333" />
+                </button>
+                <span style={styles.qtyValue}>{quantity}</span>
+                <button className="qty-btn" style={styles.qtyBtn} onClick={() => setQuantity(q => q + 1)}>
+                  <Plus size={14} color="#333" />
                 </button>
               </div>
+
+              <button className="add-btn" disabled={addingToCart} onClick={handleAddToCart} style={styles.addBtn}>
+                <ShoppingCart size={16} style={{ marginRight: 10 }} />
+                {addingToCart ? "ADDING…" : "ADD TO BAG"}
+              </button>
             </div>
+
+            {/* Stock hint */}
+            {selectedVariant?.stock !== undefined && (
+              <div style={styles.stockNote}>
+                {selectedVariant.stock > 0
+                  ? `${selectedVariant.stock} units in stock`
+                  : <span style={{ color: "#c0392b" }}>Out of stock</span>}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* BOTTOM SECTION: FULL WIDTH TABLE (MIDDLE) */}
-        <div className="bg-white mt-6 shadow-sm border-t lg:border border-gray-100 p-6 lg:p-10">
-          <h3 className="text-lg font-bold text-gray-900 mb-6 uppercase tracking-wider border-b-4 border-teal-600 inline-block pb-1">
-            Product Description & Components
-          </h3>
+        {/* COMPONENT TABLE */}
+        <div style={styles.tableSection}>
+          <div style={styles.tableSectionHeader}>
+            <h3 style={styles.tableTitle}>Components &amp; Catalogue</h3>
+            <div style={styles.tableSubtitle}>Detailed specification breakdown</div>
+          </div>
 
-          <div className="overflow-x-auto rounded-xl border border-gray-200">
-            <table className="w-full text-left text-sm border-collapse">
+          <div style={styles.tableWrap}>
+            <table style={styles.table}>
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-6 py-4 font-bold text-gray-700 w-40">Cat No.</th>
-                  <th className="px-6 py-4 font-bold text-gray-700">Product Name</th>
-                  <th className="px-6 py-4 font-bold text-gray-700 w-24 text-center">Unit</th>
+                <tr>
+                  <th style={{ ...styles.th, width: "20%" }}>Cat No.</th>
+                  <th style={{ ...styles.th, width: "65%" }}>Description</th>
+                  <th style={{ ...styles.th, width: "15%", textAlign: "center" }}>Units</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {(product.description || "")
-                  .split("\n")
-                  .filter((line) => line.trim() !== "")
-                  .map((line, index) => {
-                    const parts = line.split(":");
-                    // Smart detection: if no colons, treat whole line as product name
-                    const catNo = parts.length > 1 ? parts[0]?.trim() : "---";
-                    const name = parts.length > 1 ? parts[1]?.trim() : parts[0]?.trim();
-                    const unit = parts[2]?.trim() || "1";
-
-                    return (
-                      <tr key={index} className="hover:bg-teal-50/30 transition-colors group">
-                        <td className="px-6 py-4 font-mono text-teal-700 font-medium group-hover:text-teal-900">
-                          {catNo}
-                        </td>
-                        <td className="px-6 py-4 text-gray-700 font-medium leading-relaxed">
-                          {name}
-                        </td>
-                        <td className="px-6 py-4 text-center text-gray-500 font-bold">
-                          {unit}
-                        </td>
-                      </tr>
-                    );
-                  })}
-
-                {/* SPECIFICATIONS SUB-TABLE */}
-                <tr className="bg-gray-50/80">
-                  <td className="px-6 py-4 font-bold text-gray-900 border-t-2 border-gray-200">Category</td>
-                  <td colSpan="2" className="px-6 py-4 text-gray-700 border-t-2 border-gray-200">{product.category}</td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 font-bold text-gray-900">Material</td>
-                  <td colSpan="2" className="px-6 py-4 text-gray-700">Premium Quality Stainless Steel / Medical Grade</td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 font-bold text-gray-900">Warranty</td>
-                  <td colSpan="2" className="px-6 py-4 text-gray-700">1 Year Manufacturer Warranty</td>
-                </tr>
+              <tbody>
+                {product.components?.length > 0 ? (
+                  product.components.map((item, i) => (
+                    <tr key={i} className="table-row">
+                      <td style={styles.tdMono}>{item.catNo}</td>
+                      <td style={styles.td}>{item.instrumentName}</td>
+                      <td style={{ ...styles.td, textAlign: "center" }}>{item.units || 1}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="3" style={styles.emptyCell}>No catalogue data available.</td>
+                  </tr>
+                )}
               </tbody>
             </table>
-          </div>
-          
-          <div className="mt-8 flex items-center gap-6 text-xs text-gray-400 font-medium">
-            <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-teal-500"></div> ISO 13485 Certified</div>
-            <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-teal-500"></div> CE Marked</div>
-            <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-teal-500"></div> Autoclavable</div>
           </div>
         </div>
       </div>
     </div>
   );
 }
+
+const styles = {
+  page: {
+    minHeight: "100vh",
+    background: "#f8f8f6",
+    fontFamily: "'DM Sans', sans-serif",
+    color: "#1a1a1a",
+    paddingBottom: 80,
+  },
+  loadingScreen: {
+    display: "flex", alignItems: "center", justifyContent: "center",
+    height: "100vh", background: "#f8f8f6",
+  },
+  loadingRing: {
+    width: 44, height: 44, borderRadius: "50%",
+    border: "3px solid #d0eaea", borderTopColor: "#0d5e5e",
+    animation: "spin 0.8s linear infinite",
+  },
+  toast: {
+    position: "fixed", top: 88, right: 24, zIndex: 9999,
+    background: "#0d5e5e", color: "#fff",
+    padding: "12px 24px", borderRadius: 6,
+    fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 14,
+    display: "flex", alignItems: "center",
+    boxShadow: "0 8px 32px rgba(13,94,94,0.25)",
+    animation: "slideDown 0.3s ease",
+  },
+  breadcrumbBar: {
+    background: "#fff", borderBottom: "1px solid #ebebeb",
+    padding: "0 24px",
+  },
+  breadcrumbInner: {
+    maxWidth: 1400, margin: "0 auto",
+    display: "flex", alignItems: "center", gap: 8,
+    padding: "12px 0", fontSize: 12,
+    fontFamily: "'DM Sans', sans-serif", color: "#999",
+  },
+  backLink: {
+    display: "flex", alignItems: "center", background: "none",
+    border: "none", cursor: "pointer", color: "#999", fontSize: 12,
+    fontFamily: "'DM Sans', sans-serif", transition: "color 0.2s",
+    padding: 0,
+  },
+  breadcrumbSep: { color: "#ccc" },
+  breadcrumbMid: { color: "#888" },
+  breadcrumbCurrent: { color: "#222", fontWeight: 500 },
+
+  container: { maxWidth: 1400, margin: "0 auto", padding: "32px 24px" },
+
+  mainGrid: {
+    display: "grid", gridTemplateColumns: "1fr 1fr",
+    gap: 0, background: "#fff",
+    borderRadius: 16, overflow: "hidden",
+    boxShadow: "0 2px 40px rgba(0,0,0,0.07)",
+    marginBottom: 32,
+  },
+
+  /* IMAGE PANEL */
+  imagePanel: {
+    padding: "40px 32px", borderRight: "1px solid #f0f0f0",
+    background: "#fdfdfb",
+  },
+  mainImageWrap: {
+    position: "relative", borderRadius: 12,
+    overflow: "hidden", background: "#fff",
+    border: "1px solid #ebebeb", height: 520,
+    display: "flex", alignItems: "center", justifyContent: "center",
+  },
+  mainImage: { maxHeight: "100%", maxWidth: "100%", objectFit: "contain" },
+  navBtn: {
+    position: "absolute", top: "50%", transform: "translateY(-50%)",
+    background: "#fff", border: "1px solid #e8e8e8",
+    borderRadius: "50%", width: 40, height: 40,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+    transition: "background 0.2s",
+  },
+  dots: {
+    position: "absolute", bottom: 12, left: "50%", transform: "translateX(-50%)",
+    display: "flex", gap: 6,
+  },
+  dot: { width: 6, height: 6, borderRadius: "50%", border: "none", cursor: "pointer", padding: 0, transition: "background 0.2s" },
+  thumbRow: { display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" },
+  thumbBtn: {
+    width: 68, height: 68, border: "2px solid", borderRadius: 8,
+    overflow: "hidden", cursor: "pointer", background: "#fff",
+    transition: "border-color 0.2s, box-shadow 0.2s", padding: 0,
+  },
+  thumbImg: { width: "100%", height: "100%", objectFit: "cover" },
+
+  /* DETAIL PANEL */
+  detailPanel: { padding: "40px 48px", display: "flex", flexDirection: "column", gap: 0 },
+
+  categoryTag: {
+    display: "inline-block", fontSize: 10, fontWeight: 600,
+    letterSpacing: 2, textTransform: "uppercase",
+    color: "#0d5e5e", marginBottom: 12,
+  },
+  productName: {
+    fontFamily: "'Cormorant Garamond', serif",
+    fontSize: 36, fontWeight: 700, lineHeight: 1.15,
+    color: "#111", marginBottom: 20, letterSpacing: "-0.3px",
+  },
+  badgeRow: { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 24 },
+  ratingBadge: {
+    display: "flex", alignItems: "center",
+    background: "#0d5e5e", color: "#fff",
+    fontSize: 12, fontWeight: 700, padding: "4px 10px",
+    borderRadius: 4,
+  },
+  certBadge: {
+    display: "flex", alignItems: "center",
+    background: "#eef8f8", color: "#0d5e5e",
+    fontSize: 11, fontWeight: 500, padding: "4px 10px",
+    borderRadius: 4, border: "1px solid #c8e8e8",
+  },
+  divider: { height: 1, background: "#f0f0f0", margin: "20px 0" },
+
+  priceBlock: { marginBottom: 24 },
+  price: {
+    fontFamily: "'Cormorant Garamond', serif",
+    fontSize: 40, fontWeight: 700, color: "#111", lineHeight: 1,
+  },
+  taxNote: { fontSize: 12, color: "#0d5e5e", fontWeight: 500, marginTop: 6 },
+
+  selectorBlock: { marginBottom: 20 },
+  selectorLabel: { fontSize: 10, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase", color: "#888", marginBottom: 10 },
+  selectorRow: { display: "flex", gap: 8, flexWrap: "wrap" },
+  classBtn: {
+    padding: "8px 20px", border: "1.5px solid", borderRadius: 6,
+    cursor: "pointer", fontSize: 13, fontFamily: "'DM Sans', sans-serif",
+    transition: "all 0.2s", letterSpacing: 0.3,
+  },
+
+  accordionBlock: { marginBottom: 4 },
+  accordionToggle: {
+    width: "100%", display: "flex", justifyContent: "space-between",
+    alignItems: "center", background: "none", border: "none",
+    borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0",
+    padding: "14px 0", cursor: "pointer",
+    fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 500,
+    color: "#555", transition: "color 0.2s", letterSpacing: 0.3,
+  },
+  descText: {
+    fontSize: 13, lineHeight: 1.8, color: "#666",
+    paddingTop: 12, paddingBottom: 4, animation: "fadeUp 0.25s ease",
+  },
+
+  purchaseRow: { display: "flex", alignItems: "center", gap: 14, marginBottom: 12, flexWrap: "wrap" },
+  qtyLabel: { fontSize: 10, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase", color: "#aaa", minWidth: 24 },
+  qtyControl: {
+    display: "flex", alignItems: "center",
+    border: "1.5px solid #e0e0e0", borderRadius: 8, overflow: "hidden",
+  },
+  qtyBtn: {
+    width: 40, height: 46, display: "flex", alignItems: "center",
+    justifyContent: "center", background: "none", border: "none",
+    cursor: "pointer", transition: "background 0.15s",
+  },
+  qtyValue: {
+    width: 44, textAlign: "center", fontWeight: 700, fontSize: 16,
+    fontFamily: "'DM Sans', sans-serif", borderLeft: "1px solid #e8e8e8", borderRight: "1px solid #e8e8e8",
+    lineHeight: "46px",
+  },
+  addBtn: {
+    flex: 1, height: 46, background: "#0d5e5e", color: "#fff",
+    border: "none", borderRadius: 8, cursor: "pointer",
+    fontFamily: "'DM Sans', sans-serif", fontWeight: 600,
+    fontSize: 12, letterSpacing: 2, textTransform: "uppercase",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    transition: "background 0.2s, letter-spacing 0.2s",
+    boxShadow: "0 4px 16px rgba(13,94,94,0.2)",
+    minWidth: 180,
+  },
+  stockNote: { fontSize: 11, color: "#888", marginTop: 4 },
+
+  /* TABLE */
+  tableSection: {
+    background: "#fff", borderRadius: 16,
+    boxShadow: "0 2px 40px rgba(0,0,0,0.07)",
+    overflow: "hidden",
+  },
+  tableSectionHeader: {
+    padding: "28px 36px 20px",
+    borderBottom: "1px solid #f0f0f0",
+  },
+  tableTitle: {
+    fontFamily: "'Cormorant Garamond', serif",
+    fontSize: 22, fontWeight: 700, color: "#111", letterSpacing: "-0.2px",
+  },
+  tableSubtitle: { fontSize: 12, color: "#aaa", marginTop: 4, letterSpacing: 0.3 },
+  tableWrap: { overflowX: "auto" },
+  table: { width: "100%", borderCollapse: "collapse", fontSize: 13 },
+  th: {
+    padding: "12px 36px", fontFamily: "'DM Sans', sans-serif",
+    fontSize: 10, fontWeight: 600, letterSpacing: 1.5,
+    textTransform: "uppercase", color: "#aaa",
+    background: "#fafafa", borderBottom: "1px solid #ebebeb",
+    textAlign: "left",
+  },
+  tdMono: {
+    padding: "14px 36px", fontFamily: "monospace",
+    fontSize: 12, color: "#0d5e5e", borderBottom: "1px solid #f5f5f5",
+    transition: "background 0.15s",
+  },
+  td: {
+    padding: "14px 36px", color: "#444",
+    borderBottom: "1px solid #f5f5f5",
+    fontFamily: "'DM Sans', sans-serif",
+    transition: "background 0.15s",
+  },
+  emptyCell: {
+    padding: "40px", textAlign: "center", color: "#bbb",
+    fontStyle: "italic", fontSize: 13,
+  },
+};
