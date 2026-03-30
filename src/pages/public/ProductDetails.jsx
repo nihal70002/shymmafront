@@ -37,10 +37,13 @@ export default function ProductDetail() {
           description: res.data.description,
           components: res.data.components || [],
           images,
-          variants: (res.data.variants || []).map(v => ({
-            id: v.variantId, class: v.class, size: v.size,
-            price: v.price, stock: v.availableStock
-          }))
+         variants: (res.data.sizes || []).map(v => ({
+  id: v.variantId,
+  class: v.class,
+  size: v.size,
+  price: v.price,
+  stock: v.availableStock
+}))
         };
         setProduct(mappedProduct);
         setSelectedImage(0);
@@ -159,7 +162,7 @@ export default function ProductDetail() {
             <ChevronLeft size={14} style={{ marginRight: 2 }} /> Home
           </button>
           <span style={styles.breadcrumbSep}>/</span>
-          <span style={styles.breadcrumbMid}>{product.category}</span>
+          
           <span style={styles.breadcrumbSep}>/</span>
           <span className="breadcrumb-current" style={styles.breadcrumbCurrent}>{product.name}</span>
         </div>
