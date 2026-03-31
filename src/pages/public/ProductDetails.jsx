@@ -7,10 +7,11 @@ import {
   ChevronLeft, ShoppingCart, Star, Heart, Search,
   Package, User, Share2, ChevronRight, Truck, Shield, RefreshCw, Plus, Minus
 } from "lucide-react";
+import { loginApi } from "../../api/authApi";
 
 import api from "../../api/axios";          // ✅ ADD THIS
 import { useCart } from "../../context/CartContext"; // ✅ already there
-
+import { Eye, EyeOff } from "lucide-react";
 
 
 export default function ProductDetail() {
@@ -27,6 +28,9 @@ export default function ProductDetail() {
   const location = useLocation();
 
 
+
+
+const [loginLoading, setLoginLoading] = useState(false);
 const [showMagnifier, setShowMagnifier] = useState(false);
 const [magnifierPosition, setMagnifierPosition] = useState({ x: 0, y: 0 });
   const [product, setProduct] = useState(null);
@@ -40,9 +44,43 @@ const [selectedClass, setSelectedClass] = useState(null);
 const [selectedStyle, setSelectedStyle] = useState(null);
 const [selectedMaterial, setSelectedMaterial] = useState(null);
 const [selectedColor, setSelectedColor] = useState(null);
-
+const [showLoginModal, setShowLoginModal] = useState(false);
 
 const hasImages = product?.images?.length > 0;
+const [loginId, setLoginId] = useState("");
+const [password, setPassword] = useState("");
+const [modalError, setModalError] = useState("");
+
+const [showPassword, setShowPassword] = useState(false);
+
+
+const handleModalLogin = async () => {
+  try {
+    const res = await loginApi(loginId.trim(), password.trim());
+
+    const { token } = res.data;
+
+    localStorage.setItem("token", token);
+
+    setShowLoginModal(false);
+
+    // ✅ retry add-to-cart automatically
+    if (selectedVariant) {
+      await addToCartApi(selectedVariant.id, quantity);
+
+      const cartRes = await api.get("/cart");
+      setCartFromApi(cartRes.data.length || 0);
+
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2500);
+    }
+
+  } catch (err) {
+    setModalError("Invalid login credentials");
+  }
+};
+
+
 
 const nextImage = () => {
   if (!hasImages) return;
@@ -162,9 +200,9 @@ const handleAddToCart = async () => {
 
   // 🚨 Not logged in → redirect
   if (!token) {
-    navigate("/login");
-    return;
-  }
+  setShowLoginModal(true);
+  return;
+}
 
   try {
     setAddingToCart(true);
@@ -243,7 +281,7 @@ const decreaseQuantity = () => {
   Home
 </span>
           <ChevronRight size={12} className="text-gray-400" />
-          <span className="hover:text-gray-900 cursor-pointer">{product.category}</span>
+          
           <ChevronRight size={12} className="text-gray-400" />
           <span className="text-gray-900 truncate max-w-xs">{product.name}</span>
         </div>
@@ -509,6 +547,119 @@ flex items-center justify-center transition ${
   
 </div>
 
+{showLoginModal && (
+  <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+
+    <div className="relative w-[380px] rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden">
+
+      {/* HEADER */}
+      <div className="px-6 pt-6 pb-2 text-center">
+        <h2 className="text-xl font-bold text-gray-900">
+          Login required
+        </h2>
+
+        <p className="text-sm text-gray-500 mt-1">
+          Please login to continue adding this product to your bag
+        </p>
+      </div>
+
+
+      {/* FORM */}
+      <div className="px-6 py-4">
+
+        {/* ERROR MESSAGE */}
+        {modalError && (
+          <div className="mb-3 text-sm text-red-600 font-medium text-center">
+            {modalError}
+          </div>
+        )}
+
+        {/* LOGIN ID */}
+        <input
+          type="text"
+          placeholder="Email or phone"
+          value={loginId}
+          onChange={(e) => {
+            setLoginId(e.target.value);
+            setModalError("");
+          }}
+          className="w-full h-11 rounded-lg border border-gray-300 px-3 text-sm 
+          focus:outline-none focus:ring-2 focus:ring-teal-500 mb-3 transition"
+        />
+
+
+        {/* PASSWORD WITH EYE ICON */}
+        <div className="relative mb-2">
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setModalError("");
+            }}
+            className="w-full h-11 rounded-lg border border-gray-300 px-3 pr-10 text-sm 
+            focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+          />
+
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-teal-600 transition"
+          >
+            {showPassword ? (
+              <EyeOff size={18} />
+            ) : (
+              <Eye size={18} />
+            )}
+          </button>
+        </div>
+
+
+        {/* FORGOT PASSWORD */}
+        <div className="text-right mb-4">
+          <button
+            onClick={() => navigate("/forgot-password")}
+            className="text-xs text-teal-600 hover:underline"
+          >
+            Forgot password?
+          </button>
+        </div>
+
+
+        {/* ACTION BUTTONS */}
+        <div className="flex gap-3">
+
+          <button
+            onClick={() => setShowLoginModal(false)}
+            className="flex-1 h-11 rounded-lg border border-gray-300 
+            text-gray-700 font-medium hover:bg-gray-50 transition"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={handleModalLogin}
+            disabled={loginLoading}
+            className="flex-1 h-11 rounded-lg bg-teal-600 text-white 
+            font-semibold hover:bg-teal-700 transition shadow-md disabled:opacity-60"
+          >
+            {loginLoading ? "Signing in..." : "Login"}
+          </button>
+
+        </div>
+
+      </div>
+
+
+      {/* FOOTER */}
+      <div className="bg-gray-50 text-center text-xs text-gray-400 py-3 border-t">
+        Secure login 🔒
+      </div>
+
+    </div>
+  </div>
+)}
         
 
    

@@ -18,6 +18,8 @@ import { getProducts } from "../../api/products.api";
 import { motion } from "framer-motion";
 
 
+import { LogOut } from "lucide-react";
+
 
 
 
@@ -28,8 +30,12 @@ import { motion } from "framer-motion";
 export default function Landing() {
   const navigate = useNavigate();
 
-  const [featuredProducts, setFeaturedProducts] = useState([]);
+ const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+const [suggestions, setSuggestions] = useState([]);
+const [showDropdown, setShowDropdown] = useState(false);
+const [loadingSearch, setLoadingSearch] = useState(false);
 
 
 useEffect(() => {
@@ -103,39 +109,159 @@ useEffect(() => {
     <div className="w-full min-h-screen bg-white text-gray-800 overflow-x-hidden">
 
       {/* ================= NAVBAR ================= */}
-      <nav className="sticky top-0 z-50 bg-white shadow-sm ">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-4">
+      <nav className="sticky top-0 z-50 bg-white shadow-sm">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
 
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <img src="/logo/logo.png" className="h-20 w-24" alt="logo" />
-           
-          </Link>
+    {/* LOGO */}
+    <Link to="/" className="flex items-center gap-2">
+      <img src="/logo/logo.png" className="h-9" alt="logo" />
+    </Link>
 
-          {/* Search Bar */}
-          <div className="flex-1 max-w-xl hidden md:flex">
-            <div className="w-full relative">
-              <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-              <input
-                type="text"
-                placeholder="Search products..."
-                className="w-full pl-10 pr-4 py-2 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    navigate(`/products?search=${e.target.value}`);
-                  }
+    {/* SEARCH BAR */}
+    <div className="flex-1 max-w-xl w-full flex mx-2">
+      <div className="w-full relative">
+
+        <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={searchQuery}
+          onFocus={() => setShowDropdown(true)}
+          onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              navigate(`/products?search=${searchQuery}`);
+              setShowDropdown(false);
+            }
+          }}
+          className="w-full pl-10 pr-4 py-2 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+        />
+
+        {/* DROPDOWN */}
+        {showDropdown && searchQuery.trim().length > 0 && (
+          <div className="absolute top-full mt-3 w-full bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 p-4">
+
+            {loadingSearch && (
+              <div className="text-sm text-gray-500 px-2 py-2">
+                Searching...
+              </div>
+            )}
+
+            {!loadingSearch && suggestions.length === 0 && (
+              <div className="text-sm text-gray-500 px-2 py-2">
+                No results found
+              </div>
+            )}
+
+            {!loadingSearch && suggestions.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+
+                {suggestions.slice(0, 6).map((item) => (
+                  <div
+                    key={item.productId}
+                    onClick={() => {
+                      navigate(`/products/${item.productId}`);
+                      setSearchQuery("");
+                      setShowDropdown(false);
+                    }}
+                    className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition"
+                  >
+                    <img
+                      src={item.primaryImageUrl || "/placeholder.jpg"}
+                      alt={item.name}
+                      className="w-10 h-10 md:w-12 md:h-12 rounded-md object-cover border border-gray-100"
+                    />
+
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-medium text-gray-800 truncate max-w-[200px]">
+                        {item.name}
+                      </span>
+
+                      <span className="text-xs text-gray-500">
+                        {item.brandName}
+                      </span>
+
+                      <span className="text-sm font-semibold text-cyan-600">
+                        SAR{item.startingPrice}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+
+              </div>
+            )}
+
+            {!loadingSearch && suggestions.length > 6 && (
+              <div
+                onClick={() => {
+                  navigate(`/products?search=${searchQuery}`);
+                  setShowDropdown(false);
                 }}
-              />
-            </div>
-          </div>
+                className="text-center mt-4 pt-3 border-t text-sm font-semibold text-cyan-600 hover:text-cyan-700 cursor-pointer"
+              >
+                View all results →
+              </div>
+            )}
 
-          {/* Icons */}
-          <div className="flex items-center gap-5">
-            <Link to="/login"><User size={22} /></Link>
-            <Link to="/cart"><ShoppingCart size={22} /></Link>
           </div>
-        </div>
-      </nav>
+        )}
+
+      </div>
+    </div>
+
+    {/* ACTION ICONS */}
+    <div className="flex items-center gap-6 text-gray-600">
+
+      {!localStorage.getItem("token") ? (
+        <button
+          onClick={() => navigate("/login")}
+          className="flex flex-col items-center hover:text-black transition"
+        >
+          <User size={22} />
+          <span className="text-xs">Login</span>
+        </button>
+      ) : (
+        <>
+          <button
+            onClick={() => navigate("/profile")}
+            className="flex flex-col items-center hover:text-black transition"
+          >
+            <User size={22} />
+            <span className="text-xs">Profile</span>
+          </button>
+
+          <button
+  onClick={() => {
+    const confirmLogout = window.confirm("Are you sure you want to logout?");
+
+    if (confirmLogout) {
+      localStorage.removeItem("token");
+      navigate("/");
+      window.location.reload();
+    }
+  }}
+  className="flex flex-col items-center hover:text-red-500 transition"
+>
+  <LogOut size={22} />
+  <span className="text-xs">Logout</span>
+</button>
+        </>
+      )}
+
+      <button
+        onClick={() => navigate("/cart")}
+        className="flex flex-col items-center hover:text-black transition"
+      >
+        <ShoppingCart size={22} />
+        <span className="text-xs">Cart</span>
+      </button>
+
+    </div>
+
+  </div>
+</nav>
 
       {/* ================= HERO SLIDER ================= */}
    {/* ================= HERO SLIDER ================= */}
@@ -489,46 +615,50 @@ lg:aspect-[1660/490]"
 
 
       {/* ================= FOOTER ================= */}
-      <footer className="bg-gray-900 text-white py-12 mt-16">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-          <div>
-            <h3 className="font-bold mb-4">Safa Store</h3>
-            <p className="text-sm text-gray-400">
-              Premium medical and orthopedic supplies delivered across KSA.
-            </p>
-          </div>
+     <footer className="bg-gray-900 text-white py-12 mt-16">
+  <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+    
+    <div>
+      <h3 className="font-bold mb-4">Shymma Surgicals</h3>
+      <p className="text-sm text-gray-400">
+        Authorised dealer of orthopedic implants and medical instruments including 
+        GREENS, SIORA, ORMED, DYNA & MGRM products.
+      </p>
+    </div>
 
-          <div>
-            <h4 className="font-semibold mb-4">Shop</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="/products">All Products</Link></li>
-              <li><Link to="/products?category=Orthopedic">Orthopedic</Link></li>
-              <li><Link to="/products?category=Surgical">Surgical</Link></li>
-            </ul>
-          </div>
+    <div>
+      <h4 className="font-semibold mb-4">Shop</h4>
+      <ul className="space-y-2 text-sm text-gray-400">
+        <li><Link to="/products">All Products</Link></li>
+        <li><Link to="/products?category=Orthopedic">Orthopedic Implants</Link></li>
+        <li><Link to="/products?category=Instruments">Medical Instruments</Link></li>
+      </ul>
+    </div>
 
-          <div>
-            <h4 className="font-semibold mb-4">Support</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li>Contact Us</li>
-              <li>Shipping Policy</li>
-              <li>Returns</li>
-            </ul>
-          </div>
+    <div>
+      <h4 className="font-semibold mb-4">Support</h4>
+      <ul className="space-y-2 text-sm text-gray-400">
+        <li>Contact Us</li>
+        <li>Shipping Policy</li>
+        <li>Returns</li>
+      </ul>
+    </div>
 
-          <div>
-            <h4 className="font-semibold mb-4">Contact</h4>
-            <p className="text-sm text-gray-400">
-              Jeddah, Saudi Arabia <br />
-              +966 12 6513490
-            </p>
-          </div>
-        </div>
+    <div>
+      <h4 className="font-semibold mb-4">Contact</h4>
+      <p className="text-sm text-gray-400">
+        Kozhikode Medical College, Kerala, India <br />
+        +91 9447360390 <br />
+        shymmasurgicals.in
+      </p>
+    </div>
 
-        <div className="text-center text-xs text-gray-500 mt-10">
-          © 2026 Safa Store. All rights reserved.
-        </div>
-      </footer>
+  </div>
+
+  <div className="text-center text-xs text-gray-500 mt-10">
+    © 2026 Shymma Surgicals. All rights reserved.
+  </div>
+</footer>
 
     </div>
   );
