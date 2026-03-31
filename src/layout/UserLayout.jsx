@@ -57,7 +57,7 @@ const handleSearch = (e) => {
     <div className="min-h-screen flex flex-col bg-white">
       {/* NAVBAR */}
       <nav className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
-        <div className="flex items-center justify-between px-6 py-3 max-w-screen-2xl mx-auto">
+        <div className="flex items-center justify-between px-6 py-3 max-w-7xl mx-auto">
 
           {/* LOGO */}
           <div
@@ -72,7 +72,7 @@ const handleSearch = (e) => {
           </div>
 
           {/* SEARCH */}
-          <div className="w-[320px] ml-auto mr-6">
+          <div className="flex-1 max-w-md mx-10">
             <div className="relative">
               <Search
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
@@ -131,7 +131,7 @@ const handleSearch = (e) => {
         </div>
       </nav>
 
-      <main className="flex-grow">
+      <main className="flex-grow max-w-7xl mx-auto px-6 w-full">
         <Outlet />
       </main>
     </div>

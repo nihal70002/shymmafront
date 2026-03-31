@@ -33,6 +33,7 @@ const EMPTY_FORM = {
   name: "",
   categoryId: "",
   brandId: "",
+  productType: 1,
   description: "",
   images: [],
   variants: [{ ...DEFAULT_VARIANT }],
@@ -49,7 +50,7 @@ export default function AdminProducts() {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const [primaryImageIndex, setPrimaryImageIndex] = useState(0);
-
+const [categoryImage, setCategoryImage] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showCatModal, setShowCatModal] = useState(false);
   const [showBrandModal, setShowBrandModal] = useState(false);
@@ -207,20 +208,40 @@ const removeComponentRow = (index) => {
 
 
 
-  const addCategory = async () => {
-    if (!newCategory.trim()) return alert("Name required");
-    try {
-      await api.post("/categories", {
-  name: newCategory.trim(),
-  parentCategoryId: parentCategoryId || null
-});
-      setNewCategory(""); 
-      setShowCatModal(false); 
-      loadData();
-    } catch { 
-      alert("Failed to add category"); 
-    }
-  };
+const addCategory = async () => {
+  if (!newCategory.trim()) return alert("Name required");
+
+  try {
+    const fd = new FormData();
+
+    fd.append("Name", newCategory.trim());
+
+    if (parentCategoryId)
+      fd.append("ParentCategoryId", Number(parentCategoryId));
+
+    if (categoryImage)
+      fd.append("Image", categoryImage);
+
+    await api.post("/categories", fd, {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    });
+
+    toast.success("Category created successfully"); // ✅ ADD THIS
+
+    setNewCategory("");
+    setParentCategoryId("");
+    setCategoryImage(null);
+    setShowCatModal(false);
+
+    loadData();
+
+  } catch (err) {
+    console.error(err.response?.data || err);
+    toast.error("Failed to add category");
+  }
+};
 
  const openEditModal = async (product) => {
   try {
@@ -230,15 +251,23 @@ const removeComponentRow = (index) => {
 
     setEditingId(product.productId);
 
-    setForm({
-      name: fullProduct.name,
-      categoryId: fullProduct.categoryId.toString(),
-      brandId: fullProduct.brandId?.toString() || "",
-      description: fullProduct.description || "",
-      images: fullProduct.imageUrls || [],
-      variants: fullProduct.sizes || [],
-      components: fullProduct.components || []
-    });
+    const detectedType =
+  fullProduct.components?.length > 0
+    ? 2
+    : fullProduct.variants?.length > 0
+    ? 3
+    : 1;
+
+setForm({
+  name: fullProduct.name,
+  categoryId: fullProduct.categoryId.toString(),
+  brandId: fullProduct.brandId?.toString() || "",
+  productType: detectedType,
+  description: fullProduct.description || "",
+  images: fullProduct.imageUrls || [],
+  variants: fullProduct.variants || [],
+  components: fullProduct.components || []
+});
 
     setPrimaryImageIndex(0);
     setShowModal(true);
@@ -327,6 +356,7 @@ if (!editingId && (!form.variants || form.variants.length === 0)) {
   const variantData = form.variants
   .filter(v => v?.size || v?.productCode)
   .map(v => ({
+    productId: editingId,
     class: v?.class?.trim() || "",
     style: v?.style?.trim() || "",
     material: v?.material?.trim() || "",
@@ -347,6 +377,8 @@ if (!editingId && (!form.variants || form.variants.length === 0)) {
       console.log("editingId =", editingId);
       // STEP A: Update the main product details
       // (Note: productPayload does NOT include the variants array here)
+      console.log("editingId =", editingId);
+console.log("productPayload =", productPayload);
       await api.put(`/admin/products/${editingId}`, productPayload);
 
       
@@ -904,6 +936,15 @@ const updateCategory = async (id, name, parentId) => {
         </select>
       )}
 
+
+      <input
+  type="file"
+  onChange={(e) => setCategoryImage(e.target.files[0])}
+/>
+
+
+      
+
       <button
         onClick={
           showCatModal
@@ -1093,6 +1134,30 @@ const updateCategory = async (id, name, parentId) => {
           />
         </div>
 
+
+        <div>
+  <label className="text-sm font-semibold text-slate-700 mb-2 block">
+    Product Type
+  </label>
+
+  <select
+    value={form.productType}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        productType: Number(e.target.value),
+        components: [],
+        variants: [{ ...DEFAULT_VARIANT }]
+      })
+    }
+    className="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-xl"
+  >
+    <option value={1}>Simple Product</option>
+    <option value={2}>Instrument Set (Kit)</option>
+    <option value={3}>Variant Matrix Product</option>
+  </select>
+</div>
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-sm font-semibold text-slate-700 mb-2 block">
@@ -1152,6 +1217,8 @@ const updateCategory = async (id, name, parentId) => {
 
 
 {/* Components Section */}
+{form.productType === 2 && (
+
 <div className="border-t border-slate-200 pt-6">
 
   <div className="flex justify-between items-center mb-4">
@@ -1230,206 +1297,214 @@ const updateCategory = async (id, name, parentId) => {
   </div>
 
 </div>
+)}
 
 
 
 
     {/* Variants Section (unchanged) */}
-    <div className="border-t border-slate-200 pt-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <div>
-                      <h4 className="text-lg font-bold text-slate-900">Product Variants</h4>
-                      <p className="text-sm text-slate-500">Add different sizes and SKUs for this product</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setForm({
-                        ...form,
-                        variants: [...form.variants, { ...DEFAULT_VARIANT }]
-                      })}
-                      className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-sm font-semibold hover:bg-blue-100 transition-colors"
-                    >
-                      <Plus size={16} className="inline mr-1" />
-                      Add Variant
-                    </button>
-                  </div>
+   {form.productType === 3 && (
 
-                  <div className="space-y-3">
-                    {form.variants.map((v, i) => (
-                      <div key={i} className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
+  <div className="border-t border-slate-200 pt-6">
+    <div className="flex justify-between items-center mb-4">
+      <div>
+        <h4 className="text-lg font-bold text-slate-900">
+          Product Variants
+        </h4>
+        <p className="text-sm text-slate-500">
+          Add different sizes and SKUs for this product
+        </p>
+      </div>
 
-                          <div>
-  <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
-    Class
-  </label>
-  <input
-    type="text"
-    placeholder="e.g., Class 1"
-    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
-    value={v.class || ""}
-    onChange={e => {
-      const vs = [...form.variants];
-      vs[i].class = e.target.value;
-      setForm({ ...form, variants: vs });
-    }}
-  />
+```
+  <button
+    type="button"
+    onClick={() =>
+      setForm({
+        ...form,
+        variants: [...form.variants, { ...DEFAULT_VARIANT }]
+      })
+    }
+    className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-sm font-semibold hover:bg-blue-100 transition-colors"
+  >
+    <Plus size={16} className="inline mr-1" />
+    Add Variant
+  </button>
 </div>
 
+<div className="space-y-3">
+  {form.variants.map((v, i) => (
+    <div
+      key={i}
+      className="bg-slate-50 rounded-xl p-4 border border-slate-200"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
 
+        {/* CLASS */}
+        <div>
+          <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+            Class
+          </label>
+          <input
+            type="text"
+            placeholder="e.g., Class 1"
+            className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
+            value={v.class || ""}
+            onChange={(e) => {
+              const vs = [...form.variants];
+              vs[i].class = e.target.value;
+              setForm({ ...form, variants: vs });
+            }}
+          />
+        </div>
 
-{/* Components Section */}
+        {/* STYLE */}
+        <div>
+          <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+            Style
+          </label>
+          <input
+            type="text"
+            placeholder="e.g., AD / AF"
+            className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
+            value={v.style || ""}
+            onChange={(e) => {
+              const vs = [...form.variants];
+              vs[i].style = e.target.value;
+              setForm({ ...form, variants: vs });
+            }}
+          />
+        </div>
 
+        {/* MATERIAL */}
+        <div>
+          <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+            Material
+          </label>
+          <input
+            type="text"
+            placeholder="e.g., Stainless Steel"
+            className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
+            value={v.material || ""}
+            onChange={(e) => {
+              const vs = [...form.variants];
+              vs[i].material = e.target.value;
+              setForm({ ...form, variants: vs });
+            }}
+          />
+        </div>
 
+        {/* COLOR */}
+        <div>
+          <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+            Color
+          </label>
+          <input
+            type="text"
+            placeholder="Optional"
+            className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
+            value={v.color || ""}
+            onChange={(e) => {
+              const vs = [...form.variants];
+              vs[i].color = e.target.value;
+              setForm({ ...form, variants: vs });
+            }}
+          />
+        </div>
 
-<div>
-  <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
-    Style
-  </label>
-  <input
-    type="text"
-    placeholder="e.g., AD / AF"
-    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
-    value={v.style || ""}
-    onChange={e => {
-      const vs = [...form.variants];
-      vs[i].style = e.target.value;
-      setForm({ ...form, variants: vs });
-    }}
-  />
+        {/* SIZE */}
+        <div>
+          <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+            Size *
+          </label>
+          <input
+            type="text"
+            placeholder="e.g., 14mm"
+            className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
+            value={v.size}
+            onChange={(e) => {
+              const vs = [...form.variants];
+              vs[i].size = e.target.value;
+              setForm({ ...form, variants: vs });
+            }}
+          />
+        </div>
+
+        {/* SKU */}
+        <div>
+          <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+            Product Code *
+          </label>
+          <input
+            type="text"
+            placeholder="e.g., 106.314"
+            className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
+            value={v.productCode}
+            onChange={(e) => {
+              const vs = [...form.variants];
+              vs[i].productCode = e.target.value;
+              setForm({ ...form, variants: vs });
+            }}
+          />
+        </div>
+
+        {/* PRICE */}
+        <div>
+          <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+            Price *
+          </label>
+          <input
+            type="number"
+            className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
+            value={v.price === 0 ? "" : v.price}
+            onChange={(e) => {
+              const vs = [...form.variants];
+              vs[i].price =
+                e.target.value === "" ? "" : Number(e.target.value);
+              setForm({ ...form, variants: vs });
+            }}
+          />
+        </div>
+
+        {/* STOCK */}
+        <div className="flex gap-2">
+          <input
+            type="number"
+            placeholder="Stock"
+            className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
+            value={v.stock === 0 ? "" : v.stock}
+            onChange={(e) => {
+              const vs = [...form.variants];
+              vs[i].stock =
+                e.target.value === "" ? 0 : Number(e.target.value);
+              setForm({ ...form, variants: vs });
+            }}
+          />
+
+          <button
+            type="button"
+            onClick={() =>
+              setForm({
+                ...form,
+                variants: form.variants.filter((_, idx) => idx !== i)
+              })
+            }
+            disabled={form.variants.length === 1}
+            className="p-2 text-rose-500"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
+
+      </div>
+    </div>
+  ))}
 </div>
+```
 
+  </div>
+)}
 
-<div>
-  <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
-    Material
-  </label>
-  <input
-    type="text"
-    placeholder="e.g., Cotton"
-    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
-    value={v.material || ""}
-    onChange={e => {
-      const vs = [...form.variants];
-      vs[i].material = e.target.value;
-      setForm({ ...form, variants: vs });
-    }}
-  />
-</div>
-
-<div>
-  <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
-    Color
-  </label>
-  <input
-    type="text"
-    placeholder="e.g., Beige"
-    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
-    value={v.color || ""}
-    onChange={e => {
-      const vs = [...form.variants];
-      vs[i].color = e.target.value;
-      setForm({ ...form, variants: vs });
-    }}
-  />
-</div>
-
-
-
-
-
-                          
-                          <div>
-                            <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
-                              Size <span className="text-rose-500">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              placeholder="e.g., M, XL, 2-3Y"
-                              className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-                              value={v.size}
-                              onChange={e => {
-                                const vs = [...form.variants];
-                                vs[i].size = e.target.value;
-                                setForm({ ...form, variants: vs });
-                              }}
-                            />
-                          </div>
-
-                          <div>
-                            <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
-                              SKU / Product Code <span className="text-rose-500">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              placeholder="e.g., PROD-001"
-                              className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-                              value={v.productCode}
-                              onChange={e => {
-                                const vs = [...form.variants];
-                                vs[i].productCode = e.target.value;
-                                setForm({ ...form, variants: vs });
-                              }}
-                            />
-                          </div>
-
-                          <div>
-                            <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
-                              Price (SAR) <span className="text-rose-500">*</span>
-                            </label>
-                            <input
-                              type="number"
-                              placeholder="0.00"
-                              min="0"
-                              step="0.01"
-                              className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-                              value={v.price === 0 ? "" : v.price}
-                              onChange={e => {
-                                const vs = [...form.variants];
-                                vs[i].price = e.target.value === "" ? "" : Number(e.target.value);
-                                setForm({ ...form, variants: vs });
-                              }}
-                            />
-                          </div>
-
-                          <div className="flex gap-2">
-                            <div className="flex-1">
-                              <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
-                                Stock
-                              </label>
-                              <input
-                                type="number"
-                                placeholder="0"
-                                min="0"
-                                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-                                value={v.stock === 0 ? "" : v.stock}
-                                onChange={e => {
-                                  const vs = [...form.variants];
-                                  vs[i].stock = e.target.value === "" ? 0 : Number(e.target.value);
-                                  setForm({ ...form, variants: vs });
-                                }}
-                              />
-                            </div>
-                            <div className="flex items-end">
-                              <button
-                                type="button"
-                                onClick={() => setForm({
-                                  ...form,
-                                  variants: form.variants.filter((_, idx) => idx !== i)
-                                })}
-                                disabled={form.variants.length === 1}
-                                className="p-2.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                title="Remove variant"
-                              >
-                                <Trash2 size={18} />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
     
   </div>
 </div>

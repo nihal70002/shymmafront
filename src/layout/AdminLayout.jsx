@@ -82,6 +82,17 @@ export default function AdminLayout() {
             onClick={() => { navigate("/admin/customers"); setOpen(false); }}
           />
 
+
+           <SidebarItem
+            icon={<BarChart3 size={18} />}
+            label="Categories"
+            active={location.pathname.startsWith("/admin/categories")}
+            onClick={() => { navigate("/admin/categories"); setOpen(false); }}
+          />
+        
+
+
+
           
 
           <SidebarItem
