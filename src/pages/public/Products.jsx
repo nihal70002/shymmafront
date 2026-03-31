@@ -505,21 +505,39 @@ console.log(allCategories);
       <div className="flex-1 overflow-y-auto custom-scrollbar space-y-8">
         {/* REUSE CATEGORY SECTION */}
         <div>
-          <h4 className="text-sm font-bold text-gray-900 mb-4">CATEGORIES</h4>
-          <div className="grid grid-cols-1 gap-3">
-            {allCategories.map((cat) => (
-              <label key={cat.id} className="flex items-center gap-3 text-sm">
-  <input
-    type="checkbox"
-    checked={selectedCategories.includes(cat.id)}
-    onChange={() => toggleCategory(cat.id)}
-    className="w-5 h-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-  />
-  {cat.name}
-</label>
+          <h4 className="text-sm font-bold text-gray-900 mb-4">MAIN CATEGORIES</h4>
 
-            ))}
-          </div>
+<div className="space-y-3 mb-6">
+  {parentCategories.map((cat) => (
+    <label key={cat.id} className="flex items-center gap-3 text-sm">
+      <input
+        type="checkbox"
+        checked={selectedCategories.includes(cat.id)}
+        onChange={() => toggleCategory(cat.id)}
+        className="w-5 h-5 rounded border-gray-300 text-teal-600"
+      />
+      <span className="font-semibold">{cat.name}</span>
+    </label>
+  ))}
+</div>
+
+<h4 className="text-sm font-bold text-gray-900 mb-4">
+  SUB CATEGORIES
+</h4>
+
+<div className="space-y-3">
+  {allSubCategories.map((sub) => (
+    <label key={sub.id} className="flex items-center gap-3 text-sm">
+      <input
+        type="checkbox"
+        checked={selectedCategories.includes(sub.id)}
+        onChange={() => toggleSubCategory(sub.id)}
+        className="w-5 h-5 rounded border-gray-300 text-teal-600"
+      />
+      {sub.name}
+    </label>
+  ))}
+</div>
         </div>
 
         {/* REUSE BRAND SECTION */}

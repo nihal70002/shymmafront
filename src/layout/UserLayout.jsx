@@ -3,6 +3,9 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Search, Package, User, ShoppingCart } from "lucide-react";
 import api from "../api/axios";
 import { useCart } from "../context/CartContext";
+import { ArrowLeft } from "lucide-react";
+
+
 
 export default function UserLayout() {
   const navigate = useNavigate();
@@ -12,6 +15,12 @@ export default function UserLayout() {
 }, [location.pathname]);
 
   const isCartPage = location.pathname === "/cart";
+
+
+
+  const showBackButton =
+  location.pathname !== "/products" &&
+  window.innerWidth < 768;
 
   // 🔎 Search States
   const [searchQuery, setSearchQuery] = useState("");
@@ -84,10 +93,21 @@ export default function UserLayout() {
         <div className="flex items-center justify-between px-6 py-3 max-w-screen-2xl mx-auto">
 
           {/* LOGO */}
-          <div
-            onClick={() => navigate("/products")}
-            className="cursor-pointer hover:scale-105 transition-transform"
-          >
+          <div className="flex items-center gap-2">
+
+  {showBackButton && (
+    <button
+      onClick={() => navigate(-1)}
+      className="sm:hidden p-1"
+    >
+      <ArrowLeft size={22} />
+    </button>
+  )}
+
+  <div
+    onClick={() => navigate("/products")}
+    className="cursor-pointer hover:scale-105 transition-transform"
+  ></div>
             <img
   src="/logo/logo.png"
   alt="Safa Store"

@@ -57,13 +57,13 @@ export default function CategoryPage() {
               className="group flex flex-col"
             >
               {/* Card: Pure White on Gray Background */}
-              <div className="relative w-full aspect-square bg-white rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] transition-all duration-500 group-hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] group-hover:-translate-y-2 flex items-center justify-center p-8 overflow-hidden border border-white group-hover:border-blue-50">
+              <div className="relative w-full aspect-[4/5] sm:aspect-square bg-white rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] transition-all duration-500 group-hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] group-hover:-translate-y-2 flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-hidden border border-white group-hover:border-blue-50">
                 
                 {/* Product Image */}
                 <img
                   src={sub.imageUrl || "/placeholder.png"}
                   alt={sub.name}
-                  className="max-h-full max-w-full object-contain transition-transform duration-700 group-hover:scale-110"
+                  className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110"
                 />
 
                 {/* Corner Accent */}
