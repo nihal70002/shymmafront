@@ -108,10 +108,10 @@ export default function UserLayout() {
     onClick={() => navigate("/products")}
     className="cursor-pointer hover:scale-105 transition-transform"
   ></div>
-            <img
+      <img
   src="/logo/logo.png"
   alt="Safa Store"
-  className="h-7 sm:h-9 md:h-11 lg:h-14 w-auto object-contain transition-all duration-200"
+  className="h-22 sm:h-18 md:h-14 lg:h-25 w-auto object-contain transition-all duration-200"
 />
           </div>
 
@@ -203,19 +203,7 @@ export default function UserLayout() {
 </button>
 
 
-<button
-  onClick={() => {
-    const current = localStorage.getItem("lang") || "en";
-    localStorage.setItem("lang", current === "en" ? "ar" : "en");
-    window.location.reload();
-  }}
-  className="flex flex-col items-center gap-1 hover:text-gray-900 transition-colors"
->
-  🌐
-  <span className="text-xs">
-    {localStorage.getItem("lang") === "ar" ? "Arabic" : "English"}
-  </span>
-</button>
+
 
 
         

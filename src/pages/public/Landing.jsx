@@ -114,8 +114,12 @@ useEffect(() => {
 
     {/* LOGO */}
     <Link to="/" className="flex items-center gap-2">
-      <img src="/logo/logo.png" className="h-9" alt="logo" />
-    </Link>
+  <img
+    src="/logo/logo.png"
+    alt="logo"
+    className="h-15 sm:h-19 md:h-22 w-auto object-contain"
+  />
+</Link>
 
     {/* SEARCH BAR */}
     <div className="flex-1 max-w-xl w-full flex mx-2">
@@ -277,6 +281,27 @@ useEffect(() => {
   >
 
     {/* VARICOSE */}
+
+
+
+
+
+    <SwiperSlide>
+      <div
+        onClick={() => navigate("/products/512")}
+        className="cursor-pointer w-full aspect-[1660/490]"
+      >
+        <img
+          src="/posters/maxo.jpg"
+          alt="Hinged Knee Brace"
+          className="w-full h-auto object-cover"
+          
+
+        />
+      </div>
+    </SwiperSlide>
+
+
     
 
     {/* ELBOW */}
@@ -298,20 +323,7 @@ lg:aspect-[1660/490]"
     </SwiperSlide>
 
     {/* KNEE */}
-    <SwiperSlide>
-      <div
-        onClick={() => navigate("/products/512")}
-        className="cursor-pointer w-full aspect-[1660/490]"
-      >
-        <img
-          src="/posters/maxo.jpg"
-          alt="Hinged Knee Brace"
-          className="w-full h-auto object-cover"
-          
-
-        />
-      </div>
-    </SwiperSlide>
+    
 
 
     <SwiperSlide>
@@ -335,7 +347,7 @@ lg:aspect-[1660/490]"
 
 
  {/* Adjusted margin: -mt-4 on mobile, -mt-8 on desktop */}
-<div className="max-w-7xl mx-auto px-4 -mt-4 sm:-mt-8 relative z-10">
+<div className="max-w-7xl mx-auto px-4 mt-2 sm:-mt-8 relative z-10">
   {/* Grid adjustment: 
       - p-4 on mobile to save space
       - gap-2 on mobile vs gap-4 on desktop 
