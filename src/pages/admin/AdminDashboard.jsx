@@ -24,10 +24,10 @@ export default function AdminDashboard() {
   totalRevenue: 0
 });
 
-       const formatSAR = (amount) =>
-  new Intl.NumberFormat("en-SA", {
+       const formatINR = (amount) =>
+  new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: "SAR",
+    currency: "INR",
   }).format(amount);
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -117,7 +117,7 @@ useEffect(() => {
           <section className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             <StatCard 
               title="Revenue" 
-              value={formatSAR(stats.totalRevenue)}
+              value={formatINR(stats.totalRevenue)}
 
               icon={<Wallet size={16} />} 
               theme="indigo" 

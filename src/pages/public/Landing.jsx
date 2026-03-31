@@ -117,7 +117,7 @@ useEffect(() => {
   <img
     src="/logo/logo.png"
     alt="logo"
-    className="h-15 sm:h-19 md:h-22 w-auto object-contain"
+    className="h-20 sm:h-19 md:h-22 w-auto object-contain"
   />
 </Link>
 

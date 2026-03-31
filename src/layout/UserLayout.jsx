@@ -18,8 +18,8 @@ export default function UserLayout() {
 
 
 
-  const showBackButton =
-  location.pathname !== "/products" &&
+const showBackButton =
+  location.pathname !== "/" &&
   window.innerWidth < 768;
 
   // 🔎 Search States

@@ -577,13 +577,13 @@ console.log(allCategories);
 
 
 {/* MOBILE BOTTOM BAR */}
-<div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-1 lg:hidden z-50">
+ <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-3 lg:hidden z-50">
 
  
 
   <button
     onClick={() => setShowFilters(true)}
-    className="text-sm font-medium"
+    className="text-base font-semibold px-6 py-2 rounded-lg bg-teal-600 text-white active:scale-95 transition"
   >
     FILTER
   </button>
