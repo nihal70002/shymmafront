@@ -33,7 +33,7 @@ const EMPTY_FORM = {
   name: "",
   categoryId: "",
   brandId: "",
-  productType: 1,
+  productType: 2,
   description: "",
   images: [],
   variants: [{ ...DEFAULT_VARIANT }],
@@ -251,12 +251,8 @@ const addCategory = async () => {
 
     setEditingId(product.productId);
 
-    const detectedType =
-  fullProduct.components?.length > 0
-    ? 2
-    : fullProduct.variants?.length > 0
-    ? 3
-    : 1;
+  const detectedType =
+  fullProduct.components?.length > 0 ? 2 : 3;
 
 setForm({
   name: fullProduct.name,
@@ -265,8 +261,13 @@ setForm({
   productType: detectedType,
   description: fullProduct.description || "",
   images: fullProduct.imageUrls || [],
-  variants: fullProduct.variants || [],
-  components: fullProduct.components || []
+
+  variants: (fullProduct.sizes || []).map(v => ({
+    ...v,
+    stock: v.availableStock,
+  })),
+
+  components: fullProduct.components || [],
 });
 
     setPrimaryImageIndex(0);
@@ -291,20 +292,7 @@ setForm({
   return;
 }
 
-if (!editingId && (!form.variants || form.variants.length === 0)) {
-  form.variants = [
-    {
-      class: "",
-      style: "",
-      material: "",
-      color: "",
-      size: "Standard",
-      productCode: `AUTO-${Date.now()}`,
-      price: 0,
-      stock: 0
-    }
-  ];
-}
+
   const combinations = new Set();
   const skus = new Set();
 
@@ -349,7 +337,8 @@ if (!editingId && (!form.variants || form.variants.length === 0)) {
   brandId: Number(form.brandId),
   description: form.description?.trim() || "",
   imageUrls: orderedImages,
-  components: form.components || []
+  components: form.components || [],
+  productType: form.productType
 };
 
   // Prepare variants separately for the loop
@@ -1152,7 +1141,7 @@ const updateCategory = async (id, name, parentId) => {
     }
     className="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-xl"
   >
-    <option value={1}>Simple Product</option>
+    
     <option value={2}>Instrument Set (Kit)</option>
     <option value={3}>Variant Matrix Product</option>
   </select>
@@ -1303,7 +1292,7 @@ const updateCategory = async (id, name, parentId) => {
 
 
     {/* Variants Section (unchanged) */}
-   {form.productType === 3 && (
+   {(
 
   <div className="border-t border-slate-200 pt-6">
     <div className="flex justify-between items-center mb-4">

@@ -461,15 +461,68 @@ const decreaseQuantity = () => {
   </div>
 )}
 
+{materialOptions.length > 0 && (
+  <div className="mb-4">
+    <h3 className="text-sm font-bold uppercase mb-3">Select Material</h3>
+    <div className="flex gap-2 flex-wrap">
+      {materialOptions.map(option => (
+        <button
+          key={option}
+          onClick={() => setSelectedMaterial(option)}
+          className={`px-4 py-2 border rounded-md ${
+            selectedMaterial === option
+              ? "border-teal-600 bg-teal-50 text-teal-600"
+              : "border-gray-300"
+          }`}
+        >
+          {option}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
+
 
           
 
           {/* Select Size */}
          <div className="mb-4 pb-4 border-b border-gray-200">
   <div className="flex items-center justify-between mb-3">
-    <h3 className="text-sm font-bold text-gray-900 uppercase">
-      Select Size
-    </h3>
+    {getUniqueValues("size").length > 0 && (
+  <div className="mb-4 pb-4 border-b border-gray-200">
+    <div className="flex items-center justify-between mb-3">
+      <h3 className="text-sm font-bold text-gray-900 uppercase">
+        Select Size
+      </h3>
+    </div>
+
+    {filteredVariants.length === 0 ? (
+      <p className="text-sm text-red-500">
+        This combination is not available.
+      </p>
+    ) : (
+      <div className="flex gap-2">
+        {filteredVariants.map(v => (
+          <button
+            key={v.id}
+            onClick={() => {
+              setSelectedVariant(v);
+              setQuantity(1);
+            }}
+            className={`min-w-[56px] h-10 px-4 rounded-full border-2 font-bold text-sm 
+flex items-center justify-center transition ${
+  selectedVariant?.id === v.id
+    ? "border-teal-600 text-teal-600 bg-teal-50"
+    : "border-gray-300 text-gray-900 hover:border-teal-400"
+}`}
+          >
+            {v.size}
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+)}
   </div>
 
   {filteredVariants.length === 0 ? (

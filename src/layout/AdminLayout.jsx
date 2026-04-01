@@ -46,7 +46,7 @@ export default function AdminLayout() {
           <img
             src="/logo/logo.png"
             alt="Logo"
-            className="h-10 w-auto object-contain"
+            className="h-22 w-auto object-contain"
           />
         </div>
 
@@ -134,7 +134,7 @@ export default function AdminLayout() {
           >
             <Menu size={24} />
           </button>
-          <img src="/logo/logo.png" alt="Logo" className="h-6 w-auto" />
+          
           <div className="w-10"></div> {/* Spacer for balance */}
         </div>
 
