@@ -181,7 +181,7 @@ useEffect(() => {
             </div>
             <div className="min-w-0">
               <p className="text-[11px] font-bold text-slate-700 truncate w-24 leading-none">{item.productName}</p>
-              <p className="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-tighter">{formatSAR(item.revenue)}
+              <p className="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-tighter">{formatINR(item.revenue)}
 </p>
             </div>
           </div>
@@ -205,7 +205,7 @@ useEffect(() => {
                     <tr key={o.orderId} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-4 py-2.5 text-xs font-bold text-slate-700">#ORD-{o.orderId}</td>
                       <td className="px-4 py-2.5"><StatusBadge status={o.status} /></td>
-                      <td className="px-4 py-2.5 text-xs font-black text-slate-900 text-right">{formatSAR(o.totalAmount)}
+                      <td className="px-4 py-2.5 text-xs font-black text-slate-900 text-right">{formatINR(o.totalAmount)}
 </td>
                       <td className="px-4 py-2.5 text-right">
                         <button onClick={() => navigate(`/admin/orders/${o.orderId}`)} className="text-slate-300 hover:text-indigo-600">
@@ -232,7 +232,7 @@ useEffect(() => {
                         <p className="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-tighter">{cust.ordersCount} Orders</p>
                       </div>
                     </div>
-                    <p className="text-[11px] font-black text-slate-800">{formatSAR(cust.totalSpent)}</p>
+                    <p className="text-[11px] font-black text-slate-800">{formatINR(cust.totalSpent)}</p>
                   </div>
                 ))}
               </div>

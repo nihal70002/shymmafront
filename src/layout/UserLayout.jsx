@@ -90,7 +90,7 @@ const showBackButton =
     <div className="min-h-screen flex flex-col bg-white">
       {/* NAVBAR */}
       <nav className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
-        <div className="flex items-center justify-between px-6 py-3 max-w-screen-2xl mx-auto">
+        <div className="flex items-center justify-between px-6 py-2 max-w-screen-2xl mx-auto">
 
           {/* LOGO */}
           <div className="flex items-center gap-2">
@@ -111,7 +111,7 @@ const showBackButton =
       <img
   src="/logo/logo.png"
   alt="Safa Store"
-  className="h-22 sm:h-18 md:h-14 lg:h-25 w-auto object-contain transition-all duration-200"
+ className="h-8 sm:h-9 md:h-10 lg:h-12 w-auto object-contain scale-[2] origin-left transition-transform duration-200"
 />
           </div>
 
@@ -193,7 +193,7 @@ const showBackButton =
 </div>
 
           {/* ACTIONS */}
-          <div className="flex items-center gap-6 text-gray-600">
+          <div className="flex items-center gap-4 text-gray-600">
              <button
   onClick={() => setShowMobileSearch(prev => !prev)}
   className="sm:hidden flex flex-col items-center gap-1 hover:text-gray-900 transition-colors"

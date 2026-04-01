@@ -485,11 +485,10 @@ const decreaseQuantity = () => {
 
           
 
-          {/* Select Size */}
-         <div className="mb-4 pb-4 border-b border-gray-200">
-  <div className="flex items-center justify-between mb-3">
-    {getUniqueValues("size").length > 0 && (
+    {/* Select Size */}
+{getUniqueValues("size").length > 0 && (
   <div className="mb-4 pb-4 border-b border-gray-200">
+
     <div className="flex items-center justify-between mb-3">
       <h3 className="text-sm font-bold text-gray-900 uppercase">
         Select Size
@@ -509,49 +508,20 @@ const decreaseQuantity = () => {
               setSelectedVariant(v);
               setQuantity(1);
             }}
-            className={`min-w-[56px] h-10 px-4 rounded-full border-2 font-bold text-sm 
-flex items-center justify-center transition ${
-  selectedVariant?.id === v.id
-    ? "border-teal-600 text-teal-600 bg-teal-50"
-    : "border-gray-300 text-gray-900 hover:border-teal-400"
-}`}
+            className={`min-w-[56px] h-10 px-4 rounded-full border-2 font-bold text-sm flex items-center justify-center transition ${
+              selectedVariant?.id === v.id
+                ? "border-teal-600 text-teal-600 bg-teal-50"
+                : "border-gray-300 text-gray-900 hover:border-teal-400"
+            }`}
           >
             {v.size}
           </button>
         ))}
       </div>
     )}
+
   </div>
 )}
-  </div>
-
-  {filteredVariants.length === 0 ? (
-    <p className="text-sm text-red-500">
-      This combination is not available.
-    </p>
-  ) : (
-    <div className="flex gap-2">
-      {filteredVariants.map(v => (
-        <button
-          key={v.id}
-          onClick={() => {
-            setSelectedVariant(v);
-            setQuantity(1);
-          }}
-          className={`min-w-[56px] h-10 px-4 rounded-full border-2 font-bold text-sm 
-flex items-center justify-center transition ${
-  selectedVariant?.id === v.id
-    ? "border-teal-600 text-teal-600 bg-teal-50"
-    : "border-gray-300 text-gray-900 hover:border-teal-400"
-}`}
-        >
-          {v.size}
-        </button>
-      ))}
-    </div>
-  )}
-</div>
-
 
           {/* Quantity Selector */}
           <div className="mb-4">
@@ -749,5 +719,6 @@ flex items-center justify-center transition ${
     </div>
     
     
+   
   );
 }
