@@ -98,7 +98,7 @@ const prevImage = () => {
 
 
  useEffect(() => {
-  const loadProduct = async () => {
+   const loadProduct = async () => {
     try {
       const res = await getProductById(id);
 
@@ -109,28 +109,32 @@ const prevImage = () => {
           ? [res.data.primaryImageUrl]
           : [];
 
-      const mappedProduct = {
-        id: res.data.productId,
-        name: res.data.name,
-        category: res.data.categoryName,
-        description: res.data.description,
+    const mappedProduct = {
+  id: res.data.productId,
+  name: res.data.name,
+  category: res.data.categoryName,
+  description: res.data.description,
 
-        // ✅ MULTI IMAGE SUPPORT
-        images,
-        primaryImage: res.data.primaryImageUrl,
+  // IMPORTANT for set-products
+  productType: res.data.productType,
 
-        // ✅ SAFE VARIANT MAP
-        variants: (res.data.sizes || []).map(v => ({
-          id: v.variantId,
-          class: v.class,
-          style: v.style,
-          material: v.material,
-          color: v.color,
-          size: v.size,
-          price: v.price,
-          stock: v.availableStock
-        }))
-      };
+  images,
+  primaryImage: res.data.primaryImageUrl,
+
+  variants: (res.data.sizes || []).map(v => ({
+    id: v.variantId,
+    class: v.class,
+    style: v.style,
+    material: v.material,
+    color: v.color,
+    size: v.size,
+    price: v.price,
+    stock: v.availableStock
+  })),
+
+  // THIS LINE WAS MISSING
+  components: res.data.components || []
+};
 
       setProduct(mappedProduct);
 
@@ -388,6 +392,9 @@ const decreaseQuantity = () => {
 
 
 
+
+
+
         </div>
 
         {/* RIGHT: PRODUCT INFO */}
@@ -397,6 +404,9 @@ const decreaseQuantity = () => {
             <h2 className="text-xl font-bold text-gray-900">{product.category}</h2>
             <h1 className="text-lg font-bold mt-1">{product.name}</h1>
           </div>
+
+
+          
 
           {/* Rating */}
           <div className="flex items-center gap-2 mb-5 pb-5 border-b border-gray-200">
@@ -569,6 +579,68 @@ const decreaseQuantity = () => {
 
   
 </div>
+{product.components?.length > 0 && (
+  <div className="mt-6 rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+
+    {/* Header */}
+    <div className="bg-teal-50 border-b px-5 py-3">
+      <h3 className="text-sm font-semibold text-teal-700 tracking-wide">
+        Components Included
+      </h3>
+    </div>
+
+    {/* Table */}
+    <div className="overflow-auto max-h-[420px]">
+      <table className="w-full text-sm">
+
+        <thead className="bg-gray-50 text-gray-600 uppercase text-xs">
+          <tr>
+            <th className="px-5 py-3 text-left">
+              Cat No
+            </th>
+
+            <th className="px-5 py-3 text-left">
+              Instrument Name
+            </th>
+
+            <th className="px-5 py-3 text-center">
+              Units
+            </th>
+          </tr>
+        </thead>
+
+        <tbody className="divide-y">
+
+          {product.components.map((c, i) => (
+
+            <tr
+              key={i}
+              className="hover:bg-teal-50/40 transition"
+            >
+
+              <td className="px-5 py-3 font-semibold text-gray-800">
+                {c.catNo}
+              </td>
+
+              <td className="px-5 py-3 text-gray-700">
+                {c.instrumentName}
+              </td>
+
+              <td className="px-5 py-3 text-center font-medium text-teal-600">
+                {c.units}
+              </td>
+
+            </tr>
+
+          ))}
+
+        </tbody>
+
+      </table>
+    </div>
+
+  </div>
+)}
 
 {showLoginModal && (
   <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-sm">

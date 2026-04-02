@@ -53,14 +53,27 @@ const loadProducts = useCallback(async (pageNo, reset = false) => {
 
     const res = await api.get("/products", {
   params: {
-  page: pageNo || 1,
-  pageSize: PAGE_SIZE,
-  categoryIds: categoryIdFromUrl
-    ? [Number(categoryIdFromUrl), ...selectedCategories]
-    : selectedCategories,
-  brandId: selectedBrand,
-  search: searchQuery
-}
+    page: pageNo || 1,
+    pageSize: PAGE_SIZE,
+    categoryIds: selectedCategories, 
+    brandId: selectedBrand,
+    search: searchQuery
+  },
+  paramsSerializer: params => {
+    const searchParams = new URLSearchParams();
+
+    Object.keys(params).forEach(key => {
+      if (Array.isArray(params[key])) {
+        params[key].forEach(v =>
+          searchParams.append(key, v)
+        );
+      } else if (params[key] !== null && params[key] !== undefined) {
+        searchParams.append(key, params[key]);
+      }
+    });
+
+    return searchParams.toString();
+  }
 });
 
     const items = res.data.items || [];
