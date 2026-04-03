@@ -16,6 +16,7 @@ import "swiper/css";
 import { useEffect, useState } from "react";
 import { getProducts } from "../../api/products.api";
 import { motion } from "framer-motion";
+import { getCategories } from "../../api/categories.api";
 
 
 import { LogOut } from "lucide-react";
@@ -39,14 +40,23 @@ const [loadingSearch, setLoadingSearch] = useState(false);
 
 
 useEffect(() => {
-  async function fetchProducts() {
+  async function fetchData() {
     try {
-      const res = await getProducts();
-
-      // Backend returns { items: [...] }
-      const products = res.data?.items || [];
-
+      // fetch products
+      const productRes = await getProducts();
+      const products = productRes.data?.items || [];
       setFeaturedProducts(products.slice(0, 4));
+
+      // fetch categories
+      const categoryRes = await getCategories();
+
+      // show only main categories (no subcategories)
+      const mainCategories = (categoryRes.data || []).filter(
+        (c) => !c.parentCategoryId
+      );
+
+      setCategories(mainCategories);
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -54,7 +64,7 @@ useEffect(() => {
     }
   }
 
-  fetchProducts();
+  fetchData();
 }, []);
 
 
@@ -78,20 +88,7 @@ useEffect(() => {
   }
 ];
 
- const categories = [
-  { id: 2, name: "Locking Plate System", slug: "locking-plate-system", img: "/categories/locking-plate.jpg" },
-  { id: 3, name: "Locking Hand System", slug: "locking-hand-system", img: "/categories/locking-hand.jpg" },
-  { id: 4, name: "Locking System", slug: "locking-system", img: "/categories/locking-system.jpg" },
-  { id: 5, name: "Radial Head Prosthesis", slug: "radial-head-prosthesis", img: "/categories/radial-head.jpg" },
-  { id: 6, name: "Bipolar Prosthesis", slug: "bipolar-prosthesis", img: "/categories/bipolar.jpg" },
-  { id: 7, name: "PFNA Nailing System", slug: "pfna-nailing-system", img: "/categories/pfna.jpg" },
-  { id: 8, name: "Cannulated Compression System", slug: "cannulated-compression-system", img: "/categories/cannulated.jpg" },
-  { id: 9, name: "Femoral Neck System", slug: "femoral-neck-system", img: "/categories/fns.jpg" },
-
-{ id: 10, name: "Maxillofacial Internal Fixation System", slug: "maxillofacial-internal-fixation-system", img: "/categories/maxillofacial.jpg" },
-
-{ id: 11, name: "Tibia System", slug: "tibia-system", img: "/categories/tibia.jpg" }
-];
+ const [categories, setCategories] = useState([]);
 
 
 
@@ -427,7 +424,7 @@ lg:aspect-[1660/490]"
             {/* 3. Product Image Container */}
             <div className="relative w-[85%] h-[85%] rounded-full overflow-hidden bg-white shadow-inner">
               <img
-                src={cat.img}
+                src={cat.imageUrl || "/placeholder.jpg"}
                 alt={cat.name}
                 // Zoomed to 160% to crop out poster text and focus on hardware
                 className="w-full h-full object-cover scale-[1.6] group-hover:scale-[1.8] transition-transform duration-700 ease-in-out"
