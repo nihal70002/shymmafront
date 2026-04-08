@@ -41,7 +41,7 @@ const [magnifierPosition, setMagnifierPosition] = useState({ x: 0, y: 0 });
   const [addingToCart, setAddingToCart] = useState(false);
 const [showToast, setShowToast] = useState(false);
 const [selectedClass, setSelectedClass] = useState(null);
-const [selectedside, setSelectedside] = useState(null);
+const [selectedStyle, setSelectedStyle] = useState(null);
 const [selectedMaterial, setSelectedMaterial] = useState(null);
 const [selectedColor, setSelectedColor] = useState(null);
 const [showLoginModal, setShowLoginModal] = useState(false);
@@ -124,7 +124,7 @@ const prevImage = () => {
   variants: (res.data.sizes || []).map(v => ({
     id: v.variantId,
     class: v.class,
-    side: v.side,
+    style: v.style,
     material: v.material,
     color: v.color,
     size: v.size,
@@ -143,7 +143,7 @@ const prevImage = () => {
       if (mappedProduct.variants.length > 0) {
   const first = mappedProduct.variants[0];
   setSelectedClass(first.class || null);
-  setSelectedside(first.side || null);
+  setSelectedStyle(first.style || null);
   setSelectedMaterial(first.material || null);
   setSelectedColor(first.color || null);
   setSelectedVariant(first);
@@ -173,13 +173,13 @@ const getUniqueValues = (key) => {
 
 // 🔥 Extract dynamic options
 const classOptions = getUniqueValues("class");
-const sideOptions = getUniqueValues("side");
+const styleOptions = getUniqueValues("style");
 const materialOptions = getUniqueValues("material");
 const colorOptions = getUniqueValues("color");
 
 const filteredVariants = product?.variants?.filter(v =>
   (!selectedClass || v.class === selectedClass) &&
-  (!selectedside || v.side === selectedside) &&
+  (!selectedStyle || v.style === selectedStyle) &&
   (!selectedMaterial || v.material === selectedMaterial) &&
   (!selectedColor || v.color === selectedColor)
 ) || [];
@@ -191,7 +191,7 @@ useEffect(() => {
   } else {
     setSelectedVariant(null);
   }
-}, [selectedClass, selectedside, selectedMaterial, selectedColor, product]);
+}, [selectedClass, selectedStyle, selectedMaterial, selectedColor, product]);
 
 
 
@@ -321,7 +321,7 @@ const decreaseQuantity = () => {
   {/* TRACK */}
   <div
     className="flex h-full transition-transform ease-in-out"
-    side={{
+    style={{
       transform: `translateX(-${selectedImage * 100}%)`,
       transitionDuration: "700ms"
     }}
@@ -450,16 +450,16 @@ const decreaseQuantity = () => {
 
 
 
-{sideOptions.length > 0 && (
+{styleOptions.length > 0 && (
   <div className="mb-4">
-    <h3 className="text-sm font-bold uppercase mb-3">Select side</h3>
+    <h3 className="text-sm font-bold uppercase mb-3">Select Style</h3>
     <div className="flex gap-2 flex-wrap">
-      {sideOptions.map(option => (
+      {styleOptions.map(option => (
         <button
           key={option}
-          onClick={() => setSelectedside(option)}
+          onClick={() => setSelectedStyle(option)}
           className={`px-4 py-2 border rounded-md ${
-            selectedside === option
+            selectedStyle === option
               ? "border-teal-600 bg-teal-50 text-teal-600"
               : "border-gray-300"
           }`}
