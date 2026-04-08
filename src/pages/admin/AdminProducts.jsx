@@ -19,7 +19,7 @@ import Papa from "papaparse";
 /* ================= CONSTANTS ================= */
 const DEFAULT_VARIANT = {
   class: "",
-  style: "",
+  side: "",
   material: "",
   color: "",
   size: "",
@@ -281,7 +281,7 @@ setForm({
 
   const formatSAR = (amount) =>
     new Intl.NumberFormat("en-SA", {
-      style: "currency",
+      side: "currency",
       currency: "SAR",
     }).format(amount);
 
@@ -303,7 +303,7 @@ setForm({
     
     const comboKey = [
       v.class?.trim().toLowerCase() || "",
-      v.style?.trim().toLowerCase() || "",
+      v.side?.trim().toLowerCase() || "",
       v.material?.trim().toLowerCase() || "",
       v.color?.trim().toLowerCase() || "",
       (size || "").toLowerCase()
@@ -347,7 +347,7 @@ setForm({
   .map(v => ({
     productId: editingId,
     class: v?.class?.trim() || "",
-    style: v?.style?.trim() || "",
+    side: v?.side?.trim() || "",
     material: v?.material?.trim() || "",
     color: v?.color?.trim() || "",
     size: v?.size?.trim() || "",
@@ -1347,19 +1347,19 @@ const updateCategory = async (id, name, parentId) => {
           />
         </div>
 
-        {/* STYLE */}
+        {/* side */}
         <div>
           <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
-            Style
+            side
           </label>
           <input
             type="text"
             placeholder="e.g., AD / AF"
             className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
-            value={v.style || ""}
+            value={v.side || ""}
             onChange={(e) => {
               const vs = [...form.variants];
-              vs[i].style = e.target.value;
+              vs[i].side = e.target.value;
               setForm({ ...form, variants: vs });
             }}
           />

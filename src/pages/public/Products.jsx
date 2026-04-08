@@ -265,7 +265,7 @@ const filteredProducts = products;
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white">
       <div className="h-12 w-12 animate-spin rounded-full border-4 border-teal-600 border-t-transparent mb-4"></div>
-      <p className="text-gray-500 font-medium">Fetching the latest styles...</p>
+      <p className="text-gray-500 font-medium">Fetching the latest sides...</p>
     </div>
   );
 }
@@ -649,7 +649,7 @@ console.log(allCategories);
         </div>
       </footer>
 
-      <style>{`
+      <side>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
         }
@@ -664,7 +664,7 @@ console.log(allCategories);
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: #0d9488;
         }
-      `}</style>
+      `}</side>
     </div>
   );
 }
