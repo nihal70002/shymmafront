@@ -53,7 +53,11 @@ export default function CategoryPage() {
           {!loading && subCategories.map((sub) => (
             <Link
               key={sub.id}
-              to={`/products?categoryId=${sub.id}`}
+              to={
+  sub.hasChildren
+    ? `/category/${sub.slug}`
+    : `/products/${sub.id}`
+}
               className="group flex flex-col"
             >
               {/* Card: Pure White on Gray Background */}

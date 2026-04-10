@@ -405,7 +405,7 @@ lg:aspect-[1660/490]"
     </div>
 
     {/* Product Grid */}
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-12 md:gap-16">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {categories.map((cat) => (
         <Link
           key={cat.id}
@@ -413,24 +413,15 @@ lg:aspect-[1660/490]"
           className="group flex flex-col items-center"
         >
           {/* The Animated Circle System */}
-          <div className="relative w-44 h-44 md:w-56 md:h-56 flex items-center justify-center">
-            
-            {/* 1. The 3/4 Spinning Line (Non-dotted, Solid) */}
-            <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-[#3a96a5] border-r-[#3a96a5] border-l-[#3a96a5] animate-spin-slow" />
-            
-            {/* 2. Static Inner Decorative Ring */}
-            <div className="absolute inset-[6px] rounded-full border border-gray-100 shadow-sm" />
+         <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-white shadow-md border border-gray-100 group-hover:shadow-xl transition-all duration-500">
 
-            {/* 3. Product Image Container */}
-            <div className="relative w-[85%] h-[85%] rounded-full overflow-hidden bg-white shadow-inner">
-              <img
-                src={cat.imageUrl || "/placeholder.jpg"}
-                alt={cat.name}
-                // Zoomed to 160% to crop out poster text and focus on hardware
-                className="w-full h-full object-cover scale-[1.6] group-hover:scale-[1.8] transition-transform duration-700 ease-in-out"
-              />
-            </div>
-          </div>
+  <img
+  src={cat.imageUrl || "/placeholder.jpg"}
+  alt={cat.name}
+  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+/>
+
+</div>
 
           {/* Product Labeling */}
           <div className="mt-8 text-center">
