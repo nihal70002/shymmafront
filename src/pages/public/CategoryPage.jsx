@@ -56,7 +56,7 @@ export default function CategoryPage() {
               to={
   sub.hasChildren
     ? `/category/${sub.slug}`
-    : `/products/${sub.id}`
+    : `/products?categoryIds=${sub.id}`
 }
               className="group flex flex-col"
             >
