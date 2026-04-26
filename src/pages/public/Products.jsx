@@ -11,7 +11,7 @@ import api from "../../api/axios";
 export default function Products() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const categoryIdFromUrl = searchParams.get("categoryId");
+  const categoryIdFromUrl = searchParams.get("categoryIds");
 
 
   const [products, setProducts] = useState([]);
