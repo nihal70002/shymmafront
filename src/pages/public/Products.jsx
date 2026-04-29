@@ -22,7 +22,9 @@ export default function Products() {
 const [page, setPage] = useState(1);
 const [hasMore, setHasMore] = useState(true);
 const PAGE_SIZE = 12;
-const [selectedCategories, setSelectedCategories] = useState([]);
+const [selectedCategories, setSelectedCategories] = useState(() =>
+  categoryIdFromUrl ? [Number(categoryIdFromUrl)] : []
+);
 const [brands, setBrands] = useState([]);
 const [selectedBrand, setSelectedBrand] = useState(null);
 const [showCategorySearch, setShowCategorySearch] = useState(false);
@@ -35,12 +37,14 @@ const [showAllCategories, setShowAllCategories] = useState(false);
 
 
 const observer = useRef();
+const requestIdRef = useRef(0);
 
 // Use the exact case-sensitive name from your pgAdmin screenshot: ParentCategoryId
 const parentCategories = allCategories.filter(cat => cat.parentCategoryId === null);
 const allSubCategories = allCategories.filter(cat => cat.parentCategoryId !== null);
 
 const loadProducts = useCallback(async (pageNo, reset = false) => {
+  const requestId = ++requestIdRef.current;
   try {
     setLoading(true);
 
@@ -78,6 +82,8 @@ const loadProducts = useCallback(async (pageNo, reset = false) => {
 
     const items = res.data.items || [];
 
+    if (requestId !== requestIdRef.current) return;
+
     setProducts(prev =>
       reset ? items : [...prev, ...items]
     );
@@ -88,9 +94,11 @@ const loadProducts = useCallback(async (pageNo, reset = false) => {
   } catch (err) {
     console.error("LOAD PRODUCTS ERROR:", err);
   } finally {
-    setLoading(false);
+    if (requestId === requestIdRef.current) {
+      setLoading(false);
+    }
   }
-}, [selectedCategories, selectedBrand, searchQuery, categoryIdFromUrl]);
+}, [selectedCategories, selectedBrand, searchQuery]);
 
 
 
@@ -123,7 +131,10 @@ useEffect(() => {
 
 useEffect(() => {
   if (categoryIdFromUrl) {
-    setSelectedCategories([Number(categoryIdFromUrl)]);
+    const next = [Number(categoryIdFromUrl)];
+    setSelectedCategories(prev => (
+      prev.length === 1 && prev[0] === next[0] ? prev : next
+    ));
   }
 }, [categoryIdFromUrl]);
 
@@ -146,20 +157,6 @@ useEffect(() => {
   setSearchQuery(queryFromUrl);
 }, [searchParams]);
 
-// If search is cleared, ensure we are on the base products route
-useEffect(() => {
-  if (searchQuery === "" && searchParams.get("search")) {
-    navigate("/products", { replace: true });
-  }
-}, [searchQuery, navigate, searchParams]);
-
-
-
-useEffect(() => {
-  if (searchQuery === "") {
-    navigate("/products", { replace: true });
-  }
-}, [searchQuery]);
 
 
 const loadCart = async () => {

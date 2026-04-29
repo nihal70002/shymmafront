@@ -37,7 +37,7 @@ const [magnifierPosition, setMagnifierPosition] = useState({ x: 0, y: 0 });
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
 const [showToast, setShowToast] = useState(false);
 const [selectedClass, setSelectedClass] = useState(null);
@@ -83,16 +83,18 @@ const handleModalLogin = async () => {
 
 
 const nextImage = () => {
-  if (!hasImages) return;
-  setSelectedImage((prev) =>
-    prev === product.images.length - 1 ? 0 : prev + 1
+  const total = (product?.images?.length || 0) + (product?.videos?.length || 0);
+  if (!total) return;
+  setSelectedMediaIndex((prev) =>
+    prev === total - 1 ? 0 : prev + 1
   );
 };
 
 const prevImage = () => {
-  if (!hasImages) return;
-  setSelectedImage((prev) =>
-    prev === 0 ? product.images.length - 1 : prev - 1
+  const total = (product?.images?.length || 0) + (product?.videos?.length || 0);
+  if (!total) return;
+  setSelectedMediaIndex((prev) =>
+    prev === 0 ? total - 1 : prev - 1
   );
 };
 
@@ -102,7 +104,7 @@ const prevImage = () => {
     try {
       const res = await getProductById(id);
 
-      // ✅ Build image array (primary first)
+      // 
       const images = res.data.imageUrls?.length
         ? res.data.imageUrls
         : res.data.primaryImageUrl
@@ -115,11 +117,13 @@ const prevImage = () => {
   category: res.data.categoryName,
   description: res.data.description,
 
-  // IMPORTANT for set-products
+  // 
   productType: res.data.productType,
 
   images,
   primaryImage: res.data.primaryImageUrl,
+
+  videos: res.data.videoUrls || [],
 
   variants: (res.data.sizes || []).map(v => ({
     id: v.variantId,
@@ -132,14 +136,14 @@ const prevImage = () => {
     stock: v.availableStock
   })),
 
-  // THIS LINE WAS MISSING
+  // 
   components: res.data.components || []
 };
 
       setProduct(mappedProduct);
 
-      // ✅ Reset image + variant safely
-      setSelectedImage(0);
+      // 
+      setSelectedMediaIndex(0);
       if (mappedProduct.variants.length > 0) {
   const first = mappedProduct.variants[0];
   setSelectedClass(first.class || null);
@@ -162,7 +166,7 @@ const prevImage = () => {
 }, [id]);
 
 
-// 🔥 Helper to extract unique option values
+// 
 const getUniqueValues = (key) => {
   return [...new Set(
     product?.variants
@@ -171,7 +175,7 @@ const getUniqueValues = (key) => {
   )];
 };
 
-// 🔥 Extract dynamic options
+// 
 const classOptions = getUniqueValues("class");
 const styleOptions = getUniqueValues("style");
 const materialOptions = getUniqueValues("material");
@@ -202,7 +206,7 @@ const handleAddToCart = async () => {
 
   const token = localStorage.getItem("token");
 
-  // 🚨 Not logged in → redirect
+  // 
   if (!token) {
   setShowLoginModal(true);
   return;
@@ -271,6 +275,16 @@ const decreaseQuantity = () => {
 
 
 
+  const media = [
+    ...(product.images || []).map((url) => ({ type: "image", url })),
+    ...(product.videos || []).map((url) => ({ type: "video", url })),
+  ];
+
+  const totalMedia = media.length;
+
+
+
+
   return (
     <div className="min-h-screen bg-gray-50">
       
@@ -298,103 +312,100 @@ const decreaseQuantity = () => {
           ✓ {quantity} item(s) added to bag
         </div>
       )}
-        {/* LEFT: IMAGES */}
+        {/* LEFT: MEDIA (Images + Videos Slider) */}
         <div className="w-full lg:w-[60%] p-0 lg:p-4 border-b lg:border-b-0 lg:border-r border-gray-100">
-          <div className="relative overflow-hidden lg:rounded-lg border-b lg:border border-gray-200 bg-white h-[420px] lg:h-[460px] w-full">
- <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-white group">
-  
-  {/* LEFT ARROW */}
-  {product.images.length > 1 && (
-    <button
-      onClick={prevImage}
-      className="absolute left-3 top-1/2 -translate-y-1/2 z-20 
-                 bg-white/80 hover:bg-white shadow rounded-full p-2
-                 transition opacity-0 group-hover:opacity-100"
-    >
-      <ChevronLeft size={22} />
-    </button>
-  )}
+          <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-white group h-[420px] lg:h-[460px] w-full">
+            {totalMedia > 1 && (
+              <button
+                onClick={prevImage}
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-20 
+                           bg-white/80 hover:bg-white shadow rounded-full p-2
+                           transition opacity-0 group-hover:opacity-100"
+              >
+                <ChevronLeft size={22} />
+              </button>
+            )}
 
-  {/* IMAGE WITH ZOOM */}
-  <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-white h-[420px] lg:h-[460px] w-full">
+            <div
+              className="flex h-full transition-transform ease-in-out"
+              style={{
+                transform: `translateX(-${selectedMediaIndex * 100}%)`,
+                transitionDuration: "700ms"
+              }}
+            >
+              {media.map((item, index) => (
+                <div
+                  key={index}
+                  className="relative h-full w-full flex-shrink-0 flex items-center justify-center overflow-hidden"
+                  onMouseEnter={() => setShowMagnifier(true)}
+                  onMouseLeave={() => setShowMagnifier(false)}
+                  onMouseMove={(e) => {
+                    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
 
-  {/* TRACK */}
-  <div
-    className="flex h-full transition-transform ease-in-out"
-    style={{
-      transform: `translateX(-${selectedImage * 100}%)`,
-      transitionDuration: "700ms"
-    }}
-  >
-    {product.images.map((img, index) => (
-      <div
-  key={index}
-  className="relative h-full w-full flex-shrink-0 flex items-center justify-center overflow-hidden"
-  onMouseEnter={() => setShowMagnifier(true)}
-  onMouseLeave={() => setShowMagnifier(false)}
-  onMouseMove={(e) => {
-    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+                    const x = ((e.clientX - left) / width) * 100;
+                    const y = ((e.clientY - top) / height) * 100;
 
-    const x = ((e.clientX - left) / width) * 100;
-    const y = ((e.clientY - top) / height) * 100;
+                    setMagnifierPosition({ x, y });
+                  }}
+                >
+                  {item.type === "image" ? (
+                    <img
+                      src={item.url}
+                      alt={`${product.name} ${index + 1}`}
+                      className="max-h-[420px] w-auto object-contain"
+                    />
+                  ) : (
+                    <video
+                      src={item.url}
+                      controls
+                      playsInline
+                      className="max-h-[420px] w-auto object-contain bg-black rounded"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
 
-    setMagnifierPosition({ x, y });
-  }}
->
-        <img
-          src={img}
-          alt={`${product.name} ${index + 1}`}
-          className="max-h-[420px] w-auto object-contain"
-        />
-      </div>
-    ))}
-  </div>
+            {totalMedia > 1 && (
+              <button
+                onClick={nextImage}
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-20
+                           bg-white/80 hover:bg-white shadow rounded-full p-2
+                           transition opacity-0 group-hover:opacity-100"
+              >
+                <ChevronRight size={22} />
+              </button>
+            )}
+          </div>
 
-  {/* LEFT */}
-  
-</div>
-
-
-  {/* RIGHT ARROW */}
-  {product.images.length > 1 && (
-    <button
-      onClick={nextImage}
-      className="absolute right-3 top-1/2 -translate-y-1/2 z-20
-                 bg-white/80 hover:bg-white shadow rounded-full p-2
-                 transition opacity-0 group-hover:opacity-100"
-    >
-      <ChevronRight size={22} />
-    </button>
-  )}
-</div>
-
-
-</div>
-<div className="flex gap-2 p-2 justify-center bg-white ">
-  {product.images.map((img, index) => (
-    <button
-      key={index}
-      onClick={() => setSelectedImage(index)}
-      className={`w-20 h-20 border rounded-md overflow-hidden transition ${
-        selectedImage === index
-          ? "border-teal-600 ring-2 ring-teal-500"
-          : "border-gray-300 hover:border-teal-400"
-      }`}
-    >
-      <img
-        src={img}
-        alt={`thumb-${index}`}
-        className="w-full h-full object-contain"
-      />
-    </button>
-  ))}
-</div>
-
-
-
-
-
-
+          <div className="flex gap-2 p-2 justify-center bg-white ">
+            {media.map((item, index) => (
+              <button
+                key={index}
+                onClick={() => setSelectedMediaIndex(index)}
+                className={`w-20 h-20 border rounded-md overflow-hidden transition ${
+                  selectedMediaIndex === index
+                    ? "border-teal-600 ring-2 ring-teal-500"
+                    : "border-gray-300 hover:border-teal-400"
+                }`}
+              >
+                {item.type === "image" ? (
+                  <img
+                    src={item.url}
+                    alt={`thumb-${index}`}
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <video
+                    src={item.url}
+                    muted
+                    playsInline
+                    className="w-full h-full object-contain bg-black"
+                  />
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* RIGHT: PRODUCT INFO */}

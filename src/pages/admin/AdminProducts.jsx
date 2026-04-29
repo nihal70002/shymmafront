@@ -36,6 +36,7 @@ const EMPTY_FORM = {
   productType: 2,
   description: "",
   images: [],
+  videos: [],
   variants: [{ ...DEFAULT_VARIANT }],
   components: []
 };
@@ -50,7 +51,7 @@ export default function AdminProducts() {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const [primaryImageIndex, setPrimaryImageIndex] = useState(0);
-const [categoryImage, setCategoryImage] = useState(null);
+  const [categoryImage, setCategoryImage] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showCatModal, setShowCatModal] = useState(false);
   const [showBrandModal, setShowBrandModal] = useState(false);
@@ -60,6 +61,7 @@ const [categoryImage, setCategoryImage] = useState(null);
   const [newCategory, setNewCategory] = useState("");
   const [newBrand, setNewBrand] = useState("");
   const [imageUploading, setImageUploading] = useState(false);
+  const [videoUploading, setVideoUploading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
 
@@ -130,154 +132,177 @@ const [categoryImage, setCategoryImage] = useState(null);
     }
   };
 
+  const handleVideoUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
 
+    setVideoUploading(true);
+    try {
+      const uploaded = [];
+
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append("file", file);
+
+        const res = await api.post("/upload/video", fd, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+
+        uploaded.push(res.data.videoUrl);
+      }
+
+      setForm(prev => ({
+        ...prev,
+        videos: [...(prev.videos || []), ...uploaded]
+      }));
+    } catch {
+      alert("Video upload failed");
+    } finally {
+      setVideoUploading(false);
+    }
+  };
 
   const handleCsvUpload = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+    const file = e.target.files[0];
+    if (!file) return;
 
-  Papa.parse(file, {
-    header: true,
-    skipEmptyLines: true,
-    complete: async ({ data }) => {
-      try {
-        await bulkCreateProducts(data);
-        toast.success("Bulk import completed");
-        loadData();
-      } catch (err) {
-        console.error(err);
-        toast.error("Bulk import failed");
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async ({ data }) => {
+        try {
+          await bulkCreateProducts(data);
+          toast.success("Bulk import completed");
+          loadData();
+        } catch (err) {
+          console.error(err);
+          toast.error("Bulk import failed");
+        }
       }
-    }
-  });
-};
+    });
+  };
 
-const addComponentRow = () => {
-  setForm(prev => ({
-    ...prev,
-    components: [
-      ...prev.components,
-      { catNo: "", instrumentName: "", units: 1 }
-    ]
-  }));
-};
+  const addComponentRow = () => {
+    setForm(prev => ({
+      ...prev,
+      components: [
+        ...prev.components,
+        { catNo: "", instrumentName: "", units: 1 }
+      ]
+    }));
+  };
 
-const removeComponentRow = (index) => {
-  setForm(prev => ({
-    ...prev,
-    components: prev.components.filter((_, i) => i !== index)
-  }));
-};
-
+  const removeComponentRow = (index) => {
+    setForm(prev => ({
+      ...prev,
+      components: prev.components.filter((_, i) => i !== index)
+    }));
+  };
 
   const bulkCreateProducts = async (rows) => {
-  // Group by product name
-  const grouped = {};
+    // Group by product name
+    const grouped = {};
 
-  for (const r of rows) {
-    if (!grouped[r.name]) {
-      grouped[r.name] = {
-  name: r.name,
-  categoryId: Number(r.categoryId),
-  brandId: Number(r.brandId),
-  description: r.description,
-  imageUrls: r.imageUrls
-    ? r.imageUrls.split("|").map(i => i.trim())
-    : [],
-  variants: [],
-  components: []
-};
-    
+    for (const r of rows) {
+      if (!grouped[r.name]) {
+        grouped[r.name] = {
+          name: r.name,
+          categoryId: Number(r.categoryId),
+          brandId: Number(r.brandId),
+          description: r.description,
+          imageUrls: r.imageUrls
+            ? r.imageUrls.split("|").map(i => i.trim())
+            : [],
+          variants: [],
+          components: []
+        };
+      }
+
+      grouped[r.name].variants.push({
+        size: r.size,
+        price: Number(r.price),
+        productCode: r.productCode,
+        stock: 0
+      });
     }
 
-    grouped[r.name].variants.push({
-      size: r.size,
-      price: Number(r.price),
-      productCode: r.productCode,
-      stock: 0
-    });
-  }
+    // Create products one by one (safe)
+    for (const product of Object.values(grouped)) {
+      await api.post("/admin/products", product);
+    }
+  };
 
-  // Create products one by one (safe)
-  for (const product of Object.values(grouped)) {
-    await api.post("/admin/products", product);
-  }
-};
+  const addCategory = async () => {
+    if (!newCategory.trim()) return alert("Name required");
 
+    try {
+      const fd = new FormData();
 
+      fd.append("Name", newCategory.trim());
 
+      if (parentCategoryId)
+        fd.append("ParentCategoryId", Number(parentCategoryId));
 
+      if (categoryImage)
+        fd.append("Image", categoryImage);
 
-const addCategory = async () => {
-  if (!newCategory.trim()) return alert("Name required");
+      await api.post("/categories", fd, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
 
-  try {
-    const fd = new FormData();
+      toast.success("Category created successfully"); // 
 
-    fd.append("Name", newCategory.trim());
+      setNewCategory("");
+      setParentCategoryId("");
+      setCategoryImage(null);
+      setShowCatModal(false);
 
-    if (parentCategoryId)
-      fd.append("ParentCategoryId", Number(parentCategoryId));
+      loadData();
 
-    if (categoryImage)
-      fd.append("Image", categoryImage);
+    } catch (err) {
+      console.error(err.response?.data || err);
+      toast.error("Failed to add category");
+    }
+  };
 
-    await api.post("/categories", fd, {
-      headers: {
-        "Content-Type": "multipart/form-data"
-      }
-    });
+  const openEditModal = async (product) => {
+    try {
+      const res = await api.get(`/admin/products/${product.productId}`);
 
-    toast.success("Category created successfully"); // ✅ ADD THIS
+      const fullProduct = res.data;
 
-    setNewCategory("");
-    setParentCategoryId("");
-    setCategoryImage(null);
-    setShowCatModal(false);
+      setEditingId(product.productId);
 
-    loadData();
+      const detectedType =
+        fullProduct.components?.length > 0 ? 2 : 3;
 
-  } catch (err) {
-    console.error(err.response?.data || err);
-    toast.error("Failed to add category");
-  }
-};
+      setForm({
+        name: fullProduct.name,
+        categoryId: fullProduct.categoryId.toString(),
+        brandId: fullProduct.brandId?.toString() || "",
+        productType: detectedType,
+        description: fullProduct.description || "",
+        images: fullProduct.imageUrls || [],
+        videos: fullProduct.videoUrls || [],
 
- const openEditModal = async (product) => {
-  try {
-    const res = await api.get(`/admin/products/${product.productId}`);
+        variants: (fullProduct.sizes || []).map(v => ({
+          ...v,
+          stock: v.availableStock,
+        })),
 
-    const fullProduct = res.data;
+        components: fullProduct.components || [],
+      });
 
-    setEditingId(product.productId);
+      setPrimaryImageIndex(0);
+      setShowModal(true);
 
-  const detectedType =
-  fullProduct.components?.length > 0 ? 2 : 3;
-
-setForm({
-  name: fullProduct.name,
-  categoryId: fullProduct.categoryId.toString(),
-  brandId: fullProduct.brandId?.toString() || "",
-  productType: detectedType,
-  description: fullProduct.description || "",
-  images: fullProduct.imageUrls || [],
-
-  variants: (fullProduct.sizes || []).map(v => ({
-    ...v,
-    stock: v.availableStock,
-  })),
-
-  components: fullProduct.components || [],
-});
-
-    setPrimaryImageIndex(0);
-    setShowModal(true);
-
-  } catch (err) {
-    console.error("Failed loading product details", err);
-    toast.error("Failed to load product details");
-  }
-};
+    } catch (err) {
+      console.error("Failed loading product details", err);
+      toast.error("Failed to load product details");
+    }
+  };
 
   const formatSAR = (amount) =>
     new Intl.NumberFormat("en-SA", {
@@ -285,137 +310,118 @@ setForm({
       currency: "SAR",
     }).format(amount);
 
- const saveProduct = async () => {
-  /* ================= 1. VALIDATION ================= */
-  if (!form.name?.trim()) {
-  toast.error("Product name is required");
-  return;
-}
-
-
-  const combinations = new Set();
-  const skus = new Set();
-
-  for (const v of form.variants) {
-    const size = v.size?.trim();
-    const sku = v.productCode?.trim();
-
-    
-    const comboKey = [
-      v.class?.trim().toLowerCase() || "",
-      v.side?.trim().toLowerCase() || "",
-      v.material?.trim().toLowerCase() || "",
-      v.color?.trim().toLowerCase() || "",
-      (size || "").toLowerCase()
-    ].join("|");
-
-    if (combinations.has(comboKey)) {
-      toast.error(`Duplicate variant: ${size}`);
-      return;
-    }
-    if (skus.has((sku || "").toLowerCase())) {
-      toast.error(`Duplicate SKU: ${sku}`);
+  const saveProduct = async () => {
+    if (!form.name?.trim()) {
+      toast.error("Product name is required");
       return;
     }
 
-    combinations.add(comboKey);
-    skus.add((sku || "").toLowerCase());
-  }
+    const combinations = new Set();
+    const skus = new Set();
 
-  /* ================= 2. IMAGE REORDERING ================= */
-  const orderedImages = [...form.images];
-  if (primaryImageIndex > 0 && orderedImages.length > primaryImageIndex) {
-    const [primary] = orderedImages.splice(primaryImageIndex, 1);
-    orderedImages.unshift(primary);
-  }
+    for (const v of form.variants) {
+      const size = v.size?.trim();
+      const sku = v.productCode?.trim();
 
-  /* ================= 3. PAYLOAD PREPARATION ================= */
-  // We prepare the base product data (matches AdminUpdateProductDto)
-  const productPayload = {
-  name: form.name.trim(),
-  categoryId: Number(form.categoryId),
-  brandId: Number(form.brandId),
-  description: form.description?.trim() || "",
-  imageUrls: orderedImages,
-  components: form.components || [],
-  productType: form.productType
-};
+      const comboKey = [
+        v.class?.trim().toLowerCase() || "",
+        v.side?.trim().toLowerCase() || "",
+        v.material?.trim().toLowerCase() || "",
+        v.color?.trim().toLowerCase() || "",
+        (size || "").toLowerCase()
+      ].join("|");
 
-  // Prepare variants separately for the loop
-  const variantData = form.variants
-  .filter(v => v?.size || v?.productCode)
-  .map(v => ({
-    productId: editingId,
-    class: v?.class?.trim() || "",
-    side: v?.side?.trim() || "",
-    material: v?.material?.trim() || "",
-    color: v?.color?.trim() || "",
-    size: v?.size?.trim() || "",
-    productCode: v?.productCode?.trim() || "",
-    price: Number(v?.price) || 0,
-    stock: Number(v?.stock) || 0,
-    variantId: v?.variantId
-  }));
-  console.log("Variants before save:", form.variants);
-
-
-  /* ================= 4. API EXECUTION ================= */
-  try {
-    if (editingId) {
-
-      console.log("editingId =", editingId);
-      // STEP A: Update the main product details
-      // (Note: productPayload does NOT include the variants array here)
-      console.log("editingId =", editingId);
-console.log("productPayload =", productPayload);
-      await api.put(`/admin/products/${editingId}`, productPayload);
-
-      
-
-      // STEP B: Update/Create variants one by one
-      // We use a regular for-loop to avoid concurrency issues on the server
-      if (variantData.length > 0) 
-  for (const v of variantData)  {
-        if (v.variantId) {
-          await api.put(`/admin/products/variant/${v.variantId}`, v);
-        } else {
-          await api.post(`/admin/products/${editingId}/variant`, v);
-        }
+      if (combinations.has(comboKey)) {
+        toast.error(`Duplicate variant: ${size}`);
+        return;
       }
-    } else {
-      // For NEW products, we send everything in one POST
-      const createPayload = {
-  ...productPayload,
-  variants: variantData,
-  components: form.components || []
-};
-      await api.post("/admin/products", createPayload);
+
+      if (skus.has((sku || "").toLowerCase())) {
+        toast.error(`Duplicate SKU: ${sku}`);
+        return;
+      }
+
+      combinations.add(comboKey);
+      skus.add((sku || "").toLowerCase());
     }
 
-    /* ================= 5. UI REFRESH ================= */
-    toast.success(editingId ? "Product updated" : "Product added");
-    closeModal();
-    loadData(); // Safer to reload everything to sync with DB state
-
-  } catch (err) {
-    console.error("Save Error:", err);
-    let msg = "Error saving product";
-
-    if (err?.response?.data?.errors) {
-      const firstError = Object.values(err.response.data.errors)[0];
-      msg = Array.isArray(firstError) ? firstError[0] : firstError;
-    } else if (err?.response?.data) {
-      msg = typeof err.response.data === 'string' ? err.response.data : (err.response.data.title || msg);
+    const orderedImages = [...form.images];
+    if (primaryImageIndex > 0 && orderedImages.length > primaryImageIndex) {
+      const [primary] = orderedImages.splice(primaryImageIndex, 1);
+      orderedImages.unshift(primary);
     }
 
-    toast.error(String(msg));
-  }
-};
+    const productPayload = {
+      name: form.name.trim(),
+      categoryId: Number(form.categoryId),
+      brandId: Number(form.brandId),
+      description: form.description?.trim() || "",
+      imageUrls: orderedImages,
+      videoUrls: form.videos || [],
+      components: form.components || [],
+      productType: form.productType
+    };
+
+    const variantData = form.variants
+      .filter(v => v?.size || v?.productCode)
+      .map(v => ({
+        productId: editingId,
+        class: v?.class?.trim() || "",
+        side: v?.side?.trim() || "",
+        material: v?.material?.trim() || "",
+        color: v?.color?.trim() || "",
+        size: v?.size?.trim() || "",
+        productCode: v?.productCode?.trim() || "",
+        price: Number(v?.price) || 0,
+        stock: Number(v?.stock) || 0,
+        variantId: v?.variantId
+      }));
+
+    try {
+      if (editingId) {
+        await api.put(`/admin/products/${editingId}`, productPayload);
+
+        if (variantData.length > 0)
+          for (const v of variantData) {
+            if (v.variantId) {
+              await api.put(`/admin/products/variant/${v.variantId}`, v);
+            } else {
+              await api.post(`/admin/products/${editingId}/variant`, v);
+            }
+          }
+      } else {
+        const createPayload = {
+          ...productPayload,
+          variants: variantData,
+          components: form.components || []
+        };
+        await api.post("/admin/products", createPayload);
+      }
+
+      toast.success(editingId ? "Product updated" : "Product added");
+      closeModal();
+      loadData();
+    } catch (err) {
+      console.error("Save Error:", err);
+      let msg = "Error saving product";
+
+      if (err?.response?.data?.errors) {
+        const firstError = Object.values(err.response.data.errors)[0];
+        msg = Array.isArray(firstError) ? firstError[0] : firstError;
+      } else if (err?.response?.data) {
+        msg = typeof err.response.data === "string" ? err.response.data : (err.response.data.title || msg);
+      }
+
+      toast.error(String(msg));
+    }
+  };
+
   const deleteProduct = async () => {
     if (!deleteTarget) return;
 
     try {
       await api.delete(`/admin/products/${deleteTarget.productId}`);
+      toast.success("Product deleted");
       setDeleteTarget(null);
       loadData();
     } catch (err) {
@@ -424,43 +430,38 @@ console.log("productPayload =", productPayload);
   };
 
   const closeModal = () => {
-  setShowModal(false);
-  setEditingId(null);
-  setForm(EMPTY_FORM);
-  setPrimaryImageIndex(0);
-};
+    setShowModal(false);
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setPrimaryImageIndex(0);
+  };
 
-const deleteCategory = async (id) => {
-  if (!window.confirm("Delete this category?")) return;
+  const deleteCategory = async (id) => {
+    if (!window.confirm("Delete this category?")) return;
 
-  try {
-    await api.delete(`/categories/${id}`);
-    toast.success("Category deleted");
-    loadData();
-  } catch (err) {
-    toast.error(err?.response?.data || "Cannot delete category");
-  }
-};
+    try {
+      await api.delete(`/categories/${id}`);
+      toast.success("Category deleted");
+      loadData();
+    } catch (err) {
+      toast.error(err?.response?.data || "Cannot delete category");
+    }
+  };
 
+  const updateCategory = async (id, name, parentId) => {
+    try {
+      await api.put(`/categories/${id}`, {
+        name,
+        isActive: true,
+        parentCategoryId: parentId
+      });
 
-const updateCategory = async (id, name, parentId) => {
-  try {
-    await api.put(`/categories/${id}`, {
-      name,
-      isActive: true,
-      parentCategoryId: parentId
-    });
-
-    toast.success("Category updated");
-    loadData();
-  } catch (err) {
-    toast.error("Update failed");
-  }
-};
-
-
-
-
+      toast.success("Category updated");
+      loadData();
+    } catch (err) {
+      toast.error("Update failed");
+    }
+  };
 
   const filteredProducts = products.filter(p => {
     const term = searchTerm.toLowerCase();
@@ -1105,6 +1106,58 @@ const updateCategory = async (id, name, parentId) => {
                 onChange={handleImageUpload}
               />
             </label>
+          )}
+        </div>
+
+        {/* Video Upload */}
+        <div className="mt-6">
+          <label className="text-sm font-semibold text-slate-700 mb-3 block">
+            Product Videos
+          </label>
+
+          <label className="w-full border-2 border-dashed border-slate-300 rounded-xl px-4 py-4 flex items-center justify-center cursor-pointer hover:border-blue-400 bg-slate-50">
+            {videoUploading ? (
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+                <Loader2 className="animate-spin text-blue-600" size={18} />
+                Uploading...
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+                <Upload className="text-slate-400" size={18} />
+                Upload Video
+              </div>
+            )}
+
+            <input
+              type="file"
+              accept="video/*"
+              multiple
+              className="hidden"
+              onChange={handleVideoUpload}
+            />
+          </label>
+
+          {form.videos?.length > 0 && (
+            <div className="mt-3 space-y-3">
+              {form.videos.map((v, idx) => (
+                <div key={idx} className="relative rounded-xl border border-slate-200 bg-white p-2">
+                  <video src={v} controls className="w-full rounded-lg" />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm(prev => ({
+                        ...prev,
+                        videos: prev.videos.filter((_, i) => i !== idx)
+                      }))
+                    }
+                    className="absolute top-2 right-2 p-1 bg-rose-500 text-white rounded-full hover:bg-rose-600"
+                    title="Remove video"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>
