@@ -1,3 +1,4 @@
+import React, { Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
@@ -9,7 +10,6 @@ import Landing from "./pages/public/Landing";
 
 /* PRODUCTS (PUBLIC) */
 import Products from "./pages/public/Products";
-import ProductDetails from "./pages/public/ProductDetails";
 import CategoryPage from "./pages/public/CategoryPage";
 
 /* USER (PROTECTED) */
@@ -25,14 +25,15 @@ import UserLayout from "./layout/UserLayout";
 import AdminLayout from "./layout/AdminLayout";
 
 /* ADMIN */
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminOrders from "./pages/admin/AdminOrders";
-import AdminOrderDetails from "./pages/admin/AdminOrderDetails";
-import AdminProducts from "./pages/admin/AdminProducts";
-import AdminLowStock from "./pages/admin/AdminLowStock";
-import AdminReports from "./pages/admin/AdminReports";
-import AdminCustomers from "./pages/admin/AdminCustomers";
-import AdminCategories from "./pages/admin/AdminCategories";
+const ProductDetails = React.lazy(() => import("./pages/public/ProductDetails"));
+const AdminDashboard = React.lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminOrders = React.lazy(() => import("./pages/admin/AdminOrders"));
+const AdminOrderDetails = React.lazy(() => import("./pages/admin/AdminOrderDetails"));
+const AdminProducts = React.lazy(() => import("./pages/admin/AdminProducts"));
+const AdminLowStock = React.lazy(() => import("./pages/admin/AdminLowStock"));
+const AdminReports = React.lazy(() => import("./pages/admin/AdminReports"));
+const AdminCustomers = React.lazy(() => import("./pages/admin/AdminCustomers"));
+const AdminCategories = React.lazy(() => import("./pages/admin/AdminCategories"));
 
 /* GUARDS */
 import ProtectedRoute from "./components/common/ProtectedRoute";
@@ -43,7 +44,8 @@ export default function App() {
     <>
       <Toaster position="top-right" toastOptions={{ style: { zIndex: 99999 } }} />
 
-      <Routes>
+      <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center text-sm font-semibold text-slate-500">Loading...</div>}>
+        <Routes>
         {/* ================= PUBLIC ================= */}
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
@@ -93,6 +95,7 @@ export default function App() {
           <Route path="categories" element={<AdminCategories />} />
         </Route>
       </Routes>
+    </Suspense>
     </>
   );
 }
