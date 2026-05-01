@@ -5,21 +5,17 @@ import { useNavigate } from "react-router-dom";
 export default function ProductCard({ product, onAddToCart }) {
   const navigate = useNavigate();
 
-  const variant = product?.variants?.[0];
-  const price = variant?.price || 0;
-  const stock = variant?.stock || 0;
-
   const handleView = () => {
     navigate(`/products/${product.productId}`);
   };
 
   return (
-    <div className="group flex h-[360px] sm:h-[390px] flex-col rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-lg transition-all duration-300">
+    <div className="group flex h-[310px] sm:h-[340px] flex-col rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-lg transition-all duration-300">
       
       {/* IMAGE (UNCHANGED) */}
       <div
   onClick={handleView}
-  className="relative h-[230px] sm:h-64 w-full flex-shrink-0 cursor-pointer rounded-t-2xl 
+  className="relative h-[220px] sm:h-60 w-full flex-shrink-0 cursor-pointer rounded-t-2xl 
              bg-white flex items-center justify-center overflow-hidden
              transition"
 >
@@ -52,15 +48,6 @@ export default function ProductCard({ product, onAddToCart }) {
         <h3 className="line-clamp-2 min-h-[40px] text-sm font-semibold text-slate-900 leading-snug">
           {product.name}
         </h3>
-
-        {/* PRICE */}
-        <div className="mt-auto flex items-center gap-1.5">
-          <span className="text-base font-bold text-slate-900">
-            ₹{price}
-          </span>
-
-          
-        </div>
 
       </div>
     </div>
