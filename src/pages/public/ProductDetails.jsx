@@ -871,9 +871,9 @@ const decreaseQuantity = () => {
 
           <div className="mb-1">
 
-            <h2 className="text-xl font-bold text-gray-900">{product.category}</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">{product.category}</h2>
 
-            <h1 className="text-lg font-bold mt-1">{product.name}</h1>
+            <h1 className="mt-1 text-lg font-semibold text-gray-900">{product.name}</h1>
 
           </div>
 
@@ -897,36 +897,11 @@ const decreaseQuantity = () => {
 
             </div>
 
-            
-
           </div>
-
-
-
-          {/* Price */}
-
-          <div className="mb-4">
-
-            <div className="flex items-center gap-2 mb-2">
-
-             <span className="text-2xl font-bold text-gray-900">
-
-  SAR {selectedVariant?.price ?? "--"}
-
-</span>
-
-            </div>
-
-            <p className="text-sm font-semibold text-teal-700">inclusive of all taxes</p>
-
-          </div>
-
-
 
           {classOptions.length > 0 && (
 
   <div className="mb-4">
-
     <h3 className="text-sm font-bold uppercase mb-3">Select Class</h3>
 
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
@@ -1195,7 +1170,7 @@ const decreaseQuantity = () => {
 
          {/* Action Buttons - Sticky for Mobile, Static for Desktop */}
 
-<div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t flex gap-2 z-[50] lg:static lg:p-0 lg:border-0 lg:mb-4">
+<div className="fixed bottom-0 left-0 right-0 p-4 bg-white flex gap-2 z-[50] lg:static lg:p-0 lg:mb-4">
 
   <button
 

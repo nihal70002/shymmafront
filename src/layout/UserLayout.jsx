@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Search, Package, User, ShoppingCart } from "lucide-react";
+import { Search, Package, User, ShoppingCart, ArrowLeft } from "lucide-react";
 import api from "../api/axios";
 import { useCart } from "../context/CartContext";
-import { ArrowLeft } from "lucide-react";
 
 
 
@@ -18,9 +17,7 @@ export default function UserLayout() {
 
 
 
-const showBackButton =
-  location.pathname !== "/" &&
-  window.innerWidth < 768;
+const showBackButton = location.pathname !== "/";
 
   // 🔎 Search States
   const [searchQuery, setSearchQuery] = useState("");
@@ -102,9 +99,10 @@ const showBackButton =
   {showBackButton && (
     <button
       onClick={() => navigate(-1)}
-      className="sm:hidden p-1"
+      className="sm:hidden flex h-9 w-9 items-center justify-center rounded-full text-slate-700 hover:bg-slate-100"
+      aria-label="Go back"
     >
-      <ArrowLeft size={22} />
+      <ArrowLeft size={22} strokeWidth={2.5} />
     </button>
   )}
 
