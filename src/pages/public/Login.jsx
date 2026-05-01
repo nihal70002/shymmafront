@@ -59,7 +59,7 @@ if (typeof backendError === "string") {
   };
 
   return (
-    <div className="flex min-h-screen bg-white overflow-hidden">
+    <div className="flex min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50 overflow-hidden lg:bg-white">
       
       {/* ================= LEFT SIDE: BRAND CONTENT ================= */}
       <div className="hidden lg:flex w-[50%] relative flex-col p-16 justify-between overflow-hidden bg-[#f8fafc]">
@@ -115,27 +115,27 @@ if (typeof backendError === "string") {
       </div>
 
       {/* ================= RIGHT SIDE: LOGIN FORM ================= */}
-      <div className="w-full lg:w-[50%] flex flex-col justify-center px-8 md:px-16 lg:px-24 bg-white relative z-20 shadow-[-20px_0_50px_rgba(0,0,0,0.02)]">
-        <div className="max-w-md w-full mx-auto">
+      <div className="w-full lg:w-[50%] flex flex-col justify-center px-5 py-6 sm:px-8 md:px-16 lg:px-24 lg:py-0 bg-transparent lg:bg-white relative z-20 shadow-none lg:shadow-[-20px_0_50px_rgba(0,0,0,0.02)]">
+        <div className="max-w-md w-full mx-auto rounded-[28px] bg-white px-6 py-8 shadow-2xl shadow-teal-900/10 ring-1 ring-slate-100 sm:px-8 lg:rounded-none lg:bg-transparent lg:p-0 lg:shadow-none lg:ring-0">
           
-          <header className="mb-12">
+          <header className="mb-8 text-center lg:mb-12 lg:text-left">
             {/* Mobile Logo Only */}
-            <div className="lg:hidden mb-8">
-               <img src="/logo/logo.png" alt="Logo" className="h-14 mx-auto" />
+            <div className="lg:hidden mb-7">
+               <img src="/logo/logo.png" alt="Logo" className="h-24 mx-auto object-contain" />
             </div>
-            <h2 className="text-4xl font-black text-slate-900 mb-3 tracking-tight">Portal Sign In</h2>
-            <p className="text-slate-500 font-medium text-lg">Enter your authorized credentials below.</p>
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-2 lg:mb-3 tracking-tight">Portal Sign In</h2>
+            <p className="text-slate-500 font-medium text-sm sm:text-base lg:text-lg">Enter your authorized credentials below.</p>
           </header>
 
           {error && (
-            <div className="mb-8 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded-r-xl font-medium">
+            <div className="mb-5 lg:mb-8 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded-r-xl font-medium">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5 lg:space-y-6">
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">
+              <label className="block text-xs lg:text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">
                 Email Address
               </label>
               <input
@@ -143,14 +143,14 @@ if (typeof backendError === "string") {
                 value={loginId}
                 onChange={(e) => setLoginId(e.target.value)}
                 placeholder="sales@medicoaid.com"
-                className="w-full h-14 px-5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-[#004d40]/5 focus:border-[#004d40] focus:bg-white outline-none transition-all font-medium"
+                className="w-full h-12 lg:h-14 px-4 lg:px-5 bg-slate-50 border border-slate-200 rounded-xl lg:rounded-2xl focus:ring-4 focus:ring-[#004d40]/5 focus:border-[#004d40] focus:bg-white outline-none transition-all font-medium"
                 required
               />
             </div>
 
             <div>
               <div className="flex justify-between mb-2">
-                <label className="text-sm font-bold text-slate-700 uppercase tracking-wide">
+                <label className="text-xs lg:text-sm font-bold text-slate-700 uppercase tracking-wide">
                   Password
                 </label>
                 <Link to="/forgot-password" size={14} className="text-xs font-bold text-cyan-600 hover:text-[#004d40]">
@@ -163,7 +163,7 @@ if (typeof backendError === "string") {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full h-14 px-5 pr-12 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-[#004d40]/5 focus:border-[#004d40] focus:bg-white outline-none transition-all font-medium"
+                  className="w-full h-12 lg:h-14 px-4 lg:px-5 pr-12 bg-slate-50 border border-slate-200 rounded-xl lg:rounded-2xl focus:ring-4 focus:ring-[#004d40]/5 focus:border-[#004d40] focus:bg-white outline-none transition-all font-medium"
                   required
                 />
                 <button
@@ -179,13 +179,13 @@ if (typeof backendError === "string") {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-15 py-4 bg-[#004d40] text-white rounded-2xl font-bold text-lg shadow-xl shadow-[#004d40]/20 hover:bg-[#00332b] hover:-translate-y-1 transition-all active:scale-95 disabled:opacity-50"
+              className="w-full h-12 lg:h-15 py-3 lg:py-4 bg-[#004d40] text-white rounded-xl lg:rounded-2xl font-bold text-sm lg:text-lg shadow-xl shadow-[#004d40]/20 hover:bg-[#00332b] hover:-translate-y-1 transition-all active:scale-95 disabled:opacity-50"
             >
               {loading ? "Authenticating..." : "Login to Dashboard"}
             </button>
           </form>
 
-          <footer className="mt-12 pt-8 border-t border-slate-100 flex items-center justify-center gap-2">
+          <footer className="mt-8 lg:mt-12 pt-5 lg:pt-8 border-t border-slate-100 flex items-center justify-center gap-2">
              <ShieldCheck size={18} className="text-[#004d40]" />
              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                Secure 256-bit Encrypted Session

@@ -29,10 +29,10 @@ export default function AdminOrderDetails() {
   const doAction = async (action) => {
     setIsUpdating(true);
     try {
-      await api.put(`/admin/orders/${orderId}/${action}`);
+      await api.post(`/orders/${orderId}/${action}`);
       await fetchOrder();
-    } catch {
-      alert("Action failed");
+    } catch (err) {
+      alert(err.response?.data?.message || "Action failed");
     } finally {
       setIsUpdating(false);
     }
@@ -56,13 +56,31 @@ export default function AdminOrderDetails() {
             <button className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">
               <Printer size={14} /> Print Invoice
             </button>
-            {order.status === "PendingAdminApproval" && (
+            {order.status === "Placed" && (
               <button
                 onClick={() => doAction("confirm")}
                 disabled={isUpdating}
                 className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm transition-all"
               >
                 Approve Order
+              </button>
+            )}
+            {order.status === "Confirmed" && (
+              <button
+                onClick={() => doAction("dispatch")}
+                disabled={isUpdating}
+                className="px-4 py-2 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm transition-all"
+              >
+                Dispatch Order
+              </button>
+            )}
+            {order.status === "Dispatched" && (
+              <button
+                onClick={() => doAction("deliver")}
+                disabled={isUpdating}
+                className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 shadow-sm transition-all"
+              >
+                Mark Delivered
               </button>
             )}
           </div>
@@ -77,9 +95,9 @@ export default function AdminOrderDetails() {
           {/* TRACKER */}
           <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm">
             <div className="flex justify-between items-start gap-4">
-              <StatusItem label="Placed" active={true} icon={<Hash size={16}/>} />
-              <StatusItem label="Confirmed" active={order.status !== "PendingAdminApproval"} icon={<CheckCircle2 size={16}/>} />
-              <StatusItem label="Dispatched" active={["Shipped", "Delivered"].includes(order.status)} icon={<Truck size={16}/>} />
+              <StatusItem label="Placed" active={["Placed", "Confirmed", "Dispatched", "Delivered"].includes(order.status)} icon={<Hash size={16}/>} />
+              <StatusItem label="Confirmed" active={["Confirmed", "Dispatched", "Delivered"].includes(order.status)} icon={<CheckCircle2 size={16}/>} />
+              <StatusItem label="Dispatched" active={["Dispatched", "Delivered"].includes(order.status)} icon={<Truck size={16}/>} />
               <StatusItem label="Delivered" active={order.status === "Delivered"} icon={<Package size={16}/>} isLast />
             </div>
           </div>
