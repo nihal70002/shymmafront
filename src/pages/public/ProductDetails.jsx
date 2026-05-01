@@ -627,13 +627,13 @@ const decreaseQuantity = () => {
 
       onClick={prevImage}
 
-      className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-30 
-                 bg-teal-600 text-white hover:bg-teal-700 shadow-xl ring-2 ring-white rounded-full p-3.5 sm:p-4
+      className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30
+                 text-white lg:text-gray-500 hover:text-gray-800 drop-shadow-[0_1px_3px_rgba(0,0,0,0.75)]
                  transition opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
 
     >
 
-      <ChevronLeft size={26} />
+      <ChevronLeft size={32} strokeWidth={2.5} />
 
     </button>
 
@@ -759,13 +759,13 @@ const decreaseQuantity = () => {
 
       onClick={nextImage}
 
-      className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-30
-                 bg-teal-600 text-white hover:bg-teal-700 shadow-xl ring-2 ring-white rounded-full p-3.5 sm:p-4
+      className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30
+                 text-white lg:text-gray-500 hover:text-gray-800 drop-shadow-[0_1px_3px_rgba(0,0,0,0.75)]
                  transition opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
 
     >
 
-      <ChevronRight size={26} />
+      <ChevronRight size={32} strokeWidth={2.5} />
 
     </button>
 
@@ -781,7 +781,7 @@ const decreaseQuantity = () => {
 
 </div>
 
-<div className="flex gap-3 px-4 py-4 justify-start sm:justify-center bg-white overflow-x-auto border-t border-gray-100">
+<div className="flex gap-3 px-4 py-4 justify-center bg-white overflow-x-auto border-t border-gray-100">
 
   {[...(product.images || []).map((url) => ({ type: "image", url })), ...(product.videos || []).map((url) => ({ type: "video", url }))]
 
@@ -929,7 +929,7 @@ const decreaseQuantity = () => {
 
     <h3 className="text-sm font-bold uppercase mb-3">Select Class</h3>
 
-    <div className="flex gap-2 flex-wrap">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
 
       {classOptions.map(option => (
 
@@ -939,7 +939,7 @@ const decreaseQuantity = () => {
 
           onClick={() => setSelectedClass(option)}
 
-          className={`px-4 py-2 border rounded-md ${
+          className={`w-full px-3 py-2 border rounded-md text-sm ${
 
             selectedClass === option
 
@@ -1089,7 +1089,7 @@ const decreaseQuantity = () => {
 
     ) : (
 
-      <div className="flex gap-2">
+      <div className="grid grid-cols-5 gap-2">
 
         {filteredVariants.map(v => (
 
@@ -1105,7 +1105,7 @@ const decreaseQuantity = () => {
 
             }}
 
-            className={`min-w-[56px] h-10 px-4 rounded-full border-2 font-bold text-sm flex items-center justify-center transition ${
+            className={`w-full h-10 px-2 rounded-full border-2 font-bold text-xs sm:text-sm flex items-center justify-center transition ${
 
               selectedVariant?.id === v.id
 

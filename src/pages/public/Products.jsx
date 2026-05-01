@@ -10,8 +10,7 @@ import api from "../../api/axios";
 
 export default function Products() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const categoryIdFromUrl = searchParams.get("categoryIds");
+  const [searchParams, setSearchParams] = useSearchParams();
 
 
   const [products, setProducts] = useState([]);
@@ -23,7 +22,7 @@ const [page, setPage] = useState(1);
 const [hasMore, setHasMore] = useState(true);
 const PAGE_SIZE = 12;
 const [selectedCategories, setSelectedCategories] = useState(() =>
-  categoryIdFromUrl ? [Number(categoryIdFromUrl)] : []
+  searchParams.getAll("categoryIds").map(Number).filter(Boolean)
 );
 const [brands, setBrands] = useState([]);
 const [selectedBrand, setSelectedBrand] = useState(null);
@@ -42,6 +41,17 @@ const requestIdRef = useRef(0);
 // Use the exact case-sensitive name from your pgAdmin screenshot: ParentCategoryId
 const parentCategories = allCategories.filter(cat => cat.parentCategoryId === null);
 const allSubCategories = allCategories.filter(cat => cat.parentCategoryId !== null);
+
+const syncCategoryParams = (categoryIds) => {
+  const nextParams = new URLSearchParams(searchParams);
+  nextParams.delete("categoryIds");
+
+  categoryIds.forEach(id => {
+    nextParams.append("categoryIds", id);
+  });
+
+  setSearchParams(nextParams, { replace: true });
+};
 
 const loadProducts = useCallback(async (pageNo, reset = false) => {
   const requestId = ++requestIdRef.current;
@@ -130,13 +140,17 @@ useEffect(() => {
 }, [selectedCategories, selectedBrand, searchQuery, loadProducts]);
 
 useEffect(() => {
-  if (categoryIdFromUrl) {
-    const next = [Number(categoryIdFromUrl)];
-    setSelectedCategories(prev => (
-      prev.length === 1 && prev[0] === next[0] ? prev : next
-    ));
-  }
-}, [categoryIdFromUrl]);
+  const next = searchParams
+    .getAll("categoryIds")
+    .map(Number)
+    .filter(Boolean);
+
+  setSelectedCategories(prev => (
+    prev.length === next.length && prev.every((id, index) => id === next[index])
+      ? prev
+      : next
+  ));
+}, [searchParams]);
 
 
 
@@ -200,11 +214,14 @@ useEffect(() => {
 }, []);
 
 const toggleSubCategory = (subId) => {
-  setSelectedCategories(prev =>
-    prev.includes(subId)
+  setSelectedCategories(prev => {
+    const next = prev.includes(subId)
       ? prev.filter(id => id !== subId)
-      : [...prev, subId]
-  );
+      : [...prev, subId];
+
+    syncCategoryParams(next);
+    return next;
+  });
 };
 
 
@@ -233,11 +250,14 @@ const toggleSubCategory = (subId) => {
 
 
 const toggleCategory = (categoryId) => {
-  setSelectedCategories(prev =>
-    prev.includes(categoryId)
+  setSelectedCategories(prev => {
+    const next = prev.includes(categoryId)
       ? prev.filter(id => id !== categoryId)
-      : [...prev, categoryId]
-  );
+      : [...prev, categoryId];
+
+    syncCategoryParams(next);
+    return next;
+  });
 };
 
 
@@ -249,6 +269,7 @@ const clearFilters = () => {
   setShowCategorySearch(false);
   setShowBrandSearch(false);
   setSearchQuery("");
+  syncCategoryParams([]);
 };
 
 useEffect(() => {

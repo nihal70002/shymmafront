@@ -14,12 +14,12 @@ export default function ProductCard({ product, onAddToCart }) {
   };
 
   return (
-    <div className="group flex flex-col rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-lg transition-all duration-300">
+    <div className="group flex h-[360px] sm:h-[390px] flex-col rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-lg transition-all duration-300">
       
       {/* IMAGE (UNCHANGED) */}
       <div
   onClick={handleView}
-  className="relative h-64 w-full cursor-pointer rounded-t-2xl 
+  className="relative h-[230px] sm:h-64 w-full flex-shrink-0 cursor-pointer rounded-t-2xl 
              bg-white flex items-center justify-center overflow-hidden
              transition"
 >
@@ -39,22 +39,22 @@ export default function ProductCard({ product, onAddToCart }) {
       </div>
 
       {/* CONTENT */}
-      <div className="flex flex-col gap-1.5 p-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-1.5 p-3">
 
         {/* BRAND */}
         {product.brandName && (
-          <p className="text-[10px] font-bold text-slate-600 tracking-wide uppercase">
+          <p className="h-4 truncate text-[10px] font-bold text-slate-600 tracking-wide uppercase">
             {product.brandName}
           </p>
         )}
 
         {/* PRODUCT NAME */}
-        <h3 className="line-clamp-2 text-sm font-semibold text-slate-900 leading-snug">
+        <h3 className="line-clamp-2 min-h-[40px] text-sm font-semibold text-slate-900 leading-snug">
           {product.name}
         </h3>
 
         {/* PRICE */}
-        <div className="flex items-center gap-1.5">
+        <div className="mt-auto flex items-center gap-1.5">
           <span className="text-base font-bold text-slate-900">
             ₹{price}
           </span>
