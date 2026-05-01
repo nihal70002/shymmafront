@@ -70,11 +70,15 @@ const showBackButton =
       try {
         setLoading(true);
 
-        const res = await api.get(
-          `/products/search-suggestions?query=${encodeURIComponent(searchQuery)}`
-        );
+        const res = await api.get("/products", {
+          params: {
+            page: 1,
+            pageSize: 6,
+            search: searchQuery.trim()
+          }
+        });
 
-        setSuggestions(res.data);
+        setSuggestions(res.data?.items || []);
       } catch (err) {
         console.error("Suggestion fetch error", err);
         setSuggestions([]);
@@ -158,7 +162,7 @@ const showBackButton =
           <div
             key={item.productId}
             onClick={() => {
-              navigate(`/product/${item.productId}`);
+              navigate(`/products/${item.productId}`);
               setSearchQuery("");
               setShowDropdown(false);
             }}
@@ -275,7 +279,7 @@ const showBackButton =
             <div
               key={item.productId}
               onClick={() => {
-                navigate(`/product/${item.productId}`);
+                navigate(`/products/${item.productId}`);
                 setSearchQuery("");
                 setShowMobileSearch(false);
               }}

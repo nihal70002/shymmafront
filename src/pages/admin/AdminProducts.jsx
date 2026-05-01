@@ -381,14 +381,9 @@ export default function AdminProducts() {
       if (editingId) {
         await api.put(`/admin/products/${editingId}`, productPayload);
 
-        if (variantData.length > 0)
-          for (const v of variantData) {
-            if (v.variantId) {
-              await api.put(`/admin/products/variant/${v.variantId}`, v);
-            } else {
-              await api.post(`/admin/products/${editingId}/variant`, v);
-            }
-          }
+        if (variantData.length > 0) {
+          await api.put(`/admin/products/${editingId}/variants`, variantData);
+        }
       } else {
         const createPayload = {
           ...productPayload,
