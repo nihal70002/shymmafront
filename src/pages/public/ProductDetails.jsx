@@ -610,13 +610,12 @@ const decreaseQuantity = () => {
 
       )}
 
-        {/* LEFT: IMAGES */}
+      {/* LEFT: IMAGES */}
 
-        <div className="w-full lg:w-[60%] p-0 lg:p-4 border-b lg:border-b-0 lg:border-r border-gray-100">
+      <div className="w-full lg:w-[60%] p-0 lg:p-4 border-b lg:border-b-0 lg:border-r border-gray-100">
 
-          <div className="relative overflow-hidden lg:rounded-lg border-b lg:border border-gray-200 bg-white h-[420px] lg:h-[460px] w-full">
-
- <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-white group">
+        <div className="relative lg:rounded-lg border-b lg:border border-gray-200 bg-white w-full">
+ <div className="relative rounded-lg border border-gray-200 bg-white group">
 
   
 
@@ -628,15 +627,13 @@ const decreaseQuantity = () => {
 
       onClick={prevImage}
 
-      className="absolute left-3 top-1/2 -translate-y-1/2 z-20 
-
-                 bg-white/80 hover:bg-white shadow rounded-full p-2
-
-                 transition opacity-0 group-hover:opacity-100"
+      className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-30 
+                 bg-teal-600 text-white hover:bg-teal-700 shadow-xl ring-2 ring-white rounded-full p-3.5 sm:p-4
+                 transition opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
 
     >
 
-      <ChevronLeft size={22} />
+      <ChevronLeft size={26} />
 
     </button>
 
@@ -646,7 +643,7 @@ const decreaseQuantity = () => {
 
   {/* IMAGE WITH ZOOM */}
 
-  <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-white h-[420px] lg:h-[460px] w-full">
+  <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-white h-[300px] sm:h-[380px] lg:h-[460px] w-full">
 
 
 
@@ -718,7 +715,7 @@ const decreaseQuantity = () => {
 
             alt={`${product.name} ${index + 1}`}
 
-            className="max-h-[420px] w-auto object-contain"
+            className="max-h-[300px] sm:max-h-[380px] lg:max-h-[420px] w-auto object-contain"
 
           />
 
@@ -732,9 +729,11 @@ const decreaseQuantity = () => {
 
             playsInline
 
-            className="max-h-[420px] w-auto object-contain bg-black rounded"
+            className="max-h-[300px] sm:max-h-[380px] lg:max-h-[420px] w-auto object-contain bg-black rounded"
 
-          />
+          >
+            <span className="absolute inset-0 flex items-center justify-center bg-black/20 text-white text-lg">▶</span>
+          </video>
 
         )}
 
@@ -760,15 +759,13 @@ const decreaseQuantity = () => {
 
       onClick={nextImage}
 
-      className="absolute right-3 top-1/2 -translate-y-1/2 z-20
-
-                 bg-white/80 hover:bg-white shadow rounded-full p-2
-
-                 transition opacity-0 group-hover:opacity-100"
+      className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-30
+                 bg-teal-600 text-white hover:bg-teal-700 shadow-xl ring-2 ring-white rounded-full p-3.5 sm:p-4
+                 transition opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
 
     >
 
-      <ChevronRight size={22} />
+      <ChevronRight size={26} />
 
     </button>
 
@@ -784,7 +781,7 @@ const decreaseQuantity = () => {
 
 </div>
 
-<div className="flex gap-2 p-2 justify-center bg-white ">
+<div className="flex gap-3 px-4 py-4 justify-start sm:justify-center bg-white overflow-x-auto border-t border-gray-100">
 
   {[...(product.images || []).map((url) => ({ type: "image", url })), ...(product.videos || []).map((url) => ({ type: "video", url }))]
 
@@ -796,7 +793,7 @@ const decreaseQuantity = () => {
 
       onClick={() => setSelectedMediaIndex(index)}
 
-      className={`w-20 h-20 border rounded-md overflow-hidden transition ${
+      className={`relative w-20 h-20 sm:w-24 sm:h-24 flex-none border rounded-md overflow-hidden bg-white shadow-sm transition ${
 
         selectedMediaIndex === index
 
@@ -822,17 +819,22 @@ const decreaseQuantity = () => {
 
       ) : (
 
-        <video
+        <>
 
-          src={item.url}
+          <video
 
-          muted
+            src={item.url}
 
-          playsInline
+            muted
 
-          className="w-full h-full object-contain bg-black"
+            playsInline
 
-        />
+            className="w-full h-full object-contain bg-black"
+
+          />
+          <span className="absolute inset-0 flex items-center justify-center bg-black/20 text-white text-lg">▶</span>
+
+        </>
 
       )}
 
