@@ -44,13 +44,12 @@ const [showMobileSearch, setShowMobileSearch] = useState(false);
 useEffect(() => {
   async function fetchData() {
     try {
-      // fetch products
-      const productRes = await getProducts();
+      const [productRes, categoryRes] = await Promise.all([
+        getProducts(),
+        getCategories()
+      ]);
       const products = productRes.data?.items || [];
       setFeaturedProducts(products.slice(0, 4));
-
-      // fetch categories
-      const categoryRes = await getCategories();
 
       // show only main categories (no subcategories)
       const mainCategories = (categoryRes.data || []).filter(
@@ -543,7 +542,7 @@ lg:aspect-[1660/490]"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 1 }}
+            transition={{ duration: 0.2 }}
             className="flex justify-between items-center mb-10"
           >
             <h2 className="text-2xl sm:text-3xl font-bold">
@@ -585,9 +584,9 @@ lg:aspect-[1660/490]"
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ 
-                      duration: 1.2, 
-                      delay: index * 0.1, // Slight stagger so they don't hit at the exact same time
-                      ease: [0.22, 1, 0.36, 1] // Smooth "S-curve" easing
+                      duration: 0.25, 
+                      delay: index * 0.03,
+                      ease: [0.22, 1, 0.36, 1]
                     }}
                   >
                     <Link
@@ -646,7 +645,7 @@ lg:aspect-[1660/490]"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: index * 0.1 }}
+          transition={{ duration: 0.25, delay: index * 0.03 }}
           className="group"
         >
           <Link to={product.link} className="block">
