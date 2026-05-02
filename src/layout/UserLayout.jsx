@@ -181,9 +181,6 @@ const showBackButton = location.pathname !== "/";
                 {item.brandName}
               </span>
 
-              <span className="text-sm font-semibold text-emerald-600">
-                SAR {item.startingPrice}
-              </span>
             </div>
           </div>
         ))}

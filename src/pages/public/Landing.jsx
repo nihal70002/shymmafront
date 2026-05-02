@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import { getProducts } from "../../api/products.api";
 import { motion } from "framer-motion";
 import { getCategories } from "../../api/categories.api";
+import api from "../../api/axios";
 
 
 import { LogOut } from "lucide-react";
@@ -37,6 +38,7 @@ export default function Landing() {
 const [suggestions, setSuggestions] = useState([]);
 const [showDropdown, setShowDropdown] = useState(false);
 const [loadingSearch, setLoadingSearch] = useState(false);
+const [showMobileSearch, setShowMobileSearch] = useState(false);
 
 
 useEffect(() => {
@@ -67,6 +69,42 @@ useEffect(() => {
   fetchData();
 }, []);
 
+useEffect(() => {
+  if (!searchQuery.trim()) {
+    setSuggestions([]);
+    return;
+  }
+
+  const delayDebounce = setTimeout(async () => {
+    try {
+      setLoadingSearch(true);
+      const res = await api.get("/products", {
+        params: {
+          page: 1,
+          pageSize: 6,
+          search: searchQuery.trim()
+        }
+      });
+      setSuggestions(res.data?.items || []);
+    } catch (err) {
+      console.error("Landing search error", err);
+      setSuggestions([]);
+    } finally {
+      setLoadingSearch(false);
+    }
+  }, 300);
+
+  return () => clearTimeout(delayDebounce);
+}, [searchQuery]);
+
+const handleSearchSubmit = () => {
+  const query = searchQuery.trim();
+  if (!query) return;
+  navigate(`/products?search=${encodeURIComponent(query)}`);
+  setShowDropdown(false);
+  setShowMobileSearch(false);
+};
+
 
 
 
@@ -77,14 +115,14 @@ useEffect(() => {
     name: "Multifix Humeral Nail",
     desc: "A precision-engineered intramedullary fixation system designed to provide superior stability and anatomical alignment in humeral fracture management. Built with high-strength titanium alloy for long-term durability.",
     img: "/products/multifix.jpg",
-    link: "/products/multifix-humeral-nail"
+    link: "/products/45"
   },
   {
     id: 2,
     name: "Femoral Neck System",
     desc: "An advanced fixation solution offering controlled compression and enhanced rotational stability for effective treatment of femoral neck fractures, supporting faster mobilization and reliable clinical outcomes.",
     img: "/products/walk.jpg",
-    link: "/products/femoral-neck-system"
+    link: "/products/37"
   }
 ];
 
@@ -103,23 +141,23 @@ useEffect(() => {
 
 
   return (
-    <div className="w-full min-h-screen bg-white text-gray-800 overflow-x-hidden">
+    <div className="w-full min-h-screen bg-white text-gray-800 overflow-x-hidden pt-[58px] sm:pt-0">
 
       {/* ================= NAVBAR ================= */}
-      <nav className="sticky top-0 z-50 bg-white shadow-sm">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+      <nav className="fixed sm:sticky top-0 left-0 right-0 z-50 bg-white shadow-sm">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 sm:gap-4">
 
     {/* LOGO */}
     <Link to="/" className="flex items-center gap-2">
   <img
     src="/logo/logo.png"
     alt="logo"
-    className="h-20 sm:h-19 md:h-22 w-auto object-contain"
+    className="h-10 sm:h-19 md:h-22 w-auto object-contain"
   />
 </Link>
 
     {/* SEARCH BAR */}
-    <div className="flex-1 max-w-xl w-full flex mx-2">
+    <div className="hidden sm:flex flex-1 max-w-xl w-full mx-2">
       <div className="w-full relative">
 
         <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
@@ -133,8 +171,7 @@ useEffect(() => {
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              navigate(`/products?search=${searchQuery}`);
-              setShowDropdown(false);
+              handleSearchSubmit();
             }
           }}
           className="w-full pl-10 pr-4 py-2 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500"
@@ -184,9 +221,6 @@ useEffect(() => {
                         {item.brandName}
                       </span>
 
-                      <span className="text-sm font-semibold text-cyan-600">
-                        SAR{item.startingPrice}
-                      </span>
                     </div>
                   </div>
                 ))}
@@ -197,8 +231,7 @@ useEffect(() => {
             {!loadingSearch && suggestions.length > 6 && (
               <div
                 onClick={() => {
-                  navigate(`/products?search=${searchQuery}`);
-                  setShowDropdown(false);
+                  handleSearchSubmit();
                 }}
                 className="text-center mt-4 pt-3 border-t text-sm font-semibold text-cyan-600 hover:text-cyan-700 cursor-pointer"
               >
@@ -213,7 +246,15 @@ useEffect(() => {
     </div>
 
     {/* ACTION ICONS */}
-    <div className="flex items-center gap-6 text-gray-600">
+    <div className="flex items-center gap-4 sm:gap-6 text-gray-600">
+
+      <button
+        onClick={() => setShowMobileSearch(prev => !prev)}
+        className="sm:hidden flex flex-col items-center hover:text-black transition"
+      >
+        <Search size={22} />
+        <span className="text-xs">Search</span>
+      </button>
 
       {!localStorage.getItem("token") ? (
         <button
@@ -263,6 +304,61 @@ useEffect(() => {
 
   </div>
 </nav>
+
+{showMobileSearch && (
+  <div className="sm:hidden fixed left-0 right-0 top-[58px] z-40 bg-white px-4 py-3 border-b border-gray-200 shadow-lg">
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+      <input
+        autoFocus
+        type="text"
+        placeholder="Search for products..."
+        value={searchQuery}
+        onFocus={() => setShowDropdown(true)}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            handleSearchSubmit();
+          }
+        }}
+        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-cyan-500"
+      />
+    </div>
+
+    {searchQuery.trim().length > 0 && (
+      <div className="mt-3 bg-white rounded-xl border border-gray-100 shadow-lg p-3">
+        {loadingSearch && <div className="text-sm text-gray-500 px-2 py-2">Searching...</div>}
+
+        {!loadingSearch && suggestions.length === 0 && (
+          <div className="text-sm text-gray-500 px-2 py-2">No results found</div>
+        )}
+
+        {!loadingSearch &&
+          suggestions.slice(0, 5).map((item) => (
+            <div
+              key={item.productId}
+              onClick={() => {
+                navigate(`/products/${item.productId}`);
+                setSearchQuery("");
+                setShowMobileSearch(false);
+              }}
+              className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+            >
+              <img
+                src={item.primaryImageUrl || "/placeholder.jpg"}
+                alt={item.name}
+                className="w-10 h-10 rounded-md object-cover border"
+              />
+              <div>
+                <p className="text-sm font-medium line-clamp-1">{item.name}</p>
+                <p className="text-xs text-gray-500">{item.brandName}</p>
+              </div>
+            </div>
+          ))}
+      </div>
+    )}
+  </div>
+)}
 
       {/* ================= HERO SLIDER ================= */}
    {/* ================= HERO SLIDER ================= */}
@@ -479,11 +575,6 @@ lg:aspect-[1660/490]"
             {/* Products with Alternating Slide Animation */}
             {!loading &&
               featuredProducts.map((product, index) => {
-                const price =
-                  product.variants?.find((v) => v.availableStock > 0)?.price ||
-                  product.variants?.[0]?.price ||
-                  0;
-
                 // Animation logic: Index 0,1 slide from Left (-100), Index 2,3 slide from Right (100)
                 const direction = index < 2 ? -100 : 100;
 
@@ -514,9 +605,6 @@ lg:aspect-[1660/490]"
                       <div className="p-4">
                         <p className="font-semibold text-sm line-clamp-2">
                           {product.name}
-                        </p>
-                        <p className="text-cyan-600 font-bold mt-2">
-                          ₹{price}
                         </p>
                       </div>
                     </Link>

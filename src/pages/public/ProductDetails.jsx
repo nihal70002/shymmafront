@@ -598,7 +598,7 @@ const decreaseQuantity = () => {
 
       {/* PRODUCT CONTENT */}
 
-      <div className="max-w-screen-2xl mx-auto flex flex-col lg:flex-row bg-white lg:my-4 shadow-sm">
+      <div className="max-w-screen-2xl mx-auto flex flex-col lg:flex-row lg:flex-wrap bg-white lg:my-4 shadow-sm">
 
         {showToast && (
 
@@ -829,10 +829,14 @@ const decreaseQuantity = () => {
 
             playsInline
 
-            className="w-full h-full object-contain bg-black"
+            preload="metadata"
+
+            className="w-full h-full object-cover bg-white"
 
           />
-          <span className="absolute inset-0 flex items-center justify-center bg-black/20 text-white text-lg">▶</span>
+          <span className="absolute inset-0 flex items-center justify-center bg-black/10">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-gray-900 shadow-md text-sm">▶</span>
+          </span>
 
         </>
 
@@ -1202,11 +1206,16 @@ const decreaseQuantity = () => {
 
 </div>
 
+        </div>
+
 {product.components?.length > 0 && (
 
-  <div className="mt-6 rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+  <div className="basis-full px-4 lg:px-6 pb-6">
+
+  <div className="mt-6 rounded-xl border border-gray-200 overflow-hidden shadow-sm w-full">
 
 
+  <div className="p-6">
 
     {/* Header */}
 
@@ -1314,18 +1323,17 @@ const decreaseQuantity = () => {
 
         </tbody>
 
-
-
       </table>
 
     </div>
 
+  </div>
 
+  </div>
 
   </div>
 
 )}
-
 
 
 {showLoginModal && (
@@ -1564,7 +1572,7 @@ const decreaseQuantity = () => {
 
           {/* Product Details */}
 
-          <div className="mb-4">
+          <div className="basis-full px-4 lg:px-6 pb-6">
 
             <h3 className="text-sm font-bold text-gray-900 mb-3 uppercase">Product Details</h3>
 
@@ -1606,7 +1614,7 @@ const decreaseQuantity = () => {
 
               <div className="flex text-sm">
 
-                <span className="w-28 text-gray-600 font-medium">Warranty:</span>
+                
 
                 <span className="text-gray-900">1 Year Manufacturer</span>
 
@@ -1615,8 +1623,6 @@ const decreaseQuantity = () => {
             </div>
 
           </div>
-
-        </div>
 
       </div>
 
