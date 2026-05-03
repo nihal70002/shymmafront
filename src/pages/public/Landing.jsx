@@ -616,11 +616,11 @@ lg:aspect-[1660/490]"
 
 
       {/* ================= NEW PRODUCTS ================= */}
-<section className="py-20 bg-white">
+<section className="pt-10 pb-20 bg-white">
   <div className="max-w-7xl mx-auto px-6">
     
     {/* Header - More Professional Typography */}
-    <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-4">
+    <div className="flex flex-col md:flex-row justify-between md:items-center mb-10 gap-4">
       <div className="space-y-2">
         <span className="text-cyan-600 font-bold tracking-widest text-xs uppercase">Premium Range</span>
         <h2 className="text-3xl md:text-4xl font-serif text-slate-900 leading-tight">
