@@ -18,211 +18,211 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-const [page, setPage] = useState(1);
-const [hasMore, setHasMore] = useState(true);
-const PAGE_SIZE = 12;
-const [selectedCategories, setSelectedCategories] = useState(() =>
-  searchParams.getAll("categoryIds").map(Number).filter(Boolean)
-);
-const [brands, setBrands] = useState([]);
-const [selectedBrand, setSelectedBrand] = useState(null);
-const [showCategorySearch, setShowCategorySearch] = useState(false);
-const [showBrandSearch, setShowBrandSearch] = useState(false);
-const [categorySearch, setCategorySearch] = useState("");
-const [brandSearch, setBrandSearch] = useState("");
-const [allCategories, setAllCategories] = useState([]); // Holds all categories from DB
-const [showAllCategories, setShowAllCategories] = useState(false); 
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const PAGE_SIZE = 12;
+  const [selectedCategories, setSelectedCategories] = useState(() =>
+    searchParams.getAll("categoryIds").map(Number).filter(Boolean)
+  );
+  const [brands, setBrands] = useState([]);
+  const [selectedBrand, setSelectedBrand] = useState(null);
+  const [showCategorySearch, setShowCategorySearch] = useState(false);
+  const [showBrandSearch, setShowBrandSearch] = useState(false);
+  const [categorySearch, setCategorySearch] = useState("");
+  const [brandSearch, setBrandSearch] = useState("");
+  const [allCategories, setAllCategories] = useState([]); // Holds all categories from DB
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
 
 
-const observer = useRef();
-const requestIdRef = useRef(0);
+  const observer = useRef();
+  const requestIdRef = useRef(0);
 
-// Use the exact case-sensitive name from your pgAdmin screenshot: ParentCategoryId
-const parentCategories = allCategories.filter(cat => cat.parentCategoryId === null);
-const allSubCategories = allCategories.filter(cat => cat.parentCategoryId !== null);
+  // Use the exact case-sensitive name from your pgAdmin screenshot: ParentCategoryId
+  const parentCategories = allCategories.filter(cat => cat.parentCategoryId === null);
+  const allSubCategories = allCategories.filter(cat => cat.parentCategoryId !== null);
 
-const syncCategoryParams = (categoryIds) => {
-  const nextParams = new URLSearchParams(searchParams);
-  nextParams.delete("categoryIds");
+  const syncCategoryParams = (categoryIds) => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("categoryIds");
 
-  categoryIds.forEach(id => {
-    nextParams.append("categoryIds", id);
-  });
-
-  setSearchParams(nextParams, { replace: true });
-};
-
-const loadProducts = useCallback(async (pageNo, reset = false) => {
-  const requestId = ++requestIdRef.current;
-  try {
-    setLoading(true);
-
-    console.log("FETCHING PRODUCTS:", {
-      page: pageNo,
-      selectedCategories,
-      brand: selectedBrand,
-      search: searchQuery
+    categoryIds.forEach(id => {
+      nextParams.append("categoryIds", id);
     });
 
-    const res = await api.get("/products", {
-  params: {
-    page: pageNo || 1,
-    pageSize: PAGE_SIZE,
-    categoryIds: selectedCategories, 
-    brandId: selectedBrand,
-    search: searchQuery
-  },
-  paramsSerializer: params => {
-    const searchParams = new URLSearchParams();
+    setSearchParams(nextParams, { replace: true });
+  };
 
-    Object.keys(params).forEach(key => {
-      if (Array.isArray(params[key])) {
-        params[key].forEach(v =>
-          searchParams.append(key, v)
-        );
-      } else if (params[key] !== null && params[key] !== undefined) {
-        searchParams.append(key, params[key]);
+  const loadProducts = useCallback(async (pageNo, reset = false) => {
+    const requestId = ++requestIdRef.current;
+    try {
+      setLoading(true);
+
+      console.log("FETCHING PRODUCTS:", {
+        page: pageNo,
+        selectedCategories,
+        brand: selectedBrand,
+        search: searchQuery
+      });
+
+      const res = await api.get("/products", {
+        params: {
+          page: pageNo || 1,
+          pageSize: PAGE_SIZE,
+          categoryIds: selectedCategories,
+          brandId: selectedBrand,
+          search: searchQuery
+        },
+        paramsSerializer: params => {
+          const searchParams = new URLSearchParams();
+
+          Object.keys(params).forEach(key => {
+            if (Array.isArray(params[key])) {
+              params[key].forEach(v =>
+                searchParams.append(key, v)
+              );
+            } else if (params[key] !== null && params[key] !== undefined) {
+              searchParams.append(key, params[key]);
+            }
+          });
+
+          return searchParams.toString();
+        }
+      });
+
+      const items = res.data.items || [];
+
+      if (requestId !== requestIdRef.current) return;
+
+      setProducts(prev =>
+        reset ? items : [...prev, ...items]
+      );
+
+      setHasMore(res.data.hasMore);
+      setPage(pageNo);
+
+    } catch (err) {
+      console.error("LOAD PRODUCTS ERROR:", err);
+    } finally {
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+      }
+    }
+  }, [selectedCategories, selectedBrand, searchQuery]);
+
+
+
+
+
+  const lastProductRef = useCallback(node => {
+    if (loading) return;
+    if (observer.current) observer.current.disconnect();
+
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        const nextPage = page + 1;
+        loadProducts(nextPage);
       }
     });
 
-    return searchParams.toString();
-  }
-});
-
-    const items = res.data.items || [];
-
-    if (requestId !== requestIdRef.current) return;
-
-    setProducts(prev =>
-      reset ? items : [...prev, ...items]
-    );
-
-    setHasMore(res.data.hasMore);
-    setPage(pageNo);
-
-  } catch (err) {
-    console.error("LOAD PRODUCTS ERROR:", err);
-  } finally {
-    if (requestId === requestIdRef.current) {
-      setLoading(false);
-    }
-  }
-}, [selectedCategories, selectedBrand, searchQuery]);
+    if (node) observer.current.observe(node);
+  }, [loading, hasMore, page, selectedCategories, selectedBrand, searchQuery]);
 
 
 
 
 
-const lastProductRef = useCallback(node => {
-  if (loading) return;
-  if (observer.current) observer.current.disconnect();
+  // This effect runs on mount AND whenever filters change
+  useEffect(() => {
+    setPage(1);
+    setHasMore(true);
+    loadProducts(1, true);
+  }, [selectedCategories, selectedBrand, searchQuery, loadProducts]);
 
-  observer.current = new IntersectionObserver(entries => {
-    if (entries[0].isIntersecting && hasMore) {
-      const nextPage = page + 1;
-      loadProducts(nextPage);
-    }
-  });
+  useEffect(() => {
+    const next = searchParams
+      .getAll("categoryIds")
+      .map(Number)
+      .filter(Boolean);
 
-  if (node) observer.current.observe(node);
-}, [loading, hasMore, page, selectedCategories, selectedBrand, searchQuery]);
-
-
-
-
-
-// This effect runs on mount AND whenever filters change
-useEffect(() => {
-  setPage(1);
-  setHasMore(true);
-  loadProducts(1, true);
-}, [selectedCategories, selectedBrand, searchQuery, loadProducts]);
-
-useEffect(() => {
-  const next = searchParams
-    .getAll("categoryIds")
-    .map(Number)
-    .filter(Boolean);
-
-  setSelectedCategories(prev => (
-    prev.length === next.length && prev.every((id, index) => id === next[index])
-      ? prev
-      : next
-  ));
-}, [searchParams]);
+    setSelectedCategories(prev => (
+      prev.length === next.length && prev.every((id, index) => id === next[index])
+        ? prev
+        : next
+    ));
+  }, [searchParams]);
 
 
 
 
-// Keep loadCart separate so it only runs once on mount
-useEffect(() => {
-  const token = localStorage.getItem("token");
+  // Keep loadCart separate so it only runs once on mount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
 
-  if (!token) return; // 🚫 skip cart API if not logged in
+    if (!token) return; // 🚫 skip cart API if not logged in
 
-  loadCart();
-}, []);
-
-
-
-useEffect(() => {
-  const queryFromUrl = searchParams.get("search") || "";
-  setSearchQuery(queryFromUrl);
-}, [searchParams]);
+    loadCart();
+  }, []);
 
 
 
-const loadCart = async () => {
-  const cartRes = await getCart();
-  setCartCount(cartRes.data?.length || 0);
-};
+  useEffect(() => {
+    const queryFromUrl = searchParams.get("search") || "";
+    setSearchQuery(queryFromUrl);
+  }, [searchParams]);
 
 
 
-
-
-
-
-
-useEffect(() => {
-  const loadFilters = async () => {
-    try {
-      const res = await api.get("/brands");
-      setBrands(res.data || []);
-    } catch (err) {
-      console.error("Failed to load brands", err);
-    }
+  const loadCart = async () => {
+    const cartRes = await getCart();
+    setCartCount(cartRes.data?.length || 0);
   };
 
-  loadFilters();
-}, []);
 
 
-useEffect(() => {
-  const loadCategories = async () => {
-    try {
-      const res = await api.get("/categories");
-      console.log("CATEGORIES:", res.data);
-      setAllCategories(res.data || []);
-    } catch (err) {
-      console.error("Failed to load categories", err);
-    }
+
+
+
+
+
+  useEffect(() => {
+    const loadFilters = async () => {
+      try {
+        const res = await api.get("/brands");
+        setBrands(res.data || []);
+      } catch (err) {
+        console.error("Failed to load brands", err);
+      }
+    };
+
+    loadFilters();
+  }, []);
+
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const res = await api.get("/categories");
+        console.log("CATEGORIES:", res.data);
+        setAllCategories(res.data || []);
+      } catch (err) {
+        console.error("Failed to load categories", err);
+      }
+    };
+
+    loadCategories();
+  }, []);
+
+  const toggleSubCategory = (subId) => {
+    setSelectedCategories(prev => {
+      const next = prev.includes(subId)
+        ? prev.filter(id => id !== subId)
+        : [...prev, subId];
+
+      syncCategoryParams(next);
+      return next;
+    });
   };
-
-  loadCategories();
-}, []);
-
-const toggleSubCategory = (subId) => {
-  setSelectedCategories(prev => {
-    const next = prev.includes(subId)
-      ? prev.filter(id => id !== subId)
-      : [...prev, subId];
-
-    syncCategoryParams(next);
-    return next;
-  });
-};
 
 
 
@@ -233,7 +233,7 @@ const toggleSubCategory = (subId) => {
       await addToCartApi(Number(variantId), 1);
       const updatedCart = await getCart();
       setCartCount(updatedCart.data?.length || 0);
-      
+
       const notification = document.createElement('div');
       notification.className = 'fixed top-20 right-6 bg-teal-600 text-white px-5 py-2.5 rounded-md shadow-lg font-medium z-50 text-xs';
       notification.textContent = '✓ Added to bag';
@@ -249,53 +249,53 @@ const toggleSubCategory = (subId) => {
 
 
 
-const toggleCategory = (categoryId) => {
-  setSelectedCategories(prev => {
-    const next = prev.includes(categoryId)
-      ? prev.filter(id => id !== categoryId)
-      : [...prev, categoryId];
+  const toggleCategory = (categoryId) => {
+    setSelectedCategories(prev => {
+      const next = prev.includes(categoryId)
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId];
 
-    syncCategoryParams(next);
-    return next;
-  });
-};
+      syncCategoryParams(next);
+      return next;
+    });
+  };
 
 
-const clearFilters = () => {
-  setSelectedCategories([]);
-  setSelectedBrand(null);
-  setCategorySearch("");
-  setBrandSearch("");
-  setShowCategorySearch(false);
-  setShowBrandSearch(false);
-  setSearchQuery("");
-  syncCategoryParams([]);
-};
+  const clearFilters = () => {
+    setSelectedCategories([]);
+    setSelectedBrand(null);
+    setCategorySearch("");
+    setBrandSearch("");
+    setShowCategorySearch(false);
+    setShowBrandSearch(false);
+    setSearchQuery("");
+    syncCategoryParams([]);
+  };
 
-useEffect(() => {
-  window.scrollTo({ top: 0, behavior: "instant" });
-}, [searchParams]);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [searchParams]);
 
-const filteredProducts = products;
+  const filteredProducts = products;
 
 
   if (loading && products.length === 0) {
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white">
-      <div className="h-12 w-12 animate-spin rounded-full border-4 border-teal-600 border-t-transparent mb-4"></div>
-      <p className="text-gray-500 font-medium">Fetching the latest styles...</p>
-    </div>
-  );
-}
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-teal-600 border-t-transparent mb-4"></div>
+        <p className="text-gray-500 font-medium">Fetching the latest styles...</p>
+      </div>
+    );
+  }
 
-console.log(allCategories);
+  console.log(allCategories);
   return (
     <div className="min-h-screen bg-white pb-16 lg:pb-0">
 
-    
 
 
-     
+
+
 
       {/* BREADCRUMB */}
       <div className="bg-white border-b border-gray-200">
@@ -310,316 +310,316 @@ console.log(allCategories);
 
       {/* MAIN CONTENT */}
       {/* MAIN CONTENT */}
-<div className="flex flex-col lg:flex-row w-full max-w-screen-2xl mx-auto overflow-x-hidden">
+      <div className="flex flex-col lg:flex-row w-full max-w-screen-2xl mx-auto overflow-x-hidden">
 
 
 
 
         {/* SIDEBAR FILTERS */}
-        
- <aside className="hidden lg:block w-64 bg-white border-r border-gray-200 p-4 sticky top-24">
+
+        <aside className="hidden lg:block w-64 bg-white border-r border-gray-200 p-4 sticky top-24">
 
 
 
 
-  {/* FILTER HEADER */}
-  <div className="flex items-center justify-between mb-6">
-    <div className="flex items-center gap-2">
-      <SlidersHorizontal size={18} className="text-teal-600" />
-      <h3 className="text-xs font-bold text-gray-900">FILTERS</h3>
-    </div>
-    <button
-      onClick={clearFilters}
-      className="text-xs font-bold text-teal-600 hover:text-teal-700 transition-colors"
-    >
-      CLEAR
-    </button>
-  </div>
+          {/* FILTER HEADER */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal size={18} className="text-teal-600" />
+              <h3 className="text-xs font-bold text-gray-900">FILTERS</h3>
+            </div>
+            <button
+              onClick={clearFilters}
+              className="text-xs font-bold text-teal-600 hover:text-teal-700 transition-colors"
+            >
+              CLEAR
+            </button>
+          </div>
 
-  {/* CATEGORIES */}
-{/* --- PARENT CATEGORIES SECTION --- */}
-<div className="mb-6">
-  <h4 className="text-xs font-bold text-gray-900 mb-4 uppercase tracking-wider">Main Categories</h4>
-  <div className="space-y-2">
-  {[
-    ...parentCategories.filter(cat => selectedCategories.includes(cat.id)),
-    ...parentCategories.filter(cat => !selectedCategories.includes(cat.id))
-  ].map((cat) => (
-    <label
-      key={cat.id}
-      className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:text-teal-700"
-    >
-      <input
-        type="checkbox"
-        checked={selectedCategories.includes(cat.id)}
-        onChange={() => toggleCategory(cat.id)}
-        className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-      />
-      <span className="font-medium">{cat.name}</span>
-    </label>
-  ))}
-  </div>
-</div>
+          {/* CATEGORIES */}
+          {/* --- PARENT CATEGORIES SECTION --- */}
+          <div className="mb-6">
+            <h4 className="text-xs font-bold text-gray-900 mb-4 uppercase tracking-wider">Main Categories</h4>
+            <div className="space-y-2">
+              {[
+                ...parentCategories.filter(cat => selectedCategories.includes(cat.id)),
+                ...parentCategories.filter(cat => !selectedCategories.includes(cat.id))
+              ].map((cat) => (
+                <label
+                  key={cat.id}
+                  className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:text-teal-700"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedCategories.includes(cat.id)}
+                    onChange={() => toggleCategory(cat.id)}
+                    className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                  />
+                  <span className="font-medium">{cat.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
 
-{/* --- SUBCATEGORIES SECTION --- */}
-<div className="mt-6 pt-4 border-t border-gray-50">
-  <div className="flex items-center justify-between mb-4">
-    <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">
-      Sub Categories
-    </h4>
-    <button
-      onClick={() => setShowCategorySearch(!showCategorySearch)}
-      className="text-gray-400 hover:text-teal-600"
-    >
-      <Search size={14} />
-    </button>
-  </div>
+          {/* --- SUBCATEGORIES SECTION --- */}
+          <div className="mt-6 pt-4 border-t border-gray-50">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">
+                Sub Categories
+              </h4>
+              <button
+                onClick={() => setShowCategorySearch(!showCategorySearch)}
+                className="text-gray-400 hover:text-teal-600"
+              >
+                <Search size={14} />
+              </button>
+            </div>
 
-  {showCategorySearch && (
-    <input
-      type="text"
-      placeholder="Search sub-categories..."
-      value={categorySearch}
-      onChange={(e) => setCategorySearch(e.target.value)}
-      className="w-full mb-3 px-2 py-1 text-xs border rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500"
-    />
-  )}
+            {showCategorySearch && (
+              <input
+                type="text"
+                placeholder="Search sub-categories..."
+                value={categorySearch}
+                onChange={(e) => setCategorySearch(e.target.value)}
+                className="w-full mb-3 px-2 py-1 text-xs border rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500"
+              />
+            )}
 
-  <div className="space-y-1">
-    {[
-      ...allSubCategories.filter(sub =>
-        selectedCategories.includes(sub.id)
-      ),
-      ...allSubCategories.filter(sub =>
-        !selectedCategories.includes(sub.id)
-      )
-    ]
-      .filter(sub =>
-        (sub?.name || "")
-          .toLowerCase()
-          .includes(categorySearch.toLowerCase())
-      )
-      .slice(0, showAllCategories ? undefined : 8)
-      .map((sub) => (
-        <label
-          key={sub.id}
-          className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer hover:text-teal-700"
-        >
-          <input
-            type="checkbox"
-            checked={selectedCategories.includes(sub.id)}
-            onChange={() => toggleSubCategory(sub.id)}
-            className="w-3.5 h-3.5 rounded border-gray-300 text-teal-600"
-          />
-          <span className="leading-snug">{sub.name}</span>
-        </label>
-      ))}
-
-    {allSubCategories.length > 8 && (
-      <button
-        onClick={() => setShowAllCategories(!showAllCategories)}
-        className="text-[10px] font-bold text-teal-600 mt-2 uppercase"
-      >
-        {showAllCategories
-          ? "- Show Less"
-          : `+ ${allSubCategories.length - 8} More`}
-      </button>
-    )}
-  </div>
-</div>
-
-
-  {/* BRAND */}
-  <div className="mb-6">
-    <div className="flex items-center justify-between mb-3">
-      <h4 className="text-xs font-bold text-gray-900">BRAND</h4>
-      <button
-        onClick={() => setShowBrandSearch(prev => !prev)}
-        className="text-gray-400 hover:text-indigo-600"
-      >
-        <Search size={14} />
-      </button>
-    </div>
-
-    {showBrandSearch && (
-      <input
-        autoFocus
-        type="text"
-        placeholder="Search brand"
-        value={brandSearch}
-        onChange={(e) => setBrandSearch(e.target.value)}
-        className="w-full mb-3 px-2 py-1 text-xs border rounded-md"
-      />
-    )}
-
-    <div className="space-y-2">
-      {brands
-        .filter(brand =>
-          (brand?.brandName || "")
-  .toLowerCase()
-  .includes(brandSearch.toLowerCase())
-        )
-        .map((brand) => (
-          <label
-            key={brand.brandId}
-            className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer"
-          >
-            <input
-              type="checkbox"
-              checked={selectedBrand === brand.brandId}
-              onChange={() =>
-                setSelectedBrand(
-                  selectedBrand === brand.brandId ? null : brand.brandId
+            <div className="space-y-1">
+              {[
+                ...allSubCategories.filter(sub =>
+                  selectedCategories.includes(sub.id)
+                ),
+                ...allSubCategories.filter(sub =>
+                  !selectedCategories.includes(sub.id)
                 )
-              }
-              className="accent-indigo-600"
-            />
-            {brand.brandName}
-          </label>
-        ))}
-    </div>
-  </div>
+              ]
+                .filter(sub =>
+                  (sub?.name || "")
+                    .toLowerCase()
+                    .includes(categorySearch.toLowerCase())
+                )
+                .slice(0, showAllCategories ? undefined : 8)
+                .map((sub) => (
+                  <label
+                    key={sub.id}
+                    className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer hover:text-teal-700"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedCategories.includes(sub.id)}
+                      onChange={() => toggleSubCategory(sub.id)}
+                      className="w-3.5 h-3.5 rounded border-gray-300 text-teal-600"
+                    />
+                    <span className="leading-snug">{sub.name}</span>
+                  </label>
+                ))}
 
-  {/* Price (unchanged placeholder) */}
-  <div className="mb-4">
-    <div className="space-y-3"></div>
-  </div>
-
-</aside>
-
-
-{/* PRODUCTS SECTION */}
-<main className="flex-1 lg:pl-6 mt-6 lg:mt-0">
-  {/* Header Bar */}
-  <div className="flex items-center justify-between mb-4 px-2 py-2 border-b border-gray-200">
-    <h1 className="text-base font-bold text-gray-900">
-      {filteredProducts.length} <span className="font-normal text-gray-600">Products</span>
-    </h1>
-  </div>
-
-  {/* Updated Grid: gap-1 fixes the left/right overflow on mobile */}
-  <div className="grid grid-cols-2 gap-1 md:gap-4 lg:grid-cols-4">
-    {filteredProducts.map((product, index) => (
-      <div 
-        key={product.productId} 
-        ref={index === filteredProducts.length - 1 ? lastProductRef : null}
-      >
-        <ProductCard product={product} onAddToCart={handleAddToCart} />
-      </div>
-    ))}
-  </div>
-
-  {/* Loading Spinner for Infinite Scroll */}
-  {loading && (
-    <div className="flex justify-center py-10">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-teal-600 border-t-transparent"></div>
-    </div>
-  )}
-</main>
-      </div>
-   
+              {allSubCategories.length > 8 && (
+                <button
+                  onClick={() => setShowAllCategories(!showAllCategories)}
+                  className="text-[10px] font-bold text-teal-600 mt-2 uppercase"
+                >
+                  {showAllCategories
+                    ? "- Show Less"
+                    : `+ ${allSubCategories.length - 8} More`}
+                </button>
+              )}
+            </div>
+          </div>
 
 
+          {/* BRAND */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-xs font-bold text-gray-900">BRAND</h4>
+              <button
+                onClick={() => setShowBrandSearch(prev => !prev)}
+                className="text-gray-400 hover:text-indigo-600"
+              >
+                <Search size={14} />
+              </button>
+            </div>
 
-{showFilters && (
-  <div className="fixed inset-0 bg-black/50 z-[100] lg:hidden">
-    <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 h-[70vh] flex flex-col animate-in slide-in-from-bottom duration-300">
-      
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6 pb-4 border-b">
-        <h3 className="font-bold text-lg text-gray-900">Filters</h3>
-        <button onClick={() => setShowFilters(false)} className="p-2 text-gray-500">
-          <ChevronRight className="rotate-90" />
-        </button>
-      </div>
+            {showBrandSearch && (
+              <input
+                autoFocus
+                type="text"
+                placeholder="Search brand"
+                value={brandSearch}
+                onChange={(e) => setBrandSearch(e.target.value)}
+                className="w-full mb-3 px-2 py-1 text-xs border rounded-md"
+              />
+            )}
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar space-y-8">
-        {/* REUSE CATEGORY SECTION */}
-        <div>
-          <h4 className="text-sm font-bold text-gray-900 mb-4">MAIN CATEGORIES</h4>
+            <div className="space-y-2">
+              {brands
+                .filter(brand =>
+                  (brand?.brandName || "")
+                    .toLowerCase()
+                    .includes(brandSearch.toLowerCase())
+                )
+                .map((brand) => (
+                  <label
+                    key={brand.brandId}
+                    className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedBrand === brand.brandId}
+                      onChange={() =>
+                        setSelectedBrand(
+                          selectedBrand === brand.brandId ? null : brand.brandId
+                        )
+                      }
+                      className="accent-indigo-600"
+                    />
+                    {brand.brandName}
+                  </label>
+                ))}
+            </div>
+          </div>
 
-<div className="space-y-3 mb-6">
-  {parentCategories.map((cat) => (
-    <label key={cat.id} className="flex items-center gap-3 text-sm">
-      <input
-        type="checkbox"
-        checked={selectedCategories.includes(cat.id)}
-        onChange={() => toggleCategory(cat.id)}
-        className="w-5 h-5 rounded border-gray-300 text-teal-600"
-      />
-      <span className="font-semibold">{cat.name}</span>
-    </label>
-  ))}
-</div>
+          {/* Price (unchanged placeholder) */}
+          <div className="mb-4">
+            <div className="space-y-3"></div>
+          </div>
 
-<h4 className="text-sm font-bold text-gray-900 mb-4">
-  SUB CATEGORIES
-</h4>
+        </aside>
 
-<div className="space-y-3">
-  {allSubCategories.map((sub) => (
-    <label key={sub.id} className="flex items-center gap-3 text-sm">
-      <input
-        type="checkbox"
-        checked={selectedCategories.includes(sub.id)}
-        onChange={() => toggleSubCategory(sub.id)}
-        className="w-5 h-5 rounded border-gray-300 text-teal-600"
-      />
-      {sub.name}
-    </label>
-  ))}
-</div>
-        </div>
 
-        {/* REUSE BRAND SECTION */}
-        <div>
-          <h4 className="text-sm font-bold text-gray-900 mb-4">BRANDS</h4>
-          <div className="grid grid-cols-1 gap-3">
-            {brands.map((brand) => (
-              <label key={brand.brandId} className="flex items-center gap-3 text-sm">
-                <input
-                  type="checkbox"
-                  checked={selectedBrand === brand.brandId}
-                  onChange={() => setSelectedBrand(selectedBrand === brand.brandId ? null : brand.brandId)}
-                  className="w-5 h-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-                />
-                {brand.brandName}
-              </label>
+        {/* PRODUCTS SECTION */}
+        <main className="flex-1 lg:pl-6 mt-6 lg:mt-0">
+          {/* Header Bar */}
+          <div className="flex items-center justify-between mb-4 px-2 py-2 border-b border-gray-200">
+            <h1 className="text-base font-bold text-gray-900">
+              {filteredProducts.length} <span className="font-normal text-gray-600">Products</span>
+            </h1>
+          </div>
+
+          {/* Updated Grid: gap-1 fixes the left/right overflow on mobile */}
+          <div className="grid grid-cols-2 gap-1 md:gap-4 lg:grid-cols-4">
+            {filteredProducts.map((product, index) => (
+              <div
+                key={product.productId}
+                ref={index === filteredProducts.length - 1 ? lastProductRef : null}
+              >
+                <ProductCard product={product} onAddToCart={handleAddToCart} />
+              </div>
             ))}
           </div>
+
+          {/* Loading Spinner for Infinite Scroll */}
+          {loading && (
+            <div className="flex justify-center py-10">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-teal-600 border-t-transparent"></div>
+            </div>
+          )}
+        </main>
+      </div>
+
+
+
+
+      {showFilters && (
+        <div className="fixed inset-0 bg-black/50 z-[100] lg:hidden">
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 h-[70vh] flex flex-col animate-in slide-in-from-bottom duration-300">
+
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6 pb-4 border-b">
+              <h3 className="font-bold text-lg text-gray-900">Filters</h3>
+              <button onClick={() => setShowFilters(false)} className="p-2 text-gray-500">
+                <ChevronRight className="rotate-90" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-8">
+              {/* REUSE CATEGORY SECTION */}
+              <div>
+                <h4 className="text-sm font-bold text-gray-900 mb-4">MAIN CATEGORIES</h4>
+
+                <div className="space-y-3 mb-6">
+                  {parentCategories.map((cat) => (
+                    <label key={cat.id} className="flex items-center gap-3 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(cat.id)}
+                        onChange={() => toggleCategory(cat.id)}
+                        className="w-5 h-5 rounded border-gray-300 text-teal-600"
+                      />
+                      <span className="font-semibold">{cat.name}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <h4 className="text-sm font-bold text-gray-900 mb-4">
+                  SUB CATEGORIES
+                </h4>
+
+                <div className="space-y-3">
+                  {allSubCategories.map((sub) => (
+                    <label key={sub.id} className="flex items-center gap-3 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(sub.id)}
+                        onChange={() => toggleSubCategory(sub.id)}
+                        className="w-5 h-5 rounded border-gray-300 text-teal-600"
+                      />
+                      {sub.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* REUSE BRAND SECTION */}
+              <div>
+                <h4 className="text-sm font-bold text-gray-900 mb-4">BRANDS</h4>
+                <div className="grid grid-cols-1 gap-3">
+                  {brands.map((brand) => (
+                    <label key={brand.brandId} className="flex items-center gap-3 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={selectedBrand === brand.brandId}
+                        onChange={() => setSelectedBrand(selectedBrand === brand.brandId ? null : brand.brandId)}
+                        className="w-5 h-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                      />
+                      {brand.brandName}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="mt-4 pt-4 border-t flex gap-4">
+              <button onClick={clearFilters} className="flex-1 py-3 text-sm font-bold text-gray-600 border border-gray-200 rounded-lg">
+                CLEAR ALL
+              </button>
+              <button onClick={() => setShowFilters(false)} className="flex-1 py-3 text-sm font-bold text-white bg-teal-600 rounded-lg">
+                APPLY
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Footer Actions */}
-      <div className="mt-4 pt-4 border-t flex gap-4">
-        <button onClick={clearFilters} className="flex-1 py-3 text-sm font-bold text-gray-600 border border-gray-200 rounded-lg">
-          CLEAR ALL
+
+
+
+
+      {/* MOBILE BOTTOM BAR */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-3 lg:hidden z-50">
+
+
+
+        <button
+          onClick={() => setShowFilters(true)}
+          className="text-base font-semibold px-6 py-2 rounded-lg bg-teal-600 text-white active:scale-95 transition"
+        >
+          FILTER
         </button>
-        <button onClick={() => setShowFilters(false)} className="flex-1 py-3 text-sm font-bold text-white bg-teal-600 rounded-lg">
-          APPLY
-        </button>
+
       </div>
-    </div>
-  </div>
-)}
-
-
-
-
-
-{/* MOBILE BOTTOM BAR */}
- <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-3 lg:hidden z-50">
-
- 
-
-  <button
-    onClick={() => setShowFilters(true)}
-    className="text-base font-semibold px-6 py-2 rounded-lg bg-teal-600 text-white active:scale-95 transition"
-  >
-    FILTER
-  </button>
-
-</div>
 
 
 

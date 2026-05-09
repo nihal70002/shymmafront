@@ -16,11 +16,9 @@ export default function CategoryPage() {
         setLoading(true);
         setError(null);
         const response = await api.get(`/categories/${slug}`);
-        console.log("Category API Response:", response.data);
         setSubCategories(response.data.subCategories || []);
       } catch (err) {
-        console.error("Category API Error:", err);
-        setError(err.response?.data?.message || err.message || "Unable to load data.");
+        setError("Unable to load data.");
       } finally {
         setLoading(false);
       }
@@ -32,12 +30,12 @@ export default function CategoryPage() {
     /* Changed: Page background is now bg-gray-50 to make white cards stand out */
     <div className="min-h-screen bg-[#f8fafc] py-12 font-sans">
       <div className="max-w-7xl mx-auto px-4">
-        
+
         {/* Header Section */}
         <header className="mb-12">
           <div className="flex items-center gap-2 mb-2">
-             <div className="h-[2px] w-8 bg-blue-600"></div>
-             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600">Premium Collection</span>
+            <div className="h-[2px] w-8 bg-blue-600"></div>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600">Premium Collection</span>
           </div>
           <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tight">
             {title}
@@ -50,33 +48,21 @@ export default function CategoryPage() {
           </div>
         )}
 
-        {error && (
-          <div className="text-center py-10 text-red-500 font-bold">
-            Error: {error}
-          </div>
-        )}
-        
-        {!loading && !error && subCategories.length === 0 && (
-          <div className="text-center py-10 text-gray-500 font-bold">
-            No subcategories found.
-          </div>
-        )}
-
         {/* Grid: 4 Columns */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {!loading && subCategories.map((sub) => (
             <Link
               key={sub.id}
               to={
-  sub.hasChildren
-    ? `/category/${sub.slug}`
-    : `/products?categoryIds=${sub.id}`
-}
+                sub.hasChildren
+                  ? `/category/${sub.slug}`
+                  : `/products?categoryIds=${sub.id}`
+              }
               className="group flex flex-col"
             >
               {/* Card: Pure White on Gray Background */}
               <div className="relative w-full aspect-[4/5] sm:aspect-square bg-white rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] transition-all duration-500 group-hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] group-hover:-translate-y-2 flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-hidden border border-white group-hover:border-blue-50">
-                
+
                 {/* Product Image */}
                 <img
                   src={sub.imageUrl || "/placeholder.png"}

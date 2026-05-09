@@ -1068,7 +1068,7 @@ const decreaseQuantity = () => {
 
     ) : (
 
-      <div className="grid grid-cols-5 gap-2">
+      <div className="flex flex-wrap gap-2">
 
         {filteredVariants.map(v => (
 
@@ -1084,7 +1084,7 @@ const decreaseQuantity = () => {
 
             }}
 
-            className={`w-full h-10 px-2 rounded-full border-2 font-bold text-xs sm:text-sm flex items-center justify-center transition ${
+            className={`min-w-[3rem] px-4 py-2 rounded-lg border-2 font-bold text-xs sm:text-sm flex items-center justify-center transition text-center ${
 
               selectedVariant?.id === v.id
 
