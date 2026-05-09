@@ -16,9 +16,11 @@ export default function CategoryPage() {
         setLoading(true);
         setError(null);
         const response = await api.get(`/categories/${slug}`);
+        console.log("Category API Response:", response.data);
         setSubCategories(response.data.subCategories || []);
       } catch (err) {
-        setError("Unable to load data.");
+        console.error("Category API Error:", err);
+        setError(err.response?.data?.message || err.message || "Unable to load data.");
       } finally {
         setLoading(false);
       }
@@ -45,6 +47,18 @@ export default function CategoryPage() {
         {loading && (
           <div className="flex justify-center py-20">
             <div className="w-8 h-8 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+          </div>
+        )}
+
+        {error && (
+          <div className="text-center py-10 text-red-500 font-bold">
+            Error: {error}
+          </div>
+        )}
+        
+        {!loading && !error && subCategories.length === 0 && (
+          <div className="text-center py-10 text-gray-500 font-bold">
+            No subcategories found.
           </div>
         )}
 
