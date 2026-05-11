@@ -504,7 +504,7 @@ lg:aspect-[1660/490]"
       {categories.map((cat) => (
         <Link
           key={cat.id}
-          to={`/category/${cat.slug}`}
+          to={`/category/${encodeURIComponent(cat.slug)}`}
           className="group flex flex-col items-center"
         >
           {/* The Animated Circle System */}
