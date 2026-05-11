@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getMyOrders } from "../../api/orders.api";
+import { getMyOrders, cancelMyOrder } from "../../api/orders.api";
 import StatusBadge from "../../components/common/StatusBadge";
-import { Package, ChevronLeft, ShoppingBag, Calendar, DollarSign, Eye } from "lucide-react";
+import { Package, ChevronLeft, ShoppingBag, Calendar, DollarSign, Eye, X } from "lucide-react";
 
 export default function MyOrders() {
   const [orders, setOrders] = useState([]);
@@ -23,6 +23,30 @@ export default function MyOrders() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleQuickCancel = async (orderId, orderStatus) => {
+    if (orderStatus !== "Placed" && !orderStatus.includes("Pending")) {
+      alert("Only placed orders can be cancelled");
+      return;
+    }
+
+    const reason = prompt("Please provide a reason for cancellation:");
+    if (!reason || !reason.trim()) {
+      return;
+    }
+
+    try {
+      await cancelMyOrder(orderId, reason);
+      alert("Order cancelled successfully");
+      loadOrders(); // Refresh the orders list
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to cancel order");
+    }
+  };
+
+  const canCancelOrder = (status) => {
+    return status === "Placed" || status.includes("Pending");
   };
 
   if (loading) {
@@ -124,7 +148,7 @@ export default function MyOrders() {
                       Total
                     </th>
                     <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Action
+                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -155,14 +179,25 @@ export default function MyOrders() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => navigate(`/orders/${order.orderId}`)}
-
-                          className="inline-flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-teal-700 transition-all hover:scale-105 shadow-md"
-                        >
-                          <Eye size={16} />
-                          View
-                        </button>
+                        <div className="flex items-center gap-2 justify-center">
+                          <button
+                            onClick={() => navigate(`/orders/${order.orderId}`)}
+                            className="inline-flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-teal-700 transition-all hover:scale-105 shadow-md"
+                          >
+                            <Eye size={16} />
+                            View
+                          </button>
+                          
+                          {canCancelOrder(order.status) && (
+                            <button
+                              onClick={() => handleQuickCancel(order.orderId, order.status)}
+                              className="inline-flex items-center gap-2 bg-red-600 text-white px-3 py-2 rounded-xl font-semibold hover:bg-red-700 transition-all hover:scale-105 shadow-md"
+                            >
+                              <X size={16} />
+                              Cancel
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -203,14 +238,25 @@ export default function MyOrders() {
                         ₹{order.totalAmount.toFixed(2)}
                       </p>
                     </div>
-                    <button
-                      onClick={() => navigate(`/orders/${order.orderId}`)}
-
-                      className="flex items-center gap-2 bg-teal-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-teal-700 transition-all"
-                    >
-                      <Eye size={16} />
-                      View
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => navigate(`/orders/${order.orderId}`)}
+                        className="flex items-center gap-2 bg-teal-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-teal-700 transition-all"
+                      >
+                        <Eye size={16} />
+                        View
+                      </button>
+                      
+                      {canCancelOrder(order.status) && (
+                        <button
+                          onClick={() => handleQuickCancel(order.orderId, order.status)}
+                          className="flex items-center gap-2 bg-red-600 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-red-700 transition-all"
+                        >
+                          <X size={16} />
+                          Cancel
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

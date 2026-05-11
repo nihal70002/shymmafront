@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getOrderDetails } from "../../api/orders.api";
-import { ArrowLeft } from "lucide-react";
+import { getOrderDetails, cancelMyOrder } from "../../api/orders.api";
+import { ArrowLeft, X, AlertTriangle } from "lucide-react";
 
 export default function OrderDetails() {
   const { id } = useParams();
@@ -9,6 +9,9 @@ export default function OrderDetails() {
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     getOrderDetails(id)
@@ -16,6 +19,30 @@ export default function OrderDetails() {
       .catch(() => setOrder(null))
       .finally(() => setLoading(false));
   }, [id]);
+
+  const handleCancelOrder = async () => {
+    if (!cancelReason.trim()) {
+      alert("Please provide a reason for cancellation");
+      return;
+    }
+
+    try {
+      setCancelling(true);
+      await cancelMyOrder(id, cancelReason);
+      // Refresh order details
+      const res = await getOrderDetails(id);
+      setOrder(res.data);
+      setShowCancelDialog(false);
+      setCancelReason("");
+      alert("Order cancelled successfully");
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to cancel order");
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const canCancelOrder = order && (order.status === "Placed" || order.status.includes("Pending"));
 
   /* -------------------- STATES -------------------- */
   if (loading) {
@@ -55,18 +82,32 @@ export default function OrderDetails() {
               Order #{order.orderId}
             </h1>
 
-            <span
-              className={`px-4 py-1 rounded-full text-sm font-semibold
-              ${
-                order.status.includes("Pending")
-                  ? "bg-yellow-100 text-yellow-700"
-                  : order.status.includes("Delivered")
-                  ? "bg-green-100 text-green-700"
-                  : "bg-gray-100 text-gray-700"
-              }`}
-            >
-              {order.status}
-            </span>
+            <div className="flex items-center gap-3">
+              <span
+                className={`px-4 py-1 rounded-full text-sm font-semibold
+                ${
+                  order.status.includes("Pending") || order.status === "Placed"
+                    ? "bg-yellow-100 text-yellow-700"
+                    : order.status.includes("Delivered")
+                    ? "bg-green-100 text-green-700"
+                    : order.status.includes("Cancelled")
+                    ? "bg-red-100 text-red-700"
+                    : "bg-gray-100 text-gray-700"
+                }`}
+              >
+                {order.status}
+              </span>
+              
+              {canCancelOrder && (
+                <button
+                  onClick={() => setShowCancelDialog(true)}
+                  className="bg-red-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-red-700 transition-all hover:scale-105 shadow-md flex items-center gap-2"
+                >
+                  <X size={16} />
+                  Cancel Order
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
@@ -142,6 +183,56 @@ export default function OrderDetails() {
             </p>
           </div>
         </div>
+
+        {/* Cancellation Confirmation Dialog */}
+        {showCancelDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">Cancel Order</h2>
+              </div>
+
+              <p className="text-gray-600 mb-4">
+                Are you sure you want to cancel order #{order.orderId}? This action cannot be undone.
+              </p>
+
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Reason for cancellation *
+                </label>
+                <textarea
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  rows="3"
+                  placeholder="Please provide a reason for cancellation..."
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowCancelDialog(false);
+                    setCancelReason("");
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Keep Order
+                </button>
+                <button
+                  onClick={handleCancelOrder}
+                  disabled={cancelling}
+                  className="flex-1 bg-red-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {cancelling ? "Cancelling..." : "Cancel Order"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
