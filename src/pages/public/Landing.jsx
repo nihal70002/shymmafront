@@ -695,6 +695,75 @@ lg:aspect-[1660/490]"
 
 
 
+{/* ================= CERTIFICATION ================= */}
+<section className="py-20 bg-[#f8fafc]">
+  <div className="max-w-7xl mx-auto px-6">
+
+    <div className="grid lg:grid-cols-2 gap-14 items-center">
+
+      {/* LEFT CONTENT */}
+      <div>
+        <span className="text-cyan-600 font-bold tracking-[0.3em] text-xs uppercase">
+          Certification
+        </span>
+
+        <h2 className="mt-4 text-4xl font-black text-slate-900 leading-tight">
+          Authorized <span className="text-cyan-600">Distributor</span>
+        </h2>
+
+        <div className="w-20 h-1 bg-red-600 rounded-full mt-5 mb-7"></div>
+
+        <p className="text-gray-600 leading-relaxed text-lg">
+          Shymma Surgicals is an officially authorized distributor
+          of SIORA orthopedic implants and instrumentation products.
+          We ensure genuine products, trusted quality standards,
+          and reliable surgical solutions for healthcare professionals.
+        </p>
+
+        <div className="mt-8 space-y-4">
+
+          <div className="flex items-center gap-3">
+            <div className="w-3 h-3 rounded-full bg-cyan-600"></div>
+            <p className="text-gray-700 font-medium">
+              Verified Distribution Partner
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="w-3 h-3 rounded-full bg-cyan-600"></div>
+            <p className="text-gray-700 font-medium">
+              Certified Orthopedic Implant Supplier
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="w-3 h-3 rounded-full bg-cyan-600"></div>
+            <p className="text-gray-700 font-medium">
+              Trusted Medical Equipment Provider
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      {/* RIGHT IMAGE */}
+      <div className="flex justify-center">
+        <div className="bg-white p-4 rounded-3xl shadow-2xl border border-gray-100 hover:scale-[1.02] transition duration-500">
+          <img
+            src="/certificate/certificate.jpeg"
+            alt="Certification"
+            className="w-full max-w-md rounded-2xl object-cover"
+          />
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+
+
 
 
 
