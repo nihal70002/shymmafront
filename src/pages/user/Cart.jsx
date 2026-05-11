@@ -34,21 +34,20 @@ export default function Cart() {
   }, []);
 
   const handleRemove = async (productVariantId) => {
-  // 1️⃣ Optimistic UI update (NO blink)
-  setCart(prev =>
-    prev.filter(item => item.productVariantId !== productVariantId)
-  );
+    // 1️⃣ Optimistic UI update (NO blink)
+    setCart(prev =>
+      prev.filter(item => item.productVariantId !== productVariantId)
+    );
 
-  try {
-    // 2️⃣ Backend call
-    await api.delete(`/cart/remove/${productVariantId}`);
-  } catch (err) {
-    // 3️⃣ Rollback only if API fails
-    alert("Failed to remove item");
-    loadCart();
-  }
-};
-
+    try {
+      // 2️⃣ Backend call
+      await api.delete(`/cart/remove/${productVariantId}`);
+    } catch (err) {
+      // 3️⃣ Rollback only if API fails
+      alert("Failed to remove item");
+      loadCart();
+    }
+  };
 
   const handleQuantityChange = async (productVariantId, newQty) => {
     if (newQty < 1) return;
@@ -68,7 +67,7 @@ export default function Cart() {
     setPlacingOrder(true);
     try {
       const payload = {
-        items: cart.map(item =>({
+        items: cart.map(item => ({
           productVariantId: Number(item.productVariantId),
           quantity: Number(item.quantity)
         })),
@@ -156,9 +155,9 @@ export default function Cart() {
                       <div>
                         <h3 className="font-bold text-slate-900 leading-tight">{item.productName}</h3>
                         <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider font-semibold">
-  {item.size && `Size: ${item.size}`}
-  {item.material && `${item.size ? " | " : ""}Material: ${item.material}`}
-</p>
+                          {item.size && `Size: ${item.size}`}
+                          {item.material && `${item.size ? " | " : ""}Material: ${item.material}`}
+                        </p>
                       </div>
                       <button onClick={() => handleRemove(item.productVariantId)} className="text-slate-300 hover:text-red-500 transition-colors">
                         <Trash2 size={18} />
@@ -189,70 +188,71 @@ export default function Cart() {
               <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xl sticky top-24">
                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Order Details</h3>
                 
-                <div className="space-y-4 mb-6">
-                  {/* Delivery Preferences */}
-                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                    <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
-                      <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M8 7a1 1 0 100-2 0v1a1 1 0 011-1 1H4a1 1 0 01-1-1V7a1 1 0 011-1 1zM8 7a1 1 0 100-2 0v1a1 1 0 011 1 1H4a1 1 0 01-1-1V7a1 1 0 011-1 1z"/>
-                      </svg>
-                      Delivery Preferences (Optional)
-                    </h4>
+                {/* Delivery Preferences */}
+                <div className="bg-blue-50 rounded-xl p-4 border border-blue-200 mb-6">
+                  <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M8 7a1 1 0 100-2 0v1a1 1 0 011-1 1H4a1 1 0 01-1-1V7a1 1 0 011-1 1zM8 7a1 1 0 100-2 0v1a1 1 0 011 1 1H4a1 1 0 01-1-1V7a1 1 0 011-1 1z"/>
+                    </svg>
+                    Delivery Preferences (Optional)
+                  </h4>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Preferred Delivery Date
+                      </label>
+                      <input
+                        type="date"
+                        value={preferredDeliveryDate}
+                        onChange={(e) => setPreferredDeliveryDate(e.target.value)}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Select delivery date (optional)"
+                      />
+                    </div>
                     
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Preferred Delivery Date
-                        </label>
-                        <input
-                          type="date"
-                          value={preferredDeliveryDate}
-                          onChange={(e) => setPreferredDeliveryDate(e.target.value)}
-                          min={new Date().toISOString().split('T')[0]}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="Select delivery date (optional)"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Preferred Delivery Time
-                        </label>
-                        <select
-                          value={preferredDeliveryTime}
-                          onChange={(e) => setPreferredDeliveryTime(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                          <option value="">Select time (optional)</option>
-                          <option value="9:00 AM - 12:00 PM">Morning (9:00 AM - 12:00 PM)</option>
-                          <option value="12:00 PM - 6:00 PM">Afternoon (12:00 PM - 6:00 PM)</option>
-                          <option value="6:00 PM - 9:00 PM">Evening (6:00 PM - 9:00 PM)</option>
-                        </select>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Delivery Instructions
-                        </label>
-                        <textarea
-                          value={deliveryInstructions}
-                          onChange={(e) => setDeliveryInstructions(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          rows="3"
-                          placeholder="Any special instructions for delivery (optional)"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Preferred Delivery Time
+                      </label>
+                      <select
+                        value={preferredDeliveryTime}
+                        onChange={(e) => setPreferredDeliveryTime(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="">Select time (optional)</option>
+                        <option value="9:00 AM - 12:00 PM">Morning (9:00 AM - 12:00 PM)</option>
+                        <option value="12:00 PM - 6:00 PM">Afternoon (12:00 PM - 6:00 PM)</option>
+                        <option value="6:00 PM - 9:00 PM">Evening (6:00 PM - 9:00 PM)</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Delivery Instructions
+                      </label>
+                      <textarea
+                        value={deliveryInstructions}
+                        onChange={(e) => setDeliveryInstructions(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        rows="3"
+                        placeholder="Any special instructions for delivery (optional)"
+                      />
                     </div>
                   </div>
                 </div>
 
-                <div className="flex justify-between text-slate-600">
-                  <span className="text-sm">Bag Subtotal</span>
-                  <span className="font-semibold text-slate-900">₹{subtotal.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-slate-600">
-                  <span className="text-sm">Delivery Fee</span>
-                  <span className="text-emerald-600 font-bold text-xs bg-emerald-50 px-2 py-1 rounded-md tracking-tight">FREE</span>
+                {/* Order Summary */}
+                <div className="space-y-2 mb-6">
+                  <div className="flex justify-between text-slate-600">
+                    <span className="text-sm">Bag Subtotal</span>
+                    <span className="font-semibold text-slate-900">₹{subtotal.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600">
+                    <span className="text-sm">Delivery Fee</span>
+                    <span className="text-emerald-600 font-bold text-xs bg-emerald-50 px-2 py-1 rounded-md tracking-tight">FREE</span>
+                  </div>
                 </div>
 
                 <div className="pt-4 border-t border-slate-100 mb-8 flex justify-between items-center">
@@ -277,7 +277,7 @@ export default function Cart() {
               </div>
             </div>
           </div>
-        </div>
+        )}
       </main>
     </div>
   );

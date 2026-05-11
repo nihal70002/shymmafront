@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { 
   ChevronLeft, Printer, Package, Truck, CheckCircle2, 
   Calendar, Building2, Phone, CreditCard, User, 
-  MapPin, Hash, ArrowUpRight
+  MapPin, Hash, ArrowUpRight, Clock, FileText
 } from "lucide-react";
 import api from "../../api/axios";
 
@@ -159,6 +159,33 @@ export default function AdminOrderDetails() {
               </div>
             </div>
           </div>
+
+          {/* Delivery Preferences */}
+          {(order.preferredDeliveryDate || order.preferredDeliveryTime || order.deliveryInstructions) && (
+            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
+                <Clock size={12} /> Delivery Preferences
+              </h3>
+              <div className="space-y-4">
+                {order.preferredDeliveryDate && (
+                  <SidebarItem icon={<Calendar size={14}/>} label="Preferred Date" val={new Date(order.preferredDeliveryDate).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })} />
+                )}
+                {order.preferredDeliveryTime && (
+                  <SidebarItem icon={<Clock size={14}/>} label="Preferred Time" val={order.preferredDeliveryTime} />
+                )}
+                {order.deliveryInstructions && (
+                  <div className="pt-4 border-t border-slate-100">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-3 flex items-center gap-2">
+                      <FileText size={12} /> Instructions
+                    </p>
+                    <p className="text-sm text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                      {order.deliveryInstructions}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">Payment & Sales</h3>
