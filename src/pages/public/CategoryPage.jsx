@@ -15,7 +15,7 @@ export default function CategoryPage() {
       try {
         setLoading(true);
         setError(null);
-        const response = await api.get(`/categories/${slug}`);
+        const response = await api.get(`/categories/${encodeURIComponent(slug)}`);
         setSubCategories(response.data.subCategories || []);
       } catch (err) {
         setError("Unable to load data.");
@@ -55,7 +55,7 @@ export default function CategoryPage() {
               key={sub.id}
               to={
                 sub.hasChildren
-                  ? `/category/${sub.slug}`
+                  ? `/category/${encodeURIComponent(sub.slug)}`
                   : `/products?categoryIds=${sub.id}`
               }
               className="group flex flex-col"
