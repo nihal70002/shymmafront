@@ -8,6 +8,11 @@ export default function Cart() {
   const [loading, setLoading] = useState(true);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  
+  // Delivery preferences
+  const [preferredDeliveryDate, setPreferredDeliveryDate] = useState("");
+  const [preferredDeliveryTime, setPreferredDeliveryTime] = useState("");
+  const [deliveryInstructions, setDeliveryInstructions] = useState("");
 
   const navigate = useNavigate();
 
@@ -63,10 +68,14 @@ export default function Cart() {
     setPlacingOrder(true);
     try {
       const payload = {
-        items: cart.map(item => ({
+        items: cart.map(item =>({
           productVariantId: Number(item.productVariantId),
           quantity: Number(item.quantity)
-        }))
+        })),
+        // Include delivery preferences
+        preferredDeliveryDate: preferredDeliveryDate || null,
+        preferredDeliveryTime: preferredDeliveryTime || null,
+        deliveryInstructions: deliveryInstructions || null
       };
       await api.post("/orders", payload);
       await api.delete("/cart/clear");
@@ -181,14 +190,69 @@ export default function Cart() {
                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Order Details</h3>
                 
                 <div className="space-y-4 mb-6">
-                  <div className="flex justify-between text-slate-600">
-                    <span className="text-sm">Bag Subtotal</span>
-                    <span className="font-semibold text-slate-900">₹{subtotal.toLocaleString()}</span>
+                  {/* Delivery Preferences */}
+                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                    <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                      <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M8 7a1 1 0 100-2 0v1a1 1 0 011-1 1H4a1 1 0 01-1-1V7a1 1 0 011-1 1zM8 7a1 1 0 100-2 0v1a1 1 0 011 1 1H4a1 1 0 01-1-1V7a1 1 0 011-1 1z"/>
+                      </svg>
+                      Delivery Preferences (Optional)
+                    </h4>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Preferred Delivery Date
+                        </label>
+                        <input
+                          type="date"
+                          value={preferredDeliveryDate}
+                          onChange={(e) => setPreferredDeliveryDate(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Select delivery date (optional)"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Preferred Delivery Time
+                        </label>
+                        <select
+                          value={preferredDeliveryTime}
+                          onChange={(e) => setPreferredDeliveryTime(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="">Select time (optional)</option>
+                          <option value="9:00 AM - 12:00 PM">Morning (9:00 AM - 12:00 PM)</option>
+                          <option value="12:00 PM - 6:00 PM">Afternoon (12:00 PM - 6:00 PM)</option>
+                          <option value="6:00 PM - 9:00 PM">Evening (6:00 PM - 9:00 PM)</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Delivery Instructions
+                        </label>
+                        <textarea
+                          value={deliveryInstructions}
+                          onChange={(e) => setDeliveryInstructions(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          rows="3"
+                          placeholder="Any special instructions for delivery (optional)"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-slate-600">
-                    <span className="text-sm">Delivery Fee</span>
-                    <span className="text-emerald-600 font-bold text-xs bg-emerald-50 px-2 py-1 rounded-md tracking-tight">FREE</span>
-                  </div>
+                </div>
+
+                <div className="flex justify-between text-slate-600">
+                  <span className="text-sm">Bag Subtotal</span>
+                  <span className="font-semibold text-slate-900">₹{subtotal.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-slate-600">
+                  <span className="text-sm">Delivery Fee</span>
+                  <span className="text-emerald-600 font-bold text-xs bg-emerald-50 px-2 py-1 rounded-md tracking-tight">FREE</span>
                 </div>
 
                 <div className="pt-4 border-t border-slate-100 mb-8 flex justify-between items-center">
@@ -209,12 +273,11 @@ export default function Cart() {
                     <ShieldCheck size={14} className="text-emerald-500" />
                     <span>Safe & Secure Payments</span>
                   </div>
-                  
                 </div>
               </div>
             </div>
           </div>
-        )}
+        </div>
       </main>
     </div>
   );

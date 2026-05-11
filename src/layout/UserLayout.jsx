@@ -304,6 +304,110 @@ const showBackButton = location.pathname !== "/";
       <main className="flex-grow">
         <Outlet />
       </main>
+
+      {/* CERTIFICATE SECTION */}
+      <div className="bg-gray-50 border-t border-gray-200 mt-auto">
+        <div className="max-w-screen-2xl mx-auto px-6 py-8">
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 00-3.976 5.368 3.066 3.066 0 00-1.745.723l-3.976 5.368a3.066 3.066 0 003.976-5.368l3.976-5.368a3.066 3.066 0 001.745-.723 3.066 3.066 0 003.976 5.368l-3.976 5.368a3.066 3.066 0 01-1.745.723 3.066 3.066 0 01-3.976-5.368l3.976-5.368a3.066 3.066 0 011.745-.723 3.066 3.066 0 013.976 5.368l-3.976 5.368a3.066 3.066 0 01-1.745.723z" clipRule="evenodd"/>
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-800">Certified Quality</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-3">Our Certifications</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <span className="text-blue-600 font-bold text-sm">ISO</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800">ISO 9001:2015</p>
+                      <p className="text-sm text-gray-600">Quality Management System</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <span className="text-purple-600 font-bold text-sm">GMP</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800">Good Manufacturing Practice</p>
+                      <p className="text-sm text-gray-600">Medical Device Standards</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                      <span className="text-green-600 font-bold text-sm">CE</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800">CE Marking</p>
+                      <p className="text-sm text-gray-600">European Conformity</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-3">Quality Assurance</h3>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-green-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 0l-2 2a1 1 0 000 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                    </svg>
+                    <div>
+                      <p className="font-medium text-gray-800">100% Authentic Products</p>
+                      <p className="text-sm text-gray-600">All products are genuine and verified</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-green-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 0l-2 2a1 1 0 000 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                    </svg>
+                    <div>
+                      <p className="font-medium text-gray-800">Quality Tested</p>
+                      <p className="text-sm text-gray-600">Rigorous quality control processes</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-green-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 0l-2 2a1 1 0 000 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                    </svg>
+                    <div>
+                      <p className="font-medium text-gray-800">Safe & Secure</p>
+                      <p className="text-sm text-gray-600">Complies with all safety standards</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 00-3.976 5.368 3.066 3.066 0 00-1.745.723l-3.976 5.368a3.066 3.066 0 003.976-5.368l3.976-5.368a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 5.368l-3.976 5.368a3.066 3.066 0 01-1.745.723 3.066 3.066 0 01-3.976-5.368l3.976-5.368a3.066 3.066 0 011.745-.723 3.066 3.066 0 013.976 5.368l-3.976 5.368a3.066 3.066 0 01-1.745.723z" clipRule="evenodd"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-800 text-lg">Trusted by Thousands</p>
+                    <p className="text-sm text-gray-600">Serving customers worldwide with certified medical supplies and equipment</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
