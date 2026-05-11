@@ -1418,9 +1418,7 @@ export default function AdminProducts() {
           <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
             Material
           </label>
-          <input
-            type="text"
-            placeholder="e.g., Stainless Steel"
+          <select
             className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
             value={v.material || ""}
             onChange={(e) => {
@@ -1428,7 +1426,11 @@ export default function AdminProducts() {
               vs[i].material = e.target.value;
               setForm({ ...form, variants: vs });
             }}
-          />
+          >
+            <option value="">Select Material</option>
+            <option value="Stainless Steel">Stainless Steel</option>
+            <option value="Titanium">Titanium</option>
+          </select>
         </div>
 
         {/* COLOR */}
