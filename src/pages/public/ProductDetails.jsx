@@ -558,7 +558,7 @@ const decreaseQuantity = () => {
 
   return (
 
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-0">
 
       
 
@@ -1174,7 +1174,7 @@ const decreaseQuantity = () => {
 
          {/* Action Buttons - Sticky for Mobile, Static for Desktop */}
 
-<div className="fixed bottom-0 left-0 right-0 p-4 bg-white flex gap-2 z-[50] lg:static lg:p-0 lg:mb-4">
+<div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 flex gap-2 z-[50] lg:static lg:border-t-0 lg:p-0 lg:mb-4">
 
   <button
 
