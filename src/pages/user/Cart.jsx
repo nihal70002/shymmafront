@@ -193,7 +193,6 @@ export default function Cart() {
                           className="w-7 h-7 flex items-center justify-center hover:bg-white rounded-md transition-colors text-slate-600 font-bold"
                         > + </button>
                       </div>
-                      <span className="text-lg font-bold text-slate-900">₹{(item.price * item.quantity).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -260,23 +259,7 @@ export default function Cart() {
                   </div>
                 </div>
 
-                {/* Order Summary */}
-                <div className="space-y-2 mb-6">
-                  <div className="flex justify-between text-slate-600">
-                    <span className="text-sm">Bag Subtotal</span>
-                    <span className="font-semibold text-slate-900">₹{subtotal.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-slate-600">
-                    <span className="text-sm">Delivery Fee</span>
-                    <span className="text-emerald-600 font-bold text-xs bg-emerald-50 px-2 py-1 rounded-md tracking-tight">FREE</span>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100 mb-8 flex justify-between items-center">
-                  <span className="font-bold text-slate-900 text-lg">Total Amount</span>
-                  <span className="text-2xl font-black text-teal-600 tracking-tight">₹{subtotal.toLocaleString()}</span>
-                </div>
-
+                
                 <button
                   onClick={handleCheckout}
                   disabled={placingOrder}
