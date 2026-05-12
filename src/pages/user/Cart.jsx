@@ -77,11 +77,16 @@ export default function Cart() {
         deliveryInstructions: deliveryInstructions || null
       };
       await api.post("/orders", payload);
+      // Only clear cart and set success state after order is placed successfully
       await api.delete("/cart/clear");
       setCart([]);
       setOrderPlaced(true);
     } catch (err) {
-      const backendMessage = err.response?.data?.message || err.response?.data;
+      console.error("Order placement error:", err);
+      console.error("Response data:", err.response?.data);
+      console.error("Response status:", err.response?.status);
+      
+      const backendMessage = err.response?.data?.message || err.response?.data?.title || err.response?.data;
       const fallbackMessage =
         err.response?.status === 403
           ? "Your account is not allowed to place orders. Please login with a customer account."
