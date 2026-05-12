@@ -7,7 +7,9 @@ import {
   ShieldCheck,
   Truck,
   Clock,
-  Award
+  Award,
+  Menu,
+  X
 } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
@@ -39,6 +41,7 @@ const [suggestions, setSuggestions] = useState([]);
 const [showDropdown, setShowDropdown] = useState(false);
 const [loadingSearch, setLoadingSearch] = useState(false);
 const [showMobileSearch, setShowMobileSearch] = useState(false);
+const [showMobileCerts, setShowMobileCerts] = useState(false);
 
 
 useEffect(() => {
@@ -248,11 +251,27 @@ const handleSearchSubmit = () => {
     <div className="flex items-center gap-4 sm:gap-6 text-gray-600">
 
       <button
-        onClick={() => setShowMobileSearch(prev => !prev)}
+        onClick={() => {
+          setShowMobileSearch(prev => !prev);
+          setShowMobileCerts(false);
+        }}
         className="sm:hidden flex flex-col items-center hover:text-black transition"
       >
         <Search size={22} />
         <span className="text-xs">Search</span>
+      </button>
+
+      <button
+        onClick={() => {
+          setShowMobileCerts(prev => !prev);
+          setShowMobileSearch(false);
+        }}
+        className="sm:hidden flex flex-col items-center hover:text-black transition"
+        aria-label={showMobileCerts ? "Close certifications menu" : "Open certifications menu"}
+        aria-expanded={showMobileCerts}
+      >
+        {showMobileCerts ? <X size={22} /> : <Menu size={22} />}
+        <span className="text-xs">Certs</span>
       </button>
 
       {!localStorage.getItem("token") ? (
@@ -356,6 +375,41 @@ const handleSearchSubmit = () => {
           ))}
       </div>
     )}
+  </div>
+)}
+
+{showMobileCerts && (
+  <div className="sm:hidden fixed left-0 right-0 top-[58px] z-40 bg-white border-b border-gray-200 shadow-xl">
+    <div className="px-4 py-5 bg-gradient-to-b from-white to-slate-50">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-cyan-600">
+            Certifications
+          </p>
+          <h2 className="mt-1 text-lg font-black text-slate-900">
+            Authorized Distributor
+          </h2>
+        </div>
+        <ShieldCheck className="text-cyan-600" size={24} />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+          <img
+            src="/certificate/certificate.jpeg"
+            alt="Certification certificate 1"
+            className="aspect-[3/4] w-full rounded-xl object-cover"
+          />
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+          <img
+            src="/certificate/certificate2.jpeg"
+            alt="Certification certificate 2"
+            className="aspect-[3/4] w-full rounded-xl object-cover"
+          />
+        </div>
+      </div>
+    </div>
   </div>
 )}
 
@@ -696,7 +750,7 @@ lg:aspect-[1660/490]"
 
 
 {/* ================= CERTIFICATION ================= */}
-<section className="py-20 bg-[#f8fafc]">
+<section className="hidden sm:block py-20 bg-[#f8fafc]">
   <div className="max-w-7xl mx-auto px-6">
 
     <div className="grid lg:grid-cols-2 gap-14 items-center">
@@ -746,13 +800,21 @@ lg:aspect-[1660/490]"
         </div>
       </div>
 
-      {/* RIGHT IMAGE */}
-      <div className="flex justify-center">
+      {/* RIGHT IMAGES */}
+      <div className="grid grid-cols-2 gap-5">
         <div className="bg-white p-4 rounded-3xl shadow-2xl border border-gray-100 hover:scale-[1.02] transition duration-500">
           <img
             src="/certificate/certificate.jpeg"
-            alt="Certification"
-            className="w-full max-w-md rounded-2xl object-cover"
+            alt="Certification certificate 1"
+            className="w-full rounded-2xl object-cover"
+          />
+        </div>
+
+        <div className="bg-white p-4 rounded-3xl shadow-2xl border border-gray-100 hover:scale-[1.02] transition duration-500">
+          <img
+            src="/certificate/certificate2.jpeg"
+            alt="Certification certificate 2"
+            className="w-full rounded-2xl object-cover"
           />
         </div>
       </div>
