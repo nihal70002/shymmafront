@@ -71,11 +71,17 @@ export default function Cart() {
           productVariantId: Number(item.productVariantId),
           quantity: Number(item.quantity)
         })),
-        // Include delivery preferences
+        // Include delivery preferences - send date as YYYY-MM-DD format
         preferredDeliveryDate: preferredDeliveryDate || null,
         preferredDeliveryTime: preferredDeliveryTime || null,
         deliveryInstructions: deliveryInstructions || null
       };
+      
+      // Debug logging
+      console.log("Sending payload:", payload);
+      console.log("preferredDeliveryDate type:", typeof preferredDeliveryDate, "value:", preferredDeliveryDate);
+      console.log("preferredDeliveryTime type:", typeof preferredDeliveryTime, "value:", preferredDeliveryTime);
+      
       await api.post("/orders", payload);
       // Only clear cart and set success state after order is placed successfully
       await api.delete("/cart/clear");
