@@ -4,13 +4,17 @@ import { useNavigate } from "react-router-dom";
 
 export default function ProductCard({ product, onAddToCart }) {
   const navigate = useNavigate();
+  const selectedVariant =
+    product.variants?.find((variant) => variant.stock > 0) ||
+    product.variants?.[0];
+  const canAddToCart = Boolean(selectedVariant?.variantId);
 
   const handleView = () => {
     navigate(`/products/${product.productId}`);
   };
 
   return (
-    <div className="group flex h-[310px] sm:h-[340px] flex-col rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-lg transition-all duration-300">
+    <div className="group flex min-h-[365px] sm:min-h-[395px] flex-col rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-lg transition-all duration-300">
       
       {/* IMAGE (UNCHANGED) */}
       <div
@@ -49,6 +53,20 @@ export default function ProductCard({ product, onAddToCart }) {
           {product.name}
         </h3>
 
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            if (canAddToCart) {
+              onAddToCart(selectedVariant.variantId);
+            }
+          }}
+          disabled={!canAddToCart}
+          className="mt-auto flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-teal-600 px-3 text-xs font-bold text-white shadow-sm shadow-teal-600/20 transition hover:bg-teal-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+        >
+          <ShoppingCart size={15} />
+          Add to Bag
+        </button>
       </div>
     </div>
   );

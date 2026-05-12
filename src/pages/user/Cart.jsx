@@ -81,7 +81,13 @@ export default function Cart() {
       setCart([]);
       setOrderPlaced(true);
     } catch (err) {
-      alert("Order failed");
+      const backendMessage = err.response?.data?.message || err.response?.data;
+      const fallbackMessage =
+        err.response?.status === 403
+          ? "Your account is not allowed to place orders. Please login with a customer account."
+          : "Order failed. Please try again.";
+
+      alert(typeof backendMessage === "string" ? backendMessage : fallbackMessage);
     } finally {
       setPlacingOrder(false);
     }
