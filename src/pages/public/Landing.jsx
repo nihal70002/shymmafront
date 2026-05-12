@@ -9,7 +9,9 @@ import {
   Clock,
   Award,
   Menu,
-  X
+  X,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
@@ -41,6 +43,7 @@ const [suggestions, setSuggestions] = useState([]);
 const [showDropdown, setShowDropdown] = useState(false);
 const [loadingSearch, setLoadingSearch] = useState(false);
 const [showMobileSearch, setShowMobileSearch] = useState(false);
+const [showMobileMenu, setShowMobileMenu] = useState(false);
 const [showMobileCerts, setShowMobileCerts] = useState(false);
 
 
@@ -253,6 +256,7 @@ const handleSearchSubmit = () => {
       <button
         onClick={() => {
           setShowMobileSearch(prev => !prev);
+          setShowMobileMenu(false);
           setShowMobileCerts(false);
         }}
         className="sm:hidden flex flex-col items-center hover:text-black transition"
@@ -263,15 +267,20 @@ const handleSearchSubmit = () => {
 
       <button
         onClick={() => {
-          setShowMobileCerts(prev => !prev);
+          setShowMobileMenu(prev => {
+            if (prev) {
+              setShowMobileCerts(false);
+            }
+            return !prev;
+          });
           setShowMobileSearch(false);
         }}
         className="sm:hidden flex flex-col items-center hover:text-black transition"
-        aria-label={showMobileCerts ? "Close certifications menu" : "Open certifications menu"}
-        aria-expanded={showMobileCerts}
+        aria-label={showMobileMenu ? "Close mobile menu" : "Open mobile menu"}
+        aria-expanded={showMobileMenu}
       >
-        {showMobileCerts ? <X size={22} /> : <Menu size={22} />}
-        <span className="text-xs">Certs</span>
+        {showMobileMenu ? <X size={22} /> : <Menu size={22} />}
+        <span className="text-xs">Menu</span>
       </button>
 
       {!localStorage.getItem("token") ? (
@@ -378,35 +387,55 @@ const handleSearchSubmit = () => {
   </div>
 )}
 
-{showMobileCerts && (
+{showMobileMenu && (
   <div className="sm:hidden fixed left-0 right-0 top-[58px] z-40 bg-white border-b border-gray-200 shadow-xl">
     <div className="px-4 py-5 bg-gradient-to-b from-white to-slate-50">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-cyan-600">
-            Certifications
-          </p>
-          <h2 className="mt-1 text-lg font-black text-slate-900">
-            Authorized Distributor
-          </h2>
-        </div>
-        <ShieldCheck className="text-cyan-600" size={24} />
-      </div>
+      <button
+        type="button"
+        onClick={() => setShowMobileCerts(prev => !prev)}
+        className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left shadow-sm transition hover:border-cyan-200 hover:bg-cyan-50/40"
+        aria-expanded={showMobileCerts}
+      >
+        <span className="flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-50 text-cyan-600">
+            <ShieldCheck size={19} />
+          </span>
+          <span>
+            <span className="block text-sm font-bold text-slate-900">
+              Certifications
+            </span>
+            <span className="block text-xs text-slate-500">
+              Authorized distributor documents
+            </span>
+          </span>
+        </span>
+        {showMobileCerts ? (
+          <ChevronUp className="text-slate-500" size={20} />
+        ) : (
+          <ChevronDown className="text-slate-500" size={20} />
+        )}
+      </button>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
-          <img
-            src="/certificate/certificate.jpeg"
-            alt="Certification certificate 1"
-            className="aspect-[3/4] w-full rounded-xl object-cover"
-          />
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
-          <img
-            src="/certificate/certificate2.jpeg"
-            alt="Certification certificate 2"
-            className="aspect-[3/4] w-full rounded-xl object-cover"
-          />
+      <div
+        className={`overflow-hidden transition-all duration-500 ease-in-out ${
+          showMobileCerts ? "max-h-[560px] opacity-100 mt-4" : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="grid grid-cols-2 gap-3 rounded-2xl border border-slate-100 bg-white/70 p-3 shadow-inner">
+          <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+            <img
+              src="/certificate/certificate.jpeg"
+              alt="Certification certificate 1"
+              className="aspect-[3/4] w-full rounded-lg object-cover"
+            />
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+            <img
+              src="/certificate/certificate2.jpeg"
+              alt="Certification certificate 2"
+              className="aspect-[3/4] w-full rounded-lg object-cover"
+            />
+          </div>
         </div>
       </div>
     </div>
