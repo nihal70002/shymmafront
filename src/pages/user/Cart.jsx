@@ -173,7 +173,8 @@ export default function Cart() {
                         <h3 className="font-bold text-slate-900 leading-tight">{item.productName}</h3>
                         <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider font-semibold">
                           {item.size && `Size: ${item.size}`}
-                          {item.material && `${item.size ? " | " : ""}Material: ${item.material}`}
+                          {item.style && `${item.size ? " | " : ""}Style: ${item.style}`}
+                          {item.material && `${item.size || item.style ? " | " : ""}Material: ${item.material}`}
                         </p>
                       </div>
                       <button onClick={() => handleRemove(item.productVariantId)} className="text-slate-300 hover:text-red-500 transition-colors">

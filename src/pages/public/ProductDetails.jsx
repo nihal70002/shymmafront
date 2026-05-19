@@ -300,13 +300,13 @@ const prevImage = () => {
 
   setSelectedClass(first.class || null);
 
-  setSelectedStyle(first.style || null);
+  setSelectedStyle(null);
 
-  setSelectedMaterial(first.material || null);
+  setSelectedMaterial(null);
 
   setSelectedColor(first.color || null);
 
-  setSelectedVariant(first);
+  setSelectedVariant(null);
 
 }
 
@@ -366,6 +366,24 @@ const materialOptions = getUniqueValues("material");
 
 const colorOptions = getUniqueValues("color");
 
+const isStyleAvailable = (style) =>
+  product?.variants?.some(v =>
+    v.style === style &&
+    (!selectedClass || v.class === selectedClass) &&
+    (!selectedMaterial || v.material === selectedMaterial) &&
+    (!selectedColor || v.color === selectedColor) &&
+    v.stock > 0
+  );
+
+const isMaterialAvailable = (material) =>
+  product?.variants?.some(v =>
+    v.material === material &&
+    (!selectedClass || v.class === selectedClass) &&
+    (!selectedStyle || v.style === selectedStyle) &&
+    (!selectedColor || v.color === selectedColor) &&
+    v.stock > 0
+  );
+
 
 
 const filteredVariants = product?.variants?.filter(v =>
@@ -386,9 +404,9 @@ const filteredVariants = product?.variants?.filter(v =>
 
 useEffect(() => {
 
-  if (filteredVariants.length > 0) {
+  if (selectedStyle && selectedMaterial && filteredVariants.length > 0) {
 
-    setSelectedVariant(filteredVariants[0]);
+    setSelectedVariant(filteredVariants.find(v => v.stock > 0) || null);
 
   } else {
 
@@ -410,7 +428,10 @@ useEffect(() => {
 
 const handleAddToCart = async () => {
 
-  if (!selectedVariant) return;
+  if (!selectedStyle || !selectedMaterial || !selectedVariant) {
+    alert("Please select style, material, and an available size before adding to bag.");
+    return;
+  }
 
 
 
@@ -956,13 +977,23 @@ const decreaseQuantity = () => {
 
     <div className="flex gap-2 flex-wrap">
 
-      {styleOptions.map(option => (
+      {styleOptions.map(option => {
+
+        const disabled = !isStyleAvailable(option);
+
+        return (
 
         <button
 
           key={option}
 
-          onClick={() => setSelectedStyle(option)}
+          disabled={disabled}
+
+          onClick={() => {
+            setSelectedStyle(option);
+            setSelectedVariant(null);
+            setQuantity(1);
+          }}
 
           className={`px-4 py-2 border rounded-md ${
 
@@ -970,7 +1001,11 @@ const decreaseQuantity = () => {
 
               ? "border-teal-600 bg-teal-50 text-teal-600"
 
-              : "border-gray-300"
+              : disabled
+
+                ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+
+                : "border-gray-300"
 
           }`}
 
@@ -980,7 +1015,9 @@ const decreaseQuantity = () => {
 
         </button>
 
-      ))}
+      );
+
+      })}
 
     </div>
 
@@ -998,13 +1035,23 @@ const decreaseQuantity = () => {
 
     <div className="flex gap-2 flex-wrap">
 
-      {materialOptions.map(option => (
+      {materialOptions.map(option => {
+
+        const disabled = !isMaterialAvailable(option);
+
+        return (
 
         <button
 
           key={option}
 
-          onClick={() => setSelectedMaterial(option)}
+          disabled={disabled}
+
+          onClick={() => {
+            setSelectedMaterial(option);
+            setSelectedVariant(null);
+            setQuantity(1);
+          }}
 
           className={`px-4 py-2 border rounded-md ${
 
@@ -1012,7 +1059,11 @@ const decreaseQuantity = () => {
 
               ? "border-teal-600 bg-teal-50 text-teal-600"
 
-              : "border-gray-300"
+              : disabled
+
+                ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+
+                : "border-gray-300"
 
           }`}
 
@@ -1022,7 +1073,9 @@ const decreaseQuantity = () => {
 
         </button>
 
-      ))}
+      );
+
+      })}
 
     </div>
 
@@ -1058,7 +1111,15 @@ const decreaseQuantity = () => {
 
 
 
-    {filteredVariants.length === 0 ? (
+    {!selectedStyle || !selectedMaterial ? (
+
+      <p className="text-sm text-gray-500">
+
+        Select style and material to see available sizes.
+
+      </p>
+
+    ) : filteredVariants.length === 0 ? (
 
       <p className="text-sm text-red-500">
 
@@ -1075,12 +1136,15 @@ const decreaseQuantity = () => {
           const isLowStock = v.stock <= 10;
 
           const isVeryLowStock = v.stock <= 5;
+          const isUnavailable = v.stock <= 0;
 
           return (
 
             <div key={v.id} className="relative">
 
               <button
+
+                disabled={isUnavailable}
 
                 onClick={() => {
 
@@ -1096,7 +1160,11 @@ const decreaseQuantity = () => {
 
                     ? "border-teal-600 text-teal-600 bg-teal-50"
 
-                    : "border-gray-300 text-gray-900 hover:border-teal-400"
+                    : isUnavailable
+
+                      ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+
+                      : "border-gray-300 text-gray-900 hover:border-teal-400"
 
                 }`}
 
@@ -1106,7 +1174,17 @@ const decreaseQuantity = () => {
 
                   <span>{v.size}</span>
 
-                  {isVeryLowStock && (
+                  {isUnavailable && (
+
+                    <span className="text-xs font-bold text-gray-500 bg-gray-200 px-2 py-1 rounded-full mt-1">
+
+                      Unavailable
+
+                    </span>
+
+                  )}
+
+                  {!isUnavailable && isVeryLowStock && (
 
                     <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-full mt-1">
 
@@ -1116,7 +1194,7 @@ const decreaseQuantity = () => {
 
                   )}
 
-                  {isLowStock && !isVeryLowStock && (
+                  {!isUnavailable && isLowStock && !isVeryLowStock && (
 
                     <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-full mt-1">
 
@@ -1210,13 +1288,13 @@ const decreaseQuantity = () => {
 
   <button
 
-    disabled={addingToCart}
+    disabled={addingToCart || !selectedStyle || !selectedMaterial || !selectedVariant}
 
     onClick={handleAddToCart}
 
     className={`flex-[2] py-4 rounded-md font-bold text-sm transition shadow-md flex items-center justify-center ${
 
-      addingToCart
+      addingToCart || !selectedStyle || !selectedMaterial || !selectedVariant
 
         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
 

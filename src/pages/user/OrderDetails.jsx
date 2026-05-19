@@ -162,6 +162,14 @@ export default function OrderDetails() {
                   <p className="font-semibold text-gray-800">
                     {item.productName}
                   </p>
+                  <p className="text-xs text-gray-400 mt-1 uppercase tracking-wide">
+                    {[
+                      item.size && `Size: ${item.size}`,
+                      item.style && `Style: ${item.style}`,
+                      item.material && `Material: ${item.material}`,
+                      item.color && `Color: ${item.color}`
+                    ].filter(Boolean).join(" | ")}
+                  </p>
                   <p className="text-sm text-gray-500">
                     Qty: {item.quantity} × ₹{item.unitPrice}
                   </p>

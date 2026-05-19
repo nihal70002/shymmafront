@@ -116,6 +116,7 @@ export default function AdminOrderDetails() {
                     <h4 className="text-sm font-bold text-slate-800">{item.productName}</h4>
                     <div className="flex flex-wrap gap-2">
                       {item.size && <Badge label="Size" val={item.size} color="blue" />}
+                      {item.style && <Badge label="Style" val={item.style} color="slate" />}
                       {item.color && <Badge label="Color" val={item.color} color="slate" />}
                       {item.material && <Badge label="Mat" val={item.material} color="indigo" />}
                     </div>

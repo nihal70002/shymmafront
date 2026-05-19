@@ -1,14 +1,9 @@
 import React from "react";
-import { ShoppingCart, Star } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function ProductCard({ product, onAddToCart }) {
   const navigate = useNavigate();
-  const selectedVariant =
-    product.variants?.find((variant) => variant.stock > 0) ||
-    product.variants?.[0];
-  const canAddToCart = Boolean(selectedVariant?.variantId);
-
   const handleView = () => {
     navigate(`/products/${product.productId}`);
   };
@@ -57,15 +52,12 @@ export default function ProductCard({ product, onAddToCart }) {
           type="button"
           onClick={(event) => {
             event.stopPropagation();
-            if (canAddToCart) {
-              onAddToCart(selectedVariant.variantId);
-            }
+            handleView();
           }}
-          disabled={!canAddToCart}
-          className="mt-auto flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-teal-600 px-3 text-xs font-bold text-white shadow-sm shadow-teal-600/20 transition hover:bg-teal-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+          className="mt-auto flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-teal-600 px-3 text-xs font-bold text-white shadow-sm shadow-teal-600/20 transition hover:bg-teal-700 active:scale-[0.98]"
         >
           <ShoppingCart size={15} />
-          Add to Bag
+          Select Options
         </button>
       </div>
     </div>

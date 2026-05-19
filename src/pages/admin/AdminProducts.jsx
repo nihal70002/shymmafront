@@ -19,8 +19,8 @@ import Papa from "papaparse";
 /* ================= CONSTANTS ================= */
 const DEFAULT_VARIANT = {
   class: "",
-  side: "",
-  material: "",
+  side: "Left",
+  material: "Titanium",
   color: "",
   size: "",
   price: "",
@@ -218,11 +218,17 @@ export default function AdminProducts() {
         };
       }
 
-      grouped[r.name].variants.push({
-        size: r.size,
-        price: Number(r.price),
-        productCode: r.productCode,
-        stock: 0
+      ["Left", "Right"].forEach(side => {
+        ["Titanium", "Stainless Steel"].forEach(material => {
+          grouped[r.name].variants.push({
+            size: r.size,
+            side,
+            material,
+            price: Number(r.price),
+            productCode: `${r.productCode}-${side}-${material}`.replace(/\s+/g, ""),
+            stock: 0
+          });
+        });
       });
     }
 
@@ -289,6 +295,7 @@ export default function AdminProducts() {
 
         variants: (fullProduct.sizes || []).map(v => ({
           ...v,
+          side: v.style || v.side || "",
           stock: v.availableStock,
         })),
 
@@ -338,6 +345,16 @@ export default function AdminProducts() {
 
       if (skus.has((sku || "").toLowerCase())) {
         toast.error(`Duplicate SKU: ${sku}`);
+        return;
+      }
+
+      if (!["left", "right"].includes(v.side?.trim().toLowerCase())) {
+        toast.error("Each variant needs Style: Left or Right");
+        return;
+      }
+
+      if (!["titanium", "stainless steel"].includes(v.material?.trim().toLowerCase())) {
+        toast.error("Each variant needs Material: Titanium or Stainless Steel");
         return;
       }
 
@@ -1395,14 +1412,12 @@ export default function AdminProducts() {
           />
         </div>
 
-        {/* side */}
+        {/* STYLE */}
         <div>
           <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
-            side
+            Style
           </label>
-          <input
-            type="text"
-            placeholder="e.g., AD / AF"
+          <select
             className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"
             value={v.side || ""}
             onChange={(e) => {
@@ -1410,7 +1425,11 @@ export default function AdminProducts() {
               vs[i].side = e.target.value;
               setForm({ ...form, variants: vs });
             }}
-          />
+          >
+            <option value="">Select Style</option>
+            <option value="Left">Left</option>
+            <option value="Right">Right</option>
+          </select>
         </div>
 
         {/* MATERIAL */}
