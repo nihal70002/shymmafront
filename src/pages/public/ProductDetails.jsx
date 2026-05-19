@@ -132,9 +132,11 @@ const handleModalLogin = async () => {
 
     // ✅ retry add-to-cart automatically
 
-    if (selectedVariant) {
+    const variantId = Number(selectedVariant?.id);
 
-      await addToCartApi(selectedVariant.id, quantity);
+    if (Number.isInteger(variantId) && variantId > 0) {
+
+      await addToCartApi(variantId, quantity);
 
 
 
@@ -308,16 +310,8 @@ const prevImage = () => {
 
   setSelectedVariant(null);
 
-  // Auto-select first style and material regardless of stock
-  const allStyles = [...new Set(mappedProduct.variants.map(v => v.style))];
-  const allMaterials = [...new Set(mappedProduct.variants.map(v => v.material))];
-  
-  if (allStyles.length > 0) {
-    setSelectedStyle(allStyles[0]);
-  }
-  if (allMaterials.length > 0) {
-    setSelectedMaterial(allMaterials[0]);
-  }
+  setSelectedStyle(first.style || null);
+  setSelectedMaterial(first.material || null);
 
 }
 
@@ -351,31 +345,34 @@ const prevImage = () => {
 
 // 🔥 Helper to extract unique option values
 
-const getUniqueValues = (key) => {
-
-  return [...new Set(
-
-    product?.variants
-
-      ?.map(v => v[key])
-
-      ?.filter(Boolean)
-
-  )];
-
+const getUniqueValues = (key, variants = product?.variants || []) => {
+  return [...new Set(variants.map(v => v[key]).filter(Boolean))];
 };
 
 
 
 // 🔥 Extract dynamic options
 
+const variantsForClass = product?.variants?.filter(v =>
+  (!selectedClass || v.class === selectedClass) &&
+  (!selectedColor || v.color === selectedColor)
+) || [];
+
+const variantsForStyle = variantsForClass.filter(v =>
+  !selectedStyle || v.style === selectedStyle
+);
+
 const classOptions = getUniqueValues("class");
 
-const styleOptions = getUniqueValues("style");
+const styleOptions = getUniqueValues("style", variantsForClass);
 
-const materialOptions = getUniqueValues("material");
+const materialOptions = getUniqueValues("material", variantsForStyle);
 
 const colorOptions = getUniqueValues("color");
+
+const hasStyleOptions = getUniqueValues("style").length > 0;
+
+const hasMaterialOptions = getUniqueValues("material").length > 0;
 
 
 
@@ -397,13 +394,25 @@ const filteredVariants = product?.variants?.filter(v =>
 
 
 useEffect(() => {
-  // Auto-select the first variant when style and material are selected (regardless of stock)
-  if (selectedStyle && selectedMaterial && filteredVariants.length > 0) {
-    setSelectedVariant(filteredVariants[0]);
-  } else {
-    setSelectedVariant(null);
+  if (!product) return;
+
+  if (styleOptions.length > 0 && !styleOptions.includes(selectedStyle)) {
+    setSelectedStyle(styleOptions[0]);
+    return;
   }
-}, [selectedClass, selectedStyle, selectedMaterial, selectedColor, product]);
+
+  if (materialOptions.length > 0 && !materialOptions.includes(selectedMaterial)) {
+    setSelectedMaterial(materialOptions[0]);
+    return;
+  }
+
+  const exactVariant = filteredVariants.find(v =>
+    (!hasStyleOptions || v.style === selectedStyle) &&
+    (!hasMaterialOptions || v.material === selectedMaterial)
+  );
+
+  setSelectedVariant(exactVariant || null);
+}, [selectedClass, selectedStyle, selectedMaterial, selectedColor, product, styleOptions, materialOptions, filteredVariants, hasStyleOptions, hasMaterialOptions]);
 
 
 
@@ -417,7 +426,9 @@ useEffect(() => {
 
 const handleAddToCart = async () => {
 
-  if (!selectedStyle || !selectedMaterial || !selectedVariant) {
+  const variantId = Number(selectedVariant?.id);
+
+  if ((hasStyleOptions && !selectedStyle) || (hasMaterialOptions && !selectedMaterial) || !Number.isInteger(variantId) || variantId <= 0) {
     alert("Please select style, material, and an available size before adding to bag.");
     return;
   }
@@ -446,7 +457,7 @@ const handleAddToCart = async () => {
 
 
 
-    await addToCartApi(selectedVariant.id, quantity);
+    await addToCartApi(variantId, quantity);
 
 
 
@@ -465,6 +476,7 @@ const handleAddToCart = async () => {
   } catch (err) {
 
     console.error("Failed to add to cart:", err);
+    alert(err.response?.data?.title || err.response?.data?.message || "Failed to add this product to bag.");
 
   } finally {
 
@@ -503,6 +515,13 @@ const decreaseQuantity = () => {
   }
 
 };
+
+const cannotAddToCart =
+  addingToCart ||
+  (hasStyleOptions && !selectedStyle) ||
+  (hasMaterialOptions && !selectedMaterial) ||
+  !Number.isInteger(Number(selectedVariant?.id)) ||
+  Number(selectedVariant?.id) <= 0;
 
 
 
@@ -1034,7 +1053,7 @@ const decreaseQuantity = () => {
 
 
 
-    {!selectedStyle || !selectedMaterial ? (
+    {(hasStyleOptions && !selectedStyle) || (hasMaterialOptions && !selectedMaterial) ? (
 
       <p className="text-sm text-gray-500">
 
@@ -1148,13 +1167,13 @@ const decreaseQuantity = () => {
 
   <button
 
-    disabled={addingToCart || !selectedStyle || !selectedMaterial || !selectedVariant}
+    disabled={cannotAddToCart}
 
     onClick={handleAddToCart}
 
     className={`flex-[2] py-4 rounded-md font-bold text-sm transition shadow-md flex items-center justify-center ${
 
-      addingToCart || !selectedStyle || !selectedMaterial || !selectedVariant
+      cannotAddToCart
 
         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
 
