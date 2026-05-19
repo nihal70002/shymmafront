@@ -1202,44 +1202,6 @@ const decreaseQuantity = () => {
 
           </div>
 
-
-
-          {/* Special Offers Banner */}
-
-          <div className="mb-4 bg-gradient-to-r from-orange-500 to-red-600 text-white p-3 rounded-lg">
-
-            <div className="text-center">
-
-              <p className="text-xs font-bold mb-1">🔥 LIMITED TIME OFFER 🔥</p>
-
-              <p className="text-lg font-bold">Buy 2 Get Small Discount!</p>
-
-              <p className="text-xs opacity-90">Add 2 items to cart to unlock 10% off</p>
-
-            </div>
-
-          </div>
-
-
-
-          {/* Free Shipping Banner */}
-
-          <div className="mb-4 bg-emerald-600 text-white p-3 rounded-lg">
-
-            <div className="text-center">
-
-              <p className="text-xs font-bold mb-1">🚚 FREE SHIPPING 🚚</p>
-
-              <p className="text-lg font-bold">Free Delivery on Orders Above ₹499</p>
-
-              <p className="text-xs opacity-90">No shipping charges on qualifying orders</p>
-
-            </div>
-
-          </div>
-
-
-
           {/* Action Buttons */}
 
          {/* Action Buttons - Sticky for Mobile, Static for Desktop */}
