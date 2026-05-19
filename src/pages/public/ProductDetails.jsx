@@ -1070,37 +1070,72 @@ const decreaseQuantity = () => {
 
       <div className="flex flex-wrap gap-2">
 
-        {filteredVariants.map(v => (
+        {filteredVariants.map(v => {
 
-          <button
+          const stockCount = Number(v.stock);
+          const hasStockCount = Number.isFinite(stockCount);
+          const isLowStock = hasStockCount && stockCount <= 10;
+          const isVeryLowStock = hasStockCount && stockCount <= 5;
 
-            key={v.id}
+          return (
 
-            onClick={() => {
+            <div key={v.id} className="relative">
 
-              setSelectedVariant(v);
+              <button
 
-              setQuantity(1);
+                onClick={() => {
 
-            }}
+                  setSelectedVariant(v);
 
-            className={`min-w-[3rem] px-4 py-2 rounded-lg border-2 font-bold text-xs sm:text-sm flex items-center justify-center transition text-center ${
+                  setQuantity(1);
 
-              selectedVariant?.id === v.id
+                }}
 
-                ? "border-teal-600 text-teal-600 bg-teal-50"
+                className={`min-w-[3rem] px-4 py-2 rounded-lg border-2 font-bold text-xs sm:text-sm flex items-center justify-center transition text-center ${
 
-                : "border-gray-300 text-gray-900 hover:border-teal-400"
+                  selectedVariant?.id === v.id
 
-            }`}
+                    ? "border-teal-600 text-teal-600 bg-teal-50"
 
-          >
+                    : "border-gray-300 text-gray-900 hover:border-teal-400"
 
-            {v.size}
+                }`}
 
-          </button>
+              >
 
-        ))}
+                <div className="flex flex-col items-center">
+
+                  <span>{v.size}</span>
+
+                  {isVeryLowStock && (
+
+                    <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-full mt-1">
+
+                      Only {stockCount} left!
+
+                    </span>
+
+                  )}
+
+                  {isLowStock && !isVeryLowStock && (
+
+                    <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-full mt-1">
+
+                      Only {stockCount} left
+
+                    </span>
+
+                  )}
+
+                </div>
+
+              </button>
+
+            </div>
+
+          );
+
+        })}
 
       </div>
 
@@ -1163,6 +1198,48 @@ const decreaseQuantity = () => {
               </div>
 
               
+
+            </div>
+
+          </div>
+
+
+
+          {/* Special Offers Banner */}
+
+          <div className="mb-4 bg-gradient-to-r from-orange-500 to-red-600 text-white p-3 rounded-lg">
+
+            <div className="text-center">
+
+              <div className="mb-1 flex items-center justify-center gap-2 text-xs font-bold">
+                <Package size={14} />
+                <span>LIMITED TIME OFFER</span>
+              </div>
+
+              <p className="text-lg font-bold">Buy 2 Get Small Discount!</p>
+
+              <p className="text-xs opacity-90">Add 2 items to cart to unlock 10% off</p>
+
+            </div>
+
+          </div>
+
+
+
+          {/* Free Shipping Banner */}
+
+          <div className="mb-4 bg-emerald-600 text-white p-3 rounded-lg">
+
+            <div className="text-center">
+
+              <div className="mb-1 flex items-center justify-center gap-2 text-xs font-bold">
+                <Truck size={14} />
+                <span>FREE SHIPPING</span>
+              </div>
+
+              <p className="text-lg font-bold">Free Delivery on Orders Above ₹499</p>
+
+              <p className="text-xs opacity-90">No shipping charges on qualifying orders</p>
 
             </div>
 
