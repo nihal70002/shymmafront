@@ -308,6 +308,17 @@ const prevImage = () => {
 
   setSelectedVariant(null);
 
+  // Auto-select first available style and material if stock exists
+  const availableStyles = [...new Set(mappedProduct.variants.filter(v => v.stock > 0).map(v => v.style))];
+  const availableMaterials = [...new Set(mappedProduct.variants.filter(v => v.stock > 0).map(v => v.material))];
+  
+  if (availableStyles.length > 0) {
+    setSelectedStyle(availableStyles[0]);
+  }
+  if (availableMaterials.length > 0) {
+    setSelectedMaterial(availableMaterials[0]);
+  }
+
 }
 
 
@@ -366,23 +377,6 @@ const materialOptions = getUniqueValues("material");
 
 const colorOptions = getUniqueValues("color");
 
-const isStyleAvailable = (style) =>
-  product?.variants?.some(v =>
-    v.style === style &&
-    (!selectedClass || v.class === selectedClass) &&
-    (!selectedMaterial || v.material === selectedMaterial) &&
-    (!selectedColor || v.color === selectedColor) &&
-    v.stock > 0
-  );
-
-const isMaterialAvailable = (material) =>
-  product?.variants?.some(v =>
-    v.material === material &&
-    (!selectedClass || v.class === selectedClass) &&
-    (!selectedStyle || v.style === selectedStyle) &&
-    (!selectedColor || v.color === selectedColor) &&
-    v.stock > 0
-  );
 
 
 
@@ -403,17 +397,13 @@ const filteredVariants = product?.variants?.filter(v =>
 
 
 useEffect(() => {
-
+  // Auto-select the first available variant when style and material are selected
   if (selectedStyle && selectedMaterial && filteredVariants.length > 0) {
-
-    setSelectedVariant(filteredVariants.find(v => v.stock > 0) || null);
-
+    const availableVariant = filteredVariants.find(v => v.stock > 0);
+    setSelectedVariant(availableVariant || null);
   } else {
-
     setSelectedVariant(null);
-
   }
-
 }, [selectedClass, selectedStyle, selectedMaterial, selectedColor, product]);
 
 
@@ -965,122 +955,56 @@ const decreaseQuantity = () => {
 
 
 
-
-
-
-
 {styleOptions.length > 0 && (
-
   <div className="mb-4">
-
     <h3 className="text-sm font-bold uppercase mb-3">Select Style</h3>
-
     <div className="flex gap-2 flex-wrap">
-
-      {styleOptions.map(option => {
-
-        const disabled = !isStyleAvailable(option);
-
-        return (
-
+      {styleOptions.map(option => (
         <button
-
           key={option}
-
-          disabled={disabled}
-
           onClick={() => {
             setSelectedStyle(option);
             setSelectedVariant(null);
             setQuantity(1);
           }}
-
           className={`px-4 py-2 border rounded-md ${
-
             selectedStyle === option
-
               ? "border-teal-600 bg-teal-50 text-teal-600"
-
-              : disabled
-
-                ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
-
-                : "border-gray-300"
-
+              : "border-gray-300 hover:border-teal-400"
           }`}
-
         >
-
           {option}
-
         </button>
-
-      );
-
-      })}
-
+      ))}
     </div>
-
   </div>
-
 )}
 
 
 
 {materialOptions.length > 0 && (
-
   <div className="mb-4">
-
     <h3 className="text-sm font-bold uppercase mb-3">Select Material</h3>
-
     <div className="flex gap-2 flex-wrap">
-
-      {materialOptions.map(option => {
-
-        const disabled = !isMaterialAvailable(option);
-
-        return (
-
+      {materialOptions.map(option => (
         <button
-
           key={option}
-
-          disabled={disabled}
-
           onClick={() => {
             setSelectedMaterial(option);
             setSelectedVariant(null);
             setQuantity(1);
           }}
-
           className={`px-4 py-2 border rounded-md ${
-
             selectedMaterial === option
-
               ? "border-teal-600 bg-teal-50 text-teal-600"
-
-              : disabled
-
-                ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
-
-                : "border-gray-300"
-
+              : "border-gray-300 hover:border-teal-400"
           }`}
-
         >
-
           {option}
-
         </button>
-
-      );
-
-      })}
-
+      ))}
     </div>
-
   </div>
-
 )}
 
 
