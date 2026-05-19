@@ -26,21 +26,6 @@ import api from "../../api/axios";
 
 import { LogOut } from "lucide-react";
 
-const certificates = [
-  {
-    src: "/certificate/certificate.jpeg",
-    alt: "Certification certificate 1"
-  },
-  {
-    src: "/certificate/certificate2.jpeg",
-    alt: "Certification certificate 2"
-  },
-  {
-    src: "/certificate/WhatsApp Image 2026-05-13 at 11.06.46 AM.jpeg",
-    alt: "Certification certificate 3"
-  }
-];
-
 
 
 
@@ -436,18 +421,20 @@ const handleSearchSubmit = () => {
         }`}
       >
         <div className="grid grid-cols-2 gap-3 rounded-2xl border border-slate-100 bg-white/70 p-3 shadow-inner">
-          {certificates.map((certificate) => (
-            <div
-              key={certificate.src}
-              className="rounded-xl border border-slate-200 bg-white p-2 shadow-sm"
-            >
-              <img
-                src={certificate.src}
-                alt={certificate.alt}
-                className="aspect-[3/4] w-full rounded-lg object-cover"
-              />
-            </div>
-          ))}
+          <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+            <img
+              src="/certificate/certificate.jpeg"
+              alt="Certification certificate 1"
+              className="aspect-[3/4] w-full rounded-lg object-cover"
+            />
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+            <img
+              src="/certificate/certificate2.jpeg"
+              alt="Certification certificate 2"
+              className="aspect-[3/4] w-full rounded-lg object-cover"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -843,20 +830,21 @@ lg:aspect-[1660/490]"
 
       {/* RIGHT IMAGES */}
       <div className="grid grid-cols-2 gap-5">
-        {certificates.map((certificate, index) => (
-          <div
-            key={certificate.src}
-            className={`bg-white p-4 rounded-3xl shadow-2xl border border-gray-100 hover:scale-[1.02] transition duration-500 ${
-              index === 2 ? "lg:col-span-2 lg:mx-auto lg:w-1/2" : ""
-            }`}
-          >
-            <img
-              src={certificate.src}
-              alt={certificate.alt}
-              className="w-full rounded-2xl object-cover"
-            />
-          </div>
-        ))}
+        <div className="bg-white p-4 rounded-3xl shadow-2xl border border-gray-100 hover:scale-[1.02] transition duration-500">
+          <img
+            src="/certificate/certificate.jpeg"
+            alt="Certification certificate 1"
+            className="w-full rounded-2xl object-cover"
+          />
+        </div>
+
+        <div className="bg-white p-4 rounded-3xl shadow-2xl border border-gray-100 hover:scale-[1.02] transition duration-500">
+          <img
+            src="/certificate/certificate2.jpeg"
+            alt="Certification certificate 2"
+            className="w-full rounded-2xl object-cover"
+          />
+        </div>
       </div>
 
     </div>

@@ -1072,10 +1072,9 @@ const decreaseQuantity = () => {
 
         {filteredVariants.map(v => {
 
-          const stockCount = Number(v.stock);
-          const hasStockCount = Number.isFinite(stockCount);
-          const isLowStock = hasStockCount && stockCount <= 10;
-          const isVeryLowStock = hasStockCount && stockCount <= 5;
+          const isLowStock = v.stock <= 10;
+
+          const isVeryLowStock = v.stock <= 5;
 
           return (
 
@@ -1111,7 +1110,7 @@ const decreaseQuantity = () => {
 
                     <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-full mt-1">
 
-                      Only {stockCount} left!
+                      Only {v.stock} left!
 
                     </span>
 
@@ -1121,7 +1120,7 @@ const decreaseQuantity = () => {
 
                     <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-full mt-1">
 
-                      Only {stockCount} left
+                      Only {v.stock} left
 
                     </span>
 
@@ -1211,10 +1210,7 @@ const decreaseQuantity = () => {
 
             <div className="text-center">
 
-              <div className="mb-1 flex items-center justify-center gap-2 text-xs font-bold">
-                <Package size={14} />
-                <span>LIMITED TIME OFFER</span>
-              </div>
+              <p className="text-xs font-bold mb-1">🔥 LIMITED TIME OFFER 🔥</p>
 
               <p className="text-lg font-bold">Buy 2 Get Small Discount!</p>
 
@@ -1232,10 +1228,7 @@ const decreaseQuantity = () => {
 
             <div className="text-center">
 
-              <div className="mb-1 flex items-center justify-center gap-2 text-xs font-bold">
-                <Truck size={14} />
-                <span>FREE SHIPPING</span>
-              </div>
+              <p className="text-xs font-bold mb-1">🚚 FREE SHIPPING 🚚</p>
 
               <p className="text-lg font-bold">Free Delivery on Orders Above ₹499</p>
 
