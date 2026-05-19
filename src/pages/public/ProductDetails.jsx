@@ -308,15 +308,15 @@ const prevImage = () => {
 
   setSelectedVariant(null);
 
-  // Auto-select first available style and material if stock exists
-  const availableStyles = [...new Set(mappedProduct.variants.filter(v => v.stock > 0).map(v => v.style))];
-  const availableMaterials = [...new Set(mappedProduct.variants.filter(v => v.stock > 0).map(v => v.material))];
+  // Auto-select first style and material regardless of stock
+  const allStyles = [...new Set(mappedProduct.variants.map(v => v.style))];
+  const allMaterials = [...new Set(mappedProduct.variants.map(v => v.material))];
   
-  if (availableStyles.length > 0) {
-    setSelectedStyle(availableStyles[0]);
+  if (allStyles.length > 0) {
+    setSelectedStyle(allStyles[0]);
   }
-  if (availableMaterials.length > 0) {
-    setSelectedMaterial(availableMaterials[0]);
+  if (allMaterials.length > 0) {
+    setSelectedMaterial(allMaterials[0]);
   }
 
 }
@@ -397,10 +397,9 @@ const filteredVariants = product?.variants?.filter(v =>
 
 
 useEffect(() => {
-  // Auto-select the first available variant when style and material are selected
+  // Auto-select the first variant when style and material are selected (regardless of stock)
   if (selectedStyle && selectedMaterial && filteredVariants.length > 0) {
-    const availableVariant = filteredVariants.find(v => v.stock > 0);
-    setSelectedVariant(availableVariant || null);
+    setSelectedVariant(filteredVariants[0]);
   } else {
     setSelectedVariant(null);
   }
@@ -1054,90 +1053,27 @@ const decreaseQuantity = () => {
     ) : (
 
       <div className="flex flex-wrap gap-2">
-
         {filteredVariants.map(v => {
-
-          const isLowStock = v.stock <= 10;
-
-          const isVeryLowStock = v.stock <= 5;
-          const isUnavailable = v.stock <= 0;
-
           return (
-
             <div key={v.id} className="relative">
-
               <button
-
-                disabled={isUnavailable}
-
                 onClick={() => {
-
                   setSelectedVariant(v);
-
                   setQuantity(1);
-
                 }}
-
                 className={`min-w-[3rem] px-4 py-2 rounded-lg border-2 font-bold text-xs sm:text-sm flex items-center justify-center transition text-center ${
-
                   selectedVariant?.id === v.id
-
                     ? "border-teal-600 text-teal-600 bg-teal-50"
-
-                    : isUnavailable
-
-                      ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
-
-                      : "border-gray-300 text-gray-900 hover:border-teal-400"
-
+                    : "border-gray-300 text-gray-900 hover:border-teal-400"
                 }`}
-
               >
-
                 <div className="flex flex-col items-center">
-
                   <span>{v.size}</span>
-
-                  {isUnavailable && (
-
-                    <span className="text-xs font-bold text-gray-500 bg-gray-200 px-2 py-1 rounded-full mt-1">
-
-                      Unavailable
-
-                    </span>
-
-                  )}
-
-                  {!isUnavailable && isVeryLowStock && (
-
-                    <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-full mt-1">
-
-                      Only {v.stock} left!
-
-                    </span>
-
-                  )}
-
-                  {!isUnavailable && isLowStock && !isVeryLowStock && (
-
-                    <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-full mt-1">
-
-                      Only {v.stock} left
-
-                    </span>
-
-                  )}
-
                 </div>
-
               </button>
-
             </div>
-
           );
-
         })}
-
       </div>
 
     )}
