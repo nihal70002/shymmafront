@@ -23,6 +23,14 @@ const StatusBadge = ({ status }) => {
   );
 };
 
+const toArray = (payload, keys = []) => {
+  if (Array.isArray(payload)) return payload;
+  for (const key of keys) {
+    if (Array.isArray(payload?.[key])) return payload[key];
+  }
+  return [];
+};
+
 export default function AdminCustomers() {
   const [customers, setCustomers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -52,7 +60,7 @@ const [showPassword, setShowPassword] = useState(false);
   const loadCustomers = async () => {
     try {
       const res = await api.get("/admin/users");
-      setCustomers(res.data);
+      setCustomers(toArray(res.data, ["items", "users", "customers", "data"]));
     } catch (err) { console.error(err); } 
     finally { setLoading(false); }
   };
@@ -78,7 +86,7 @@ const [showPassword, setShowPassword] = useState(false);
   const loadSalesExecutives = async () => {
     try {
       const res = await api.get("/admin/sales-executives");
-      setSalesExecutives(res.data);
+      setSalesExecutives(toArray(res.data, ["items", "users", "salesExecutives", "data"]));
     } catch (err) { console.error("Failed to load sales executives"); }
   };
 
@@ -120,7 +128,7 @@ const [showPassword, setShowPassword] = useState(false);
     return { derivedStats: { total, count, avg }, groupedProducts: Object.values(productMap).sort((a, b) => b.revenue - a.revenue) };
   }, [selectedUser]);
 
-  const filteredCustomers = customers.filter(c =>
+  const filteredCustomers = toArray(customers).filter(c =>
     c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.companyName?.toLowerCase().includes(searchTerm.toLowerCase())
