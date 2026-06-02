@@ -19,7 +19,7 @@ import Papa from "papaparse";
 /* ================= CONSTANTS ================= */
 const DEFAULT_VARIANT = {
   class: "",
-  side: "Left",
+  side: "Right",
   material: "Titanium",
   color: "",
   size: "",
@@ -218,7 +218,7 @@ export default function AdminProducts() {
         };
       }
 
-      ["Left", "Right"].forEach(side => {
+      ["Right", "Left", "Universal"].forEach(side => {
         ["Titanium", "Stainless Steel"].forEach(material => {
           grouped[r.name].variants.push({
             size: r.size,
@@ -348,8 +348,8 @@ export default function AdminProducts() {
         return;
       }
 
-      if (!["left", "right"].includes(v.side?.trim().toLowerCase())) {
-        toast.error("Each variant needs Style: Left or Right");
+      if (!["left", "right", "universal"].includes(v.side?.trim().toLowerCase())) {
+        toast.error("Each variant needs Style: Right, Left, or Universal");
         return;
       }
 
@@ -1427,8 +1427,9 @@ export default function AdminProducts() {
             }}
           >
             <option value="">Select Style</option>
-            <option value="Left">Left</option>
             <option value="Right">Right</option>
+            <option value="Left">Left</option>
+            <option value="Universal">Universal</option>
           </select>
         </div>
 
