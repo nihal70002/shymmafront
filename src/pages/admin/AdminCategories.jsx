@@ -1,13 +1,26 @@
 import React, { useEffect, useState } from "react";
 import api from "../../api/axios";
-import { Edit3, Trash2, Plus, X, ChevronDown } from "lucide-react";
+import { ArrowDown, ArrowUp, Edit3, Trash2, Plus, X, ChevronDown } from "lucide-react";
 import toast from "react-hot-toast";
+
+const getCategoryOrder = (category, fallbackIndex = 0) => {
+  const order = category.displayOrder ?? category.sortOrder ?? category.order ?? category.position;
+  return Number.isFinite(Number(order)) ? Number(order) : fallbackIndex;
+};
+
+const sortCategories = (items) =>
+  [...items].sort((a, b) => {
+    const orderDiff = getCategoryOrder(a, Number.MAX_SAFE_INTEGER) - getCategoryOrder(b, Number.MAX_SAFE_INTEGER);
+    if (orderDiff !== 0) return orderDiff;
+    return (a.id || 0) - (b.id || 0);
+  });
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState([]);
   const [expanded, setExpanded] = useState({});
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+  const [savingOrder, setSavingOrder] = useState(false);
 
   const [name, setName] = useState("");
   const [parentId, setParentId] = useState("");
@@ -21,13 +34,76 @@ export default function AdminCategories() {
   const loadCategories = async () => {
     try {
       const res = await api.get("/categories/admin");
-      setCategories(res.data || []);
+      setCategories(sortCategories(res.data || []));
     } catch {
       toast.error("Failed to load categories");
     }
   };
 
-  const mainCategories = categories.filter(c => !c.parentCategoryId);
+  const mainCategories = sortCategories(categories.filter(c => !c.parentCategoryId));
+
+  const persistCategoryOrder = async (nextCategories, parentCategoryId) => {
+    const siblings = sortCategories(
+      nextCategories.filter((category) =>
+        parentCategoryId ? category.parentCategoryId === parentCategoryId : !category.parentCategoryId
+      )
+    );
+
+    const payload = siblings.map((category, index) => ({
+      id: category.id,
+      displayOrder: index + 1,
+      parentCategoryId: category.parentCategoryId || null
+    }));
+
+    setSavingOrder(true);
+    try {
+      await api.put("/categories/reorder", { categories: payload });
+      toast.success("Category order updated");
+    } catch (err) {
+      toast.error(err?.response?.data || "Failed to save category order");
+      loadCategories();
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
+  const moveCategory = (category, direction) => {
+    const parentCategoryId = category.parentCategoryId || null;
+    const siblings = sortCategories(
+      categories.filter((item) =>
+        parentCategoryId ? item.parentCategoryId === parentCategoryId : !item.parentCategoryId
+      )
+    );
+    const currentIndex = siblings.findIndex((item) => item.id === category.id);
+    const nextIndex = currentIndex + direction;
+
+    if (currentIndex === -1 || nextIndex < 0 || nextIndex >= siblings.length) return;
+
+    const reorderedSiblings = [...siblings];
+    [reorderedSiblings[currentIndex], reorderedSiblings[nextIndex]] = [
+      reorderedSiblings[nextIndex],
+      reorderedSiblings[currentIndex]
+    ];
+
+    const orderById = new Map(
+      reorderedSiblings.map((item, index) => [item.id, index + 1])
+    );
+
+    const nextCategories = categories.map((item) =>
+      orderById.has(item.id)
+        ? {
+            ...item,
+            displayOrder: orderById.get(item.id),
+            sortOrder: item.sortOrder === undefined ? item.sortOrder : orderById.get(item.id),
+            order: item.order === undefined ? item.order : orderById.get(item.id),
+            position: item.position === undefined ? item.position : orderById.get(item.id)
+          }
+        : item
+    );
+
+    setCategories(sortCategories(nextCategories));
+    persistCategoryOrder(nextCategories, parentCategoryId);
+  };
 
   const toggleExpand = (id) => {
     setExpanded(prev => ({
@@ -125,11 +201,21 @@ export default function AdminCategories() {
 
         {/* Category List */}
         <div className="bg-white rounded-2xl shadow p-4 sm:p-6 max-h-[70vh] overflow-y-auto space-y-4">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            <span className="font-semibold">
+              Use the arrow buttons to arrange how categories appear on the landing page.
+            </span>
+            {savingOrder && (
+              <span className="shrink-0 text-xs font-bold uppercase tracking-wide">
+                Saving...
+              </span>
+            )}
+          </div>
 
-          {mainCategories.map(main => {
-            const subCategories = categories.filter(
+          {mainCategories.map((main, mainIndex) => {
+            const subCategories = sortCategories(categories.filter(
               sub => sub.parentCategoryId === main.id
-            );
+            ));
 
             return (
               <div
@@ -167,6 +253,9 @@ export default function AdminCategories() {
                     </div>
 
                     <div>
+                      <div className="mb-1 inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">
+                        #{mainIndex + 1}
+                      </div>
                       <div className="font-semibold text-lg text-slate-800">
                         {main.name}
                       </div>
@@ -178,7 +267,25 @@ export default function AdminCategories() {
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => moveCategory(main, -1)}
+                      disabled={mainIndex === 0 || savingOrder}
+                      className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                      title="Move up"
+                    >
+                      <ArrowUp size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveCategory(main, 1)}
+                      disabled={mainIndex === mainCategories.length - 1 || savingOrder}
+                      className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                      title="Move down"
+                    >
+                      <ArrowDown size={16} />
+                    </button>
                     <button onClick={() => openEdit(main)}>
                       <Edit3 size={18} />
                     </button>
@@ -197,7 +304,7 @@ export default function AdminCategories() {
                       </div>
                     )}
 
-                    {subCategories.map(sub => (
+                    {subCategories.map((sub, subIndex) => (
                       <div
                         key={sub.id}
                         className="flex justify-between items-center bg-slate-50 p-3 rounded-lg"
@@ -213,12 +320,35 @@ export default function AdminCategories() {
                             )}
                           </div>
 
-                          <span className="font-medium text-slate-700">
-                            {sub.name}
-                          </span>
+                          <div>
+                            <div className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                              #{subIndex + 1}
+                            </div>
+                            <span className="font-medium text-slate-700">
+                              {sub.name}
+                            </span>
+                          </div>
                         </div>
 
                         <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => moveCategory(sub, -1)}
+                            disabled={subIndex === 0 || savingOrder}
+                            className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                            title="Move up"
+                          >
+                            <ArrowUp size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveCategory(sub, 1)}
+                            disabled={subIndex === subCategories.length - 1 || savingOrder}
+                            className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                            title="Move down"
+                          >
+                            <ArrowDown size={14} />
+                          </button>
                           <button onClick={() => openEdit(sub)}>
                             <Edit3 size={16} />
                           </button>

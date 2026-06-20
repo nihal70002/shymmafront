@@ -2,6 +2,18 @@ import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
 
+const getCategoryOrder = (category, fallbackIndex = 0) => {
+  const order = category.displayOrder ?? category.sortOrder ?? category.order ?? category.position;
+  return Number.isFinite(Number(order)) ? Number(order) : fallbackIndex;
+};
+
+const sortCategories = (items) =>
+  [...items].sort((a, b) => {
+    const orderDiff = getCategoryOrder(a, Number.MAX_SAFE_INTEGER) - getCategoryOrder(b, Number.MAX_SAFE_INTEGER);
+    if (orderDiff !== 0) return orderDiff;
+    return (a.id || 0) - (b.id || 0);
+  });
+
 export default function CategoryPage() {
   const { slug } = useParams();
   const [subCategories, setSubCategories] = useState([]);
@@ -16,7 +28,7 @@ export default function CategoryPage() {
         setLoading(true);
         setError(null);
         const response = await api.get(`/categories/${encodeURIComponent(slug)}`);
-        setSubCategories(response.data.subCategories || []);
+        setSubCategories(sortCategories(response.data.subCategories || []));
       } catch (err) {
         setError("Unable to load data.");
       } finally {

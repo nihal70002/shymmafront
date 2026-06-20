@@ -27,6 +27,18 @@ import api from "../../api/axios";
 import { LogOut } from "lucide-react";
 
 
+const getCategoryOrder = (category, fallbackIndex = 0) => {
+  const order = category.displayOrder ?? category.sortOrder ?? category.order ?? category.position;
+  return Number.isFinite(Number(order)) ? Number(order) : fallbackIndex;
+};
+
+const sortCategories = (items) =>
+  [...items].sort((a, b) => {
+    const orderDiff = getCategoryOrder(a, Number.MAX_SAFE_INTEGER) - getCategoryOrder(b, Number.MAX_SAFE_INTEGER);
+    if (orderDiff !== 0) return orderDiff;
+    return (a.id || 0) - (b.id || 0);
+  });
+
 
 
 
@@ -57,9 +69,9 @@ useEffect(() => {
       setFeaturedProducts(products.slice(0, 4));
 
       // show only main categories (no subcategories)
-      const mainCategories = (categoryRes.data || []).filter(
+      const mainCategories = sortCategories((categoryRes.data || []).filter(
         (c) => !c.parentCategoryId
-      );
+      ));
 
       setCategories(mainCategories);
 
