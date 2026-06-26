@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import api from "../../api/axios";
-import { ArrowDown, ArrowUp, Edit3, Trash2, Plus, X, ChevronDown } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, Edit3, Plus, Trash2, X } from "lucide-react";
 import toast from "react-hot-toast";
+
+const MAX_DEPTH = 3;
 
 const getCategoryOrder = (category, fallbackIndex = 0) => {
   const order = category.displayOrder ?? category.sortOrder ?? category.order ?? category.position;
@@ -14,6 +16,48 @@ const sortCategories = (items) =>
     if (orderDiff !== 0) return orderDiff;
     return (a.id || 0) - (b.id || 0);
   });
+
+const getChildren = (categories, parentId) =>
+  sortCategories(categories.filter((category) =>
+    parentId ? category.parentCategoryId === parentId : !category.parentCategoryId
+  ));
+
+const getCategoryDepth = (category, categories) => {
+  let depth = 1;
+  let parentId = category.parentCategoryId;
+
+  while (parentId) {
+    const parent = categories.find((item) => item.id === parentId);
+    if (!parent) break;
+    depth += 1;
+    parentId = parent.parentCategoryId;
+  }
+
+  return depth;
+};
+
+const getSubtreeHeight = (category, categories) => {
+  const children = getChildren(categories, category.id);
+  if (children.length === 0) return 1;
+  return 1 + Math.max(...children.map((child) => getSubtreeHeight(child, categories)));
+};
+
+const isDescendant = (candidateParentId, categoryId, categories) => {
+  let currentId = candidateParentId;
+
+  while (currentId) {
+    if (currentId === categoryId) return true;
+    currentId = categories.find((item) => item.id === currentId)?.parentCategoryId;
+  }
+
+  return false;
+};
+
+const getLevelLabel = (depth) => {
+  if (depth === 1) return "Parent Category";
+  if (depth === 2) return "Main Category";
+  return "Sub Category";
+};
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState([]);
@@ -31,6 +75,8 @@ export default function AdminCategories() {
     loadCategories();
   }, []);
 
+  const rootCategories = useMemo(() => getChildren(categories, null), [categories]);
+
   const loadCategories = async () => {
     try {
       const res = await api.get("/categories/admin");
@@ -40,15 +86,20 @@ export default function AdminCategories() {
     }
   };
 
-  const mainCategories = sortCategories(categories.filter(c => !c.parentCategoryId));
+  const parentOptions = useMemo(() => {
+    return sortCategories(categories).filter((category) => {
+      if (category.id === editingCategory?.id) return false;
+      if (editingCategory && isDescendant(category.id, editingCategory.id, categories)) return false;
+
+      const categoryDepth = getCategoryDepth(category, categories);
+      const editingHeight = editingCategory ? getSubtreeHeight(editingCategory, categories) : 1;
+
+      return categoryDepth + editingHeight <= MAX_DEPTH;
+    });
+  }, [categories, editingCategory]);
 
   const persistCategoryOrder = async (nextCategories, parentCategoryId) => {
-    const siblings = sortCategories(
-      nextCategories.filter((category) =>
-        parentCategoryId ? category.parentCategoryId === parentCategoryId : !category.parentCategoryId
-      )
-    );
-
+    const siblings = getChildren(nextCategories, parentCategoryId);
     const payload = siblings.map((category, index) => ({
       id: category.id,
       displayOrder: index + 1,
@@ -69,11 +120,7 @@ export default function AdminCategories() {
 
   const moveCategory = (category, direction) => {
     const parentCategoryId = category.parentCategoryId || null;
-    const siblings = sortCategories(
-      categories.filter((item) =>
-        parentCategoryId ? item.parentCategoryId === parentCategoryId : !item.parentCategoryId
-      )
-    );
+    const siblings = getChildren(categories, parentCategoryId);
     const currentIndex = siblings.findIndex((item) => item.id === category.id);
     const nextIndex = currentIndex + direction;
 
@@ -85,19 +132,10 @@ export default function AdminCategories() {
       reorderedSiblings[currentIndex]
     ];
 
-    const orderById = new Map(
-      reorderedSiblings.map((item, index) => [item.id, index + 1])
-    );
-
+    const orderById = new Map(reorderedSiblings.map((item, index) => [item.id, index + 1]));
     const nextCategories = categories.map((item) =>
       orderById.has(item.id)
-        ? {
-            ...item,
-            displayOrder: orderById.get(item.id),
-            sortOrder: item.sortOrder === undefined ? item.sortOrder : orderById.get(item.id),
-            order: item.order === undefined ? item.order : orderById.get(item.id),
-            position: item.position === undefined ? item.position : orderById.get(item.id)
-          }
+        ? { ...item, displayOrder: orderById.get(item.id) }
         : item
     );
 
@@ -106,16 +144,13 @@ export default function AdminCategories() {
   };
 
   const toggleExpand = (id) => {
-    setExpanded(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const openCreate = () => {
+  const openCreate = (parentCategoryId = "") => {
     setEditingCategory(null);
     setName("");
-    setParentId("");
+    setParentId(parentCategoryId || "");
     setImageFile(null);
     setPreview(null);
     setShowModal(true);
@@ -180,30 +215,140 @@ export default function AdminCategories() {
     }
   };
 
+  const renderCategory = (category, index, siblings, depth = 1) => {
+    const children = getChildren(categories, category.id);
+    const isOpen = expanded[category.id];
+    const canAddChild = depth < MAX_DEPTH;
+    const levelLabel = getLevelLabel(depth);
+
+    return (
+      <div
+        key={category.id}
+        className={`overflow-hidden rounded-xl border bg-white ${depth === 1 ? "border-slate-200" : "border-slate-100"}`}
+      >
+        <div className="flex flex-col gap-4 p-4 transition hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-4">
+            <button
+              type="button"
+              onClick={() => toggleExpand(category.id)}
+              className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 disabled:opacity-30"
+              disabled={children.length === 0}
+            >
+              <ChevronDown
+                size={20}
+                className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            <div className={`${depth === 1 ? "h-16 w-16" : "h-12 w-12"} shrink-0 overflow-hidden rounded-xl border bg-white shadow-sm`}>
+              {category.imageUrl ? (
+                <img
+                  src={category.imageUrl}
+                  alt={category.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-[10px] text-slate-400">
+                  No Image
+                </div>
+              )}
+            </div>
+
+            <div className="min-w-0">
+              <div className="mb-1 flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">
+                  {levelLabel}
+                </span>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
+                  #{index + 1}
+                </span>
+              </div>
+              <div className="truncate text-base font-semibold text-slate-800 sm:text-lg">
+                {category.name}
+              </div>
+              <div className="text-sm text-slate-500">
+                {children.length} {children.length === 1 ? "child" : "children"}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+            <button
+              type="button"
+              onClick={() => moveCategory(category, -1)}
+              disabled={index === 0 || savingOrder}
+              className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+              title="Move up"
+            >
+              <ArrowUp size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={() => moveCategory(category, 1)}
+              disabled={index === siblings.length - 1 || savingOrder}
+              className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+              title="Move down"
+            >
+              <ArrowDown size={16} />
+            </button>
+            {canAddChild && (
+              <button
+                type="button"
+                onClick={() => openCreate(category.id)}
+                className="rounded-lg border border-blue-200 px-3 py-2 text-xs font-bold text-blue-700 transition hover:bg-blue-50"
+              >
+                <Plus size={14} className="inline" /> Child
+              </button>
+            )}
+            <button type="button" onClick={() => openEdit(category)}>
+              <Edit3 size={18} />
+            </button>
+            <button type="button" onClick={() => deleteCategory(category.id)}>
+              <Trash2 size={18} className="text-rose-600" />
+            </button>
+          </div>
+        </div>
+
+        {isOpen && (
+          <div className="space-y-3 border-t bg-slate-50 p-4">
+            {children.length === 0 && (
+              <div className="text-sm text-slate-400">No child categories</div>
+            )}
+            {children.map((child, childIndex) =>
+              renderCategory(child, childIndex, children, depth + 1)
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 p-4 sm:p-8">
-      <div className="max-w-6xl mx-auto">
-
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">
-            Category Management
-          </h1>
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800 sm:text-3xl">
+              Category Management
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Parent Category -> Main Category -> Sub Category
+            </p>
+          </div>
 
           <button
-            onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow"
+            onClick={() => openCreate()}
+            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white shadow transition hover:bg-blue-700"
           >
             <Plus size={18} />
-            Add Category
+            Add Parent Category
           </button>
         </div>
 
-        {/* Category List */}
-        <div className="bg-white rounded-2xl shadow p-4 sm:p-6 max-h-[70vh] overflow-y-auto space-y-4">
+        <div className="max-h-[70vh] space-y-4 overflow-y-auto rounded-2xl bg-white p-4 shadow sm:p-6">
           <div className="flex items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
             <span className="font-semibold">
-              Use the arrow buttons to arrange how categories appear on the landing page.
+              Arrange sibling categories with arrows. Products should be assigned to final subcategories.
             </span>
             {savingOrder && (
               <span className="shrink-0 text-xs font-bold uppercase tracking-wide">
@@ -212,172 +357,22 @@ export default function AdminCategories() {
             )}
           </div>
 
-          {mainCategories.map((main, mainIndex) => {
-            const subCategories = sortCategories(categories.filter(
-              sub => sub.parentCategoryId === main.id
-            ));
+          {rootCategories.map((category, index) =>
+            renderCategory(category, index, rootCategories)
+          )}
 
-            return (
-              <div
-                key={main.id}
-                className="border rounded-xl overflow-hidden bg-slate-50"
-              >
-                {/* Parent Row */}
-                <div className="flex items-center justify-between p-4 hover:bg-slate-100 transition">
-
-                  <div className="flex items-center gap-4">
-
-                    {/* Dropdown Icon */}
-                    <button onClick={() => toggleExpand(main.id)}>
-                      <ChevronDown
-                        size={20}
-                        className={`transition-transform ${
-                          expanded[main.id] ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-
-                    {/* Bigger Image */}
-                    <div className="w-16 h-16 rounded-xl overflow-hidden border bg-white shadow-sm">
-                      {main.imageUrl ? (
-                        <img
-                          src={main.imageUrl}
-                          alt={main.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full text-xs text-slate-400">
-                          No Image
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <div className="mb-1 inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">
-                        #{mainIndex + 1}
-                      </div>
-                      <div className="font-semibold text-lg text-slate-800">
-                        {main.name}
-                      </div>
-
-                      {/* Count Badge */}
-                      <div className="text-sm text-slate-500">
-                        {subCategories.length} Subcategories
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => moveCategory(main, -1)}
-                      disabled={mainIndex === 0 || savingOrder}
-                      className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
-                      title="Move up"
-                    >
-                      <ArrowUp size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveCategory(main, 1)}
-                      disabled={mainIndex === mainCategories.length - 1 || savingOrder}
-                      className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
-                      title="Move down"
-                    >
-                      <ArrowDown size={16} />
-                    </button>
-                    <button onClick={() => openEdit(main)}>
-                      <Edit3 size={18} />
-                    </button>
-                    <button onClick={() => deleteCategory(main.id)}>
-                      <Trash2 size={18} className="text-rose-600" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Subcategories */}
-                {expanded[main.id] && (
-                  <div className="bg-white border-t p-4 space-y-3">
-                    {subCategories.length === 0 && (
-                      <div className="text-sm text-slate-400">
-                        No subcategories
-                      </div>
-                    )}
-
-                    {subCategories.map((sub, subIndex) => (
-                      <div
-                        key={sub.id}
-                        className="flex justify-between items-center bg-slate-50 p-3 rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-lg overflow-hidden border bg-white">
-                            {sub.imageUrl && (
-                              <img
-                                src={sub.imageUrl}
-                                alt={sub.name}
-                                className="w-full h-full object-cover"
-                              />
-                            )}
-                          </div>
-
-                          <div>
-                            <div className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                              #{subIndex + 1}
-                            </div>
-                            <span className="font-medium text-slate-700">
-                              {sub.name}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => moveCategory(sub, -1)}
-                            disabled={subIndex === 0 || savingOrder}
-                            className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
-                            title="Move up"
-                          >
-                            <ArrowUp size={14} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => moveCategory(sub, 1)}
-                            disabled={subIndex === subCategories.length - 1 || savingOrder}
-                            className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
-                            title="Move down"
-                          >
-                            <ArrowDown size={14} />
-                          </button>
-                          <button onClick={() => openEdit(sub)}>
-                            <Edit3 size={16} />
-                          </button>
-                          <button onClick={() => deleteCategory(sub.id)}>
-                            <Trash2 size={16} className="text-rose-600" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {mainCategories.length === 0 && (
-            <div className="text-center text-slate-400 py-10">
+          {rootCategories.length === 0 && (
+            <div className="py-10 text-center text-slate-400">
               No categories created yet.
             </div>
           )}
         </div>
       </div>
 
-      {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-
-            <div className="flex justify-between items-center mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-bold">
                 {editingCategory ? "Edit Category" : "Add Category"}
               </h2>
@@ -391,29 +386,31 @@ export default function AdminCategories() {
               placeholder="Category name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border px-3 py-2 rounded-lg mb-4"
+              className="mb-4 w-full rounded-lg border px-3 py-2"
             />
 
             <select
               value={parentId}
               onChange={(e) => setParentId(e.target.value)}
-              className="w-full border px-3 py-2 rounded-lg mb-4"
+              className="mb-4 w-full rounded-lg border px-3 py-2"
             >
-              <option value="">Main Category</option>
-              {mainCategories
-                .filter(c => c.id !== editingCategory?.id)
-                .map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
+              <option value="">Parent Category (Top Level)</option>
+              {parentOptions.map((category) => {
+                const depth = getCategoryDepth(category, categories);
+                return (
+                  <option key={category.id} value={category.id}>
+                    {"- ".repeat(depth - 1)}
+                    {category.name} ({getLevelLabel(depth)})
                   </option>
-                ))}
+                );
+              })}
             </select>
 
             <input
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className="w-full mb-4"
+              className="mb-4 w-full"
             />
 
             {preview && (
@@ -421,14 +418,14 @@ export default function AdminCategories() {
                 <img
                   src={preview}
                   alt="Preview"
-                  className="w-28 h-28 object-cover rounded-xl border"
+                  className="h-28 w-28 rounded-xl border object-cover"
                 />
               </div>
             )}
 
             <button
               onClick={saveCategory}
-              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+              className="w-full rounded-lg bg-blue-600 py-2 text-white transition hover:bg-blue-700"
             >
               {editingCategory ? "Update Category" : "Create Category"}
             </button>

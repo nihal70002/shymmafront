@@ -18,7 +18,6 @@ import { Autoplay } from "swiper/modules";
 import "swiper/css";
 
 import { useEffect, useState } from "react";
-import { getProducts } from "../../api/products.api";
 import { motion } from "framer-motion";
 import { getCategories } from "../../api/categories.api";
 import api from "../../api/axios";
@@ -47,7 +46,6 @@ const sortCategories = (items) =>
 export default function Landing() {
   const navigate = useNavigate();
 
- const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 const [suggestions, setSuggestions] = useState([]);
@@ -56,17 +54,13 @@ const [loadingSearch, setLoadingSearch] = useState(false);
 const [showMobileSearch, setShowMobileSearch] = useState(false);
 const [showMobileMenu, setShowMobileMenu] = useState(false);
 const [showMobileCerts, setShowMobileCerts] = useState(false);
+const [showCategoriesDropdown, setShowCategoriesDropdown] = useState(false);
 
 
 useEffect(() => {
   async function fetchData() {
     try {
-      const [productRes, categoryRes] = await Promise.all([
-        getProducts(),
-        getCategories()
-      ]);
-      const products = productRes.data?.items || [];
-      setFeaturedProducts(products.slice(0, 4));
+      const categoryRes = await getCategories();
 
       // show only main categories (no subcategories)
       const mainCategories = sortCategories((categoryRes.data || []).filter(
@@ -264,6 +258,32 @@ const handleSearchSubmit = () => {
     {/* ACTION ICONS */}
     <div className="flex items-center gap-4 sm:gap-6 text-gray-600">
 
+      {/* Categories Dropdown (Desktop) */}
+      <div className="hidden sm:block relative">
+        <button
+          onClick={() => setShowCategoriesDropdown(prev => !prev)}
+          className="flex items-center gap-1 hover:text-black transition font-medium"
+        >
+          Categories
+          <ChevronDown size={16} className={`transition-transform ${showCategoriesDropdown ? 'rotate-180' : ''}`} />
+        </button>
+
+        {showCategoriesDropdown && (
+          <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 p-2">
+            {categories.map((cat) => (
+              <Link
+                key={cat.id}
+                to={`/category/${encodeURIComponent(cat.slug)}`}
+                onClick={() => setShowCategoriesDropdown(false)}
+                className="block px-4 py-2 rounded-lg hover:bg-cyan-50 hover:text-cyan-600 transition text-sm"
+              >
+                {cat.name}
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
       <button
         onClick={() => {
           setShowMobileSearch(prev => !prev);
@@ -401,6 +421,23 @@ const handleSearchSubmit = () => {
 {showMobileMenu && (
   <div className="sm:hidden fixed left-0 right-0 top-[58px] z-40 bg-white border-b border-gray-200 shadow-xl">
     <div className="px-4 py-5 bg-gradient-to-b from-white to-slate-50">
+      {/* Categories Section */}
+      <div className="mb-4">
+        <h3 className="text-sm font-bold text-slate-900 mb-3">Categories</h3>
+        <div className="space-y-2">
+          {categories.map((cat) => (
+            <Link
+              key={cat.id}
+              to={`/category/${encodeURIComponent(cat.slug)}`}
+              onClick={() => setShowMobileMenu(false)}
+              className="block px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-cyan-50 hover:border-cyan-200 transition text-sm"
+            >
+              {cat.name}
+            </Link>
+          ))}
+        </div>
+      </div>
+
       <button
         type="button"
         onClick={() => setShowMobileCerts(prev => !prev)}
@@ -626,87 +663,6 @@ lg:aspect-[1660/490]"
     </div>
   </div>
 </section>
-
-    
-      {/* ================= FEATURED PRODUCTS ================= */}
-      <section className="bg-gray-50 py-12 sm:py-16 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.2 }}
-            className="flex justify-between items-center mb-10"
-          >
-            <h2 className="text-2xl sm:text-3xl font-bold">
-              Featured Products
-            </h2>
-            <Link
-              to="/products"
-              className="text-cyan-600 font-semibold hover:underline"
-            >
-              View All →
-            </Link>
-          </motion.div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {/* Loading State */}
-            {loading && (
-              <p className="col-span-full text-center text-gray-500">
-                Loading products...
-              </p>
-            )}
-
-            {/* Empty State */}
-            {!loading && featuredProducts.length === 0 && (
-              <p className="col-span-full text-center text-gray-500">
-                No featured products available.
-              </p>
-            )}
-
-            {/* Products with Alternating Slide Animation */}
-            {!loading &&
-              featuredProducts.map((product, index) => {
-                // Animation logic: Index 0,1 slide from Left (-100), Index 2,3 slide from Right (100)
-                const direction = index < 2 ? -100 : 100;
-
-                return (
-                  <motion.div
-                    key={product.productId}
-                    initial={{ opacity: 0, x: direction }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ 
-                      duration: 0.25, 
-                      delay: index * 0.03,
-                      ease: [0.22, 1, 0.36, 1]
-                    }}
-                  >
-                    <Link
-                      to={`/products/${product.productId}`}
-                      className="group block bg-white rounded-2xl border border-gray-200 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden"
-                    >
-                      <div className="bg-gray-50">
-                        <img
-                          src={product.primaryImageUrl || "/placeholder.jpg"}
-                          alt={product.name}
-                          className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      </div>
-
-                      <div className="p-4">
-                        <p className="font-semibold text-sm line-clamp-2">
-                          {product.name}
-                        </p>
-                      </div>
-                    </Link>
-                  </motion.div>
-                );
-              })}
-          </div>
-        </div>
-      </section>
 
 
       {/* ================= NEW PRODUCTS ================= */}

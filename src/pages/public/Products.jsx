@@ -32,15 +32,20 @@ export default function Products() {
   const [brandSearch, setBrandSearch] = useState("");
   const [allCategories, setAllCategories] = useState([]); // Holds all categories from DB
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const [selectedParentCategory, setSelectedParentCategory] = useState(null);
 
 
 
   const observer = useRef();
   const requestIdRef = useRef(0);
 
-  // Use the exact case-sensitive name from your pgAdmin screenshot: ParentCategoryId
+  // 3-level category hierarchy
   const parentCategories = allCategories.filter(cat => cat.parentCategoryId === null);
-  const allSubCategories = allCategories.filter(cat => cat.parentCategoryId !== null);
+  const mainCategories = allCategories.filter(cat => cat.parentCategoryId !== null);
+  const subCategories = allCategories.filter(cat => {
+    const parent = allCategories.find(p => p.id === cat.parentCategoryId);
+    return parent && parent.parentCategoryId !== null;
+  });
 
   const syncCategoryParams = (categoryIds) => {
     const nextParams = new URLSearchParams(searchParams);
@@ -336,10 +341,10 @@ export default function Products() {
             </button>
           </div>
 
-          {/* CATEGORIES */}
+          {/* CATEGORIES - 3 LEVEL HIERARCHY */}
           {/* --- PARENT CATEGORIES SECTION --- */}
           <div className="mb-6">
-            <h4 className="text-xs font-bold text-gray-900 mb-4 uppercase tracking-wider">Main Categories</h4>
+            <h4 className="text-xs font-bold text-gray-900 mb-4 uppercase tracking-wider">Parent Categories</h4>
             <div className="space-y-2">
               {[
                 ...parentCategories.filter(cat => selectedCategories.includes(cat.id)),
@@ -352,7 +357,10 @@ export default function Products() {
                   <input
                     type="checkbox"
                     checked={selectedCategories.includes(cat.id)}
-                    onChange={() => toggleCategory(cat.id)}
+                    onChange={() => {
+                      toggleCategory(cat.id);
+                      setSelectedParentCategory(selectedCategories.includes(cat.id) ? null : cat.id);
+                    }}
                     className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                   />
                   <span className="font-medium">{cat.name}</span>
@@ -360,6 +368,31 @@ export default function Products() {
               ))}
             </div>
           </div>
+
+          {/* --- MAIN CATEGORIES SECTION --- */}
+          {selectedParentCategory && (
+            <div className="mt-6 pt-4 border-t border-gray-50">
+              <h4 className="text-xs font-bold text-gray-900 mb-4 uppercase tracking-wider">Main Categories</h4>
+              <div className="space-y-2">
+                {mainCategories
+                  .filter(cat => cat.parentCategoryId === selectedParentCategory)
+                  .map((cat) => (
+                    <label
+                      key={cat.id}
+                      className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer hover:text-teal-700"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(cat.id)}
+                        onChange={() => toggleCategory(cat.id)}
+                        className="w-3.5 h-3.5 rounded border-gray-300 text-teal-600"
+                      />
+                      <span className="leading-snug">{cat.name}</span>
+                    </label>
+                  ))}
+              </div>
+            </div>
+          )}
 
           {/* --- SUBCATEGORIES SECTION --- */}
           <div className="mt-6 pt-4 border-t border-gray-50">
@@ -387,10 +420,10 @@ export default function Products() {
 
             <div className="space-y-1">
               {[
-                ...allSubCategories.filter(sub =>
+                ...subCategories.filter(sub =>
                   selectedCategories.includes(sub.id)
                 ),
-                ...allSubCategories.filter(sub =>
+                ...subCategories.filter(sub =>
                   !selectedCategories.includes(sub.id)
                 )
               ]
@@ -408,21 +441,21 @@ export default function Products() {
                     <input
                       type="checkbox"
                       checked={selectedCategories.includes(sub.id)}
-                      onChange={() => toggleSubCategory(sub.id)}
+                      onChange={() => toggleCategory(sub.id)}
                       className="w-3.5 h-3.5 rounded border-gray-300 text-teal-600"
                     />
                     <span className="leading-snug">{sub.name}</span>
                   </label>
                 ))}
 
-              {allSubCategories.length > 8 && (
+              {subCategories.length > 8 && (
                 <button
                   onClick={() => setShowAllCategories(!showAllCategories)}
                   className="text-[10px] font-bold text-teal-600 mt-2 uppercase"
                 >
                   {showAllCategories
                     ? "- Show Less"
-                    : `+ ${allSubCategories.length - 8} More`}
+                    : `+ ${subCategories.length - 8} More`}
                 </button>
               )}
             </div>
@@ -534,9 +567,9 @@ export default function Products() {
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar space-y-8">
-              {/* REUSE CATEGORY SECTION */}
+              {/* REUSE CATEGORY SECTION - 3 LEVEL HIERARCHY */}
               <div>
-                <h4 className="text-sm font-bold text-gray-900 mb-4">MAIN CATEGORIES</h4>
+                <h4 className="text-sm font-bold text-gray-900 mb-4">PARENT CATEGORIES</h4>
 
                 <div className="space-y-3 mb-6">
                   {parentCategories.map((cat) => (
@@ -544,7 +577,10 @@ export default function Products() {
                       <input
                         type="checkbox"
                         checked={selectedCategories.includes(cat.id)}
-                        onChange={() => toggleCategory(cat.id)}
+                        onChange={() => {
+                          toggleCategory(cat.id);
+                          setSelectedParentCategory(selectedCategories.includes(cat.id) ? null : cat.id);
+                        }}
                         className="w-5 h-5 rounded border-gray-300 text-teal-600"
                       />
                       <span className="font-semibold">{cat.name}</span>
@@ -552,17 +588,38 @@ export default function Products() {
                   ))}
                 </div>
 
+                {selectedParentCategory && (
+                  <>
+                    <h4 className="text-sm font-bold text-gray-900 mb-4">MAIN CATEGORIES</h4>
+                    <div className="space-y-3 mb-6">
+                      {mainCategories
+                        .filter(cat => cat.parentCategoryId === selectedParentCategory)
+                        .map((cat) => (
+                          <label key={cat.id} className="flex items-center gap-3 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={selectedCategories.includes(cat.id)}
+                              onChange={() => toggleCategory(cat.id)}
+                              className="w-5 h-5 rounded border-gray-300 text-teal-600"
+                            />
+                            {cat.name}
+                          </label>
+                        ))}
+                    </div>
+                  </>
+                )}
+
                 <h4 className="text-sm font-bold text-gray-900 mb-4">
                   SUB CATEGORIES
                 </h4>
 
                 <div className="space-y-3">
-                  {allSubCategories.map((sub) => (
+                  {subCategories.map((sub) => (
                     <label key={sub.id} className="flex items-center gap-3 text-sm">
                       <input
                         type="checkbox"
                         checked={selectedCategories.includes(sub.id)}
-                        onChange={() => toggleSubCategory(sub.id)}
+                        onChange={() => toggleCategory(sub.id)}
                         className="w-5 h-5 rounded border-gray-300 text-teal-600"
                       />
                       {sub.name}

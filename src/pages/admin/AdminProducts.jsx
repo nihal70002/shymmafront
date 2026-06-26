@@ -41,6 +41,37 @@ const EMPTY_FORM = {
   components: []
 };
 
+const getCategoryDepth = (category, categories) => {
+  let depth = 1;
+  let parentId = category.parentCategoryId;
+
+  while (parentId) {
+    const parent = categories.find((item) => item.id === parentId);
+    if (!parent) break;
+    depth += 1;
+    parentId = parent.parentCategoryId;
+  }
+
+  return depth;
+};
+
+const hasChildCategories = (category, categories) =>
+  categories.some((item) => item.parentCategoryId === category.id);
+
+const getCategoryPath = (category, categories) => {
+  const names = [category.name];
+  let parentId = category.parentCategoryId;
+
+  while (parentId) {
+    const parent = categories.find((item) => item.id === parentId);
+    if (!parent) break;
+    names.unshift(parent.name);
+    parentId = parent.parentCategoryId;
+  }
+
+  return names.join(" -> ");
+};
+
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -84,7 +115,8 @@ export default function AdminProducts() {
     }
   };
 
-  const mainCategories = categories.filter(c => !c.parentCategoryId);
+  const categoryParentOptions = categories.filter(c => getCategoryDepth(c, categories) < 3);
+  const productCategoryOptions = categories.filter(c => !hasChildCategories(c, categories));
 
   /* ================= HANDLERS ================= */
   const handleToggleActive = async (productId) => {
