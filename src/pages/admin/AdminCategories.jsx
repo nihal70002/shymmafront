@@ -332,7 +332,7 @@ export default function AdminCategories() {
               Category Management
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Parent Category -> Main Category -> Sub Category
+              Parent Category - Main Category - Sub Category
             </p>
           </div>
 
