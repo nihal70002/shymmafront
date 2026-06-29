@@ -62,12 +62,25 @@ useEffect(() => {
     try {
       const categoryRes = await getCategories();
 
-      // show only main categories (no subcategories)
-      const mainCategories = sortCategories((categoryRes.data || []).filter(
-        (c) => !c.parentCategoryId
-      ));
+      // Get all categories for mega menu
+      const allCategories = categoryRes.data || [];
 
-      setCategories(mainCategories);
+      // Build 3-level hierarchy
+      const parentCategories = sortCategories(allCategories.filter(c => !c.parentCategoryId));
+
+      const categoryHierarchy = parentCategories.map(parent => ({
+        ...parent,
+        mainCategories: sortCategories(allCategories.filter(c => c.parentCategoryId === parent.id)).map(main => ({
+          ...main,
+          subCategories: sortCategories(allCategories.filter(c => c.parentCategoryId === main.id))
+        }))
+      }));
+
+      setCategories(categoryHierarchy);
+
+      // Also set flat categories for the grid section
+      const mainCategoriesForGrid = sortCategories(allCategories.filter(c => !c.parentCategoryId));
+      setCategoriesForGrid(mainCategoriesForGrid);
 
     } catch (err) {
       console.error(err);
@@ -137,6 +150,7 @@ const handleSearchSubmit = () => {
 ];
 
  const [categories, setCategories] = useState([]);
+ const [categoriesForGrid, setCategoriesForGrid] = useState([]);
 
 
 
@@ -258,7 +272,7 @@ const handleSearchSubmit = () => {
     {/* ACTION ICONS */}
     <div className="flex items-center gap-4 sm:gap-6 text-gray-600">
 
-      {/* Categories Dropdown (Desktop) */}
+      {/* Categories Dropdown (Desktop) - Mega Menu */}
       <div className="hidden sm:block relative">
         <button
           onClick={() => setShowCategoriesDropdown(prev => !prev)}
@@ -269,20 +283,76 @@ const handleSearchSubmit = () => {
         </button>
 
         {showCategoriesDropdown && (
-          <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 p-2">
-            {categories.map((cat) => (
-              <Link
-                key={cat.id}
-                to={`/category/${encodeURIComponent(cat.slug)}`}
-                onClick={() => setShowCategoriesDropdown(false)}
-                className="block px-4 py-2 rounded-lg hover:bg-cyan-50 hover:text-cyan-600 transition text-sm"
-              >
-                {cat.name}
-              </Link>
-            ))}
+          <div className="absolute top-full right-0 mt-2 w-[600px] bg-white rounded-xl shadow-2xl border border-gray-100 z-50 p-6">
+            <div className="grid grid-cols-3 gap-6">
+              {categories.map((parent) => (
+                <div key={parent.id} className="space-y-3">
+                  <Link
+                    to={`/category/${encodeURIComponent(parent.slug)}`}
+                    onClick={() => setShowCategoriesDropdown(false)}
+                    className="block font-bold text-gray-900 hover:text-cyan-600 transition text-sm uppercase tracking-wide"
+                  >
+                    {parent.name}
+                  </Link>
+                  <div className="space-y-2 pl-2 border-l-2 border-gray-100">
+                    {parent.mainCategories && parent.mainCategories.map((main) => (
+                      <div key={main.id} className="space-y-1">
+                        <Link
+                          to={`/category/${encodeURIComponent(main.slug)}`}
+                          onClick={() => setShowCategoriesDropdown(false)}
+                          className="block font-medium text-gray-700 hover:text-cyan-600 transition text-xs"
+                        >
+                          {main.name}
+                        </Link>
+                        {main.subCategories && main.subCategories.length > 0 && (
+                          <div className="space-y-1 pl-3">
+                            {main.subCategories.map((sub) => (
+                              <Link
+                                key={sub.id}
+                                to={`/products?categoryIds=${sub.id}`}
+                                onClick={() => setShowCategoriesDropdown(false)}
+                                className="block text-gray-500 hover:text-cyan-600 transition text-[11px]"
+                              >
+                                {sub.name}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
+
+      {/* Additional Menu Items */}
+      <Link
+        to="/downloads"
+        className="hidden sm:block hover:text-black transition font-medium"
+      >
+        Downloads
+      </Link>
+      <Link
+        to="/careers"
+        className="hidden sm:block hover:text-black transition font-medium"
+      >
+        Careers
+      </Link>
+      <Link
+        to="/about"
+        className="hidden sm:block hover:text-black transition font-medium"
+      >
+        About Us
+      </Link>
+      <Link
+        to="/contact"
+        className="hidden sm:block hover:text-black transition font-medium"
+      >
+        Contact
+      </Link>
 
       <button
         onClick={() => {
@@ -421,21 +491,75 @@ const handleSearchSubmit = () => {
 {showMobileMenu && (
   <div className="sm:hidden fixed left-0 right-0 top-[58px] z-40 bg-white border-b border-gray-200 shadow-xl">
     <div className="px-4 py-5 bg-gradient-to-b from-white to-slate-50">
-      {/* Categories Section */}
+      {/* Categories Section - Full Hierarchy */}
       <div className="mb-4">
         <h3 className="text-sm font-bold text-slate-900 mb-3">Categories</h3>
-        <div className="space-y-2">
-          {categories.map((cat) => (
-            <Link
-              key={cat.id}
-              to={`/category/${encodeURIComponent(cat.slug)}`}
-              onClick={() => setShowMobileMenu(false)}
-              className="block px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-cyan-50 hover:border-cyan-200 transition text-sm"
-            >
-              {cat.name}
-            </Link>
+        <div className="space-y-3">
+          {categories.map((parent) => (
+            <div key={parent.id} className="space-y-2">
+              <Link
+                to={`/category/${encodeURIComponent(parent.slug)}`}
+                onClick={() => setShowMobileMenu(false)}
+                className="block px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-cyan-50 hover:border-cyan-200 transition text-sm font-bold"
+              >
+                {parent.name}
+              </Link>
+              {parent.mainCategories && parent.mainCategories.map((main) => (
+                <div key={main.id} className="ml-4 space-y-2">
+                  <Link
+                    to={`/category/${encodeURIComponent(main.slug)}`}
+                    onClick={() => setShowMobileMenu(false)}
+                    className="block px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-cyan-50 transition text-xs font-medium"
+                  >
+                    {main.name}
+                  </Link>
+                  {main.subCategories && main.subCategories.map((sub) => (
+                    <Link
+                      key={sub.id}
+                      to={`/products?categoryIds=${sub.id}`}
+                      onClick={() => setShowMobileMenu(false)}
+                      className="block ml-4 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-cyan-50 transition text-[11px]"
+                    >
+                      {sub.name}
+                    </Link>
+                  ))}
+                </div>
+              ))}
+            </div>
           ))}
         </div>
+      </div>
+
+      {/* Additional Menu Items */}
+      <div className="space-y-2">
+        <Link
+          to="/downloads"
+          onClick={() => setShowMobileMenu(false)}
+          className="block px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-cyan-50 hover:border-cyan-200 transition text-sm font-medium"
+        >
+          Downloads
+        </Link>
+        <Link
+          to="/careers"
+          onClick={() => setShowMobileMenu(false)}
+          className="block px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-cyan-50 hover:border-cyan-200 transition text-sm font-medium"
+        >
+          Careers
+        </Link>
+        <Link
+          to="/about"
+          onClick={() => setShowMobileMenu(false)}
+          className="block px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-cyan-50 hover:border-cyan-200 transition text-sm font-medium"
+        >
+          About Us
+        </Link>
+        <Link
+          to="/contact"
+          onClick={() => setShowMobileMenu(false)}
+          className="block px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-cyan-50 hover:border-cyan-200 transition text-sm font-medium"
+        >
+          Contact
+        </Link>
       </div>
 
       <button
@@ -632,7 +756,7 @@ lg:aspect-[1660/490]"
 
     {/* Product Grid */}
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      {categories.map((cat) => (
+      {categoriesForGrid.map((cat) => (
         <Link
           key={cat.id}
           to={`/category/${encodeURIComponent(cat.slug)}`}
