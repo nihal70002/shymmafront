@@ -54,7 +54,7 @@ const [loadingSearch, setLoadingSearch] = useState(false);
 const [showMobileSearch, setShowMobileSearch] = useState(false);
 const [showMobileMenu, setShowMobileMenu] = useState(false);
 const [showMobileCerts, setShowMobileCerts] = useState(false);
-const [showCategoriesDropdown, setShowCategoriesDropdown] = useState(false);
+const [showMobileCategories, setShowMobileCategories] = useState(false);
 
 
 useEffect(() => {
@@ -272,62 +272,6 @@ const handleSearchSubmit = () => {
     {/* ACTION ICONS */}
     <div className="flex items-center gap-4 sm:gap-6 text-gray-600">
 
-      {/* Categories Dropdown (Desktop) - Mega Menu */}
-      <div className="hidden sm:block relative">
-        <button
-          onClick={() => setShowCategoriesDropdown(prev => !prev)}
-          className="flex items-center gap-1 hover:text-black transition font-medium"
-        >
-          Categories
-          <ChevronDown size={16} className={`transition-transform ${showCategoriesDropdown ? 'rotate-180' : ''}`} />
-        </button>
-
-        {showCategoriesDropdown && (
-          <div className="absolute top-full right-0 mt-2 w-[600px] bg-white rounded-xl shadow-2xl border border-gray-100 z-50 p-6">
-            <div className="grid grid-cols-3 gap-6">
-              {categories.map((parent) => (
-                <div key={parent.id} className="space-y-3">
-                  <Link
-                    to={`/category/${encodeURIComponent(parent.slug)}`}
-                    onClick={() => setShowCategoriesDropdown(false)}
-                    className="block font-bold text-gray-900 hover:text-cyan-600 transition text-sm uppercase tracking-wide"
-                  >
-                    {parent.name}
-                  </Link>
-                  <div className="space-y-2 pl-2 border-l-2 border-gray-100">
-                    {parent.mainCategories && parent.mainCategories.map((main) => (
-                      <div key={main.id} className="space-y-1">
-                        <Link
-                          to={`/category/${encodeURIComponent(main.slug)}`}
-                          onClick={() => setShowCategoriesDropdown(false)}
-                          className="block font-medium text-gray-700 hover:text-cyan-600 transition text-xs"
-                        >
-                          {main.name}
-                        </Link>
-                        {main.subCategories && main.subCategories.length > 0 && (
-                          <div className="space-y-1 pl-3">
-                            {main.subCategories.map((sub) => (
-                              <Link
-                                key={sub.id}
-                                to={`/products?categoryIds=${sub.id}`}
-                                onClick={() => setShowCategoriesDropdown(false)}
-                                className="block text-gray-500 hover:text-cyan-600 transition text-[11px]"
-                              >
-                                {sub.name}
-                              </Link>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* Additional Menu Items */}
       <Link
         to="/downloads"
@@ -393,31 +337,13 @@ const handleSearchSubmit = () => {
           <span className="text-xs">Login</span>
         </button>
       ) : (
-        <>
-          <button
-            onClick={() => navigate("/profile")}
-            className="flex flex-col items-center hover:text-black transition"
-          >
-            <User size={22} />
-            <span className="text-xs">Profile</span>
-          </button>
-
-          <button
-  onClick={() => {
-    const confirmLogout = window.confirm("Are you sure you want to logout?");
-
-    if (confirmLogout) {
-      localStorage.removeItem("token");
-      navigate("/");
-      window.location.reload();
-    }
-  }}
-  className="flex flex-col items-center hover:text-red-500 transition"
->
-  <LogOut size={22} />
-  <span className="text-xs">Logout</span>
-</button>
-        </>
+        <button
+          onClick={() => navigate("/profile")}
+          className="flex flex-col items-center hover:text-black transition"
+        >
+          <User size={22} />
+          <span className="text-xs">Profile</span>
+        </button>
       )}
 
       <button
@@ -491,42 +417,46 @@ const handleSearchSubmit = () => {
 {showMobileMenu && (
   <div className="sm:hidden fixed left-0 right-0 top-[58px] z-40 bg-white border-b border-gray-200 shadow-xl">
     <div className="px-4 py-5 bg-gradient-to-b from-white to-slate-50">
-      {/* Categories Section - Full Hierarchy */}
+      {/* Categories Section - Only Parent Categories */}
       <div className="mb-4">
-        <h3 className="text-sm font-bold text-slate-900 mb-3">Categories</h3>
-        <div className="space-y-3">
-          {categories.map((parent) => (
-            <div key={parent.id} className="space-y-2">
+        <button
+          type="button"
+          onClick={() => setShowMobileCategories(prev => !prev)}
+          className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left shadow-sm transition hover:border-cyan-200 hover:bg-cyan-50/40"
+          aria-expanded={showMobileCategories}
+        >
+          <span className="flex items-center gap-3">
+            <span className="text-sm font-bold text-slate-900">
+              Categories
+            </span>
+          </span>
+          {showMobileCategories ? (
+            <ChevronUp className="text-slate-500" size={20} />
+          ) : (
+            <ChevronDown className="text-slate-500" size={20} />
+          )}
+        </button>
+
+        <div
+          className={`overflow-hidden transition-all duration-500 ease-in-out ${
+            showMobileCategories ? "max-h-[500px] opacity-100 mt-4" : "max-h-0 opacity-0"
+          }`}
+        >
+          <div className="space-y-2">
+            {categories.map((parent) => (
               <Link
+                key={parent.id}
                 to={`/category/${encodeURIComponent(parent.slug)}`}
-                onClick={() => setShowMobileMenu(false)}
+                onClick={() => {
+                  setShowMobileMenu(false);
+                  setShowMobileCategories(false);
+                }}
                 className="block px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-cyan-50 hover:border-cyan-200 transition text-sm font-bold"
               >
                 {parent.name}
               </Link>
-              {parent.mainCategories && parent.mainCategories.map((main) => (
-                <div key={main.id} className="ml-4 space-y-2">
-                  <Link
-                    to={`/category/${encodeURIComponent(main.slug)}`}
-                    onClick={() => setShowMobileMenu(false)}
-                    className="block px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-cyan-50 transition text-xs font-medium"
-                  >
-                    {main.name}
-                  </Link>
-                  {main.subCategories && main.subCategories.map((sub) => (
-                    <Link
-                      key={sub.id}
-                      to={`/products?categoryIds=${sub.id}`}
-                      onClick={() => setShowMobileMenu(false)}
-                      className="block ml-4 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-cyan-50 transition text-[11px]"
-                    >
-                      {sub.name}
-                    </Link>
-                  ))}
-                </div>
-              ))}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 

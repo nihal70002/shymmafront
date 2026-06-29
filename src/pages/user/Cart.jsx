@@ -13,6 +13,8 @@ export default function Cart() {
   const [preferredDeliveryDate, setPreferredDeliveryDate] = useState("");
   const [preferredDeliveryTime, setPreferredDeliveryTime] = useState("");
   const [deliveryInstructions, setDeliveryInstructions] = useState("");
+  const [surgeonName, setSurgeonName] = useState("");
+  const [hospitalName, setHospitalName] = useState("");
 
   const navigate = useNavigate();
 
@@ -74,7 +76,9 @@ export default function Cart() {
         // Include delivery preferences - send date as YYYY-MM-DD format
         preferredDeliveryDate: preferredDeliveryDate || null,
         preferredDeliveryTime: preferredDeliveryTime || null,
-        deliveryInstructions: deliveryInstructions || null
+        deliveryInstructions: deliveryInstructions || null,
+        surgeonName: surgeonName || null,
+        hospitalName: hospitalName || null
       };
       
       // Debug logging
@@ -255,6 +259,32 @@ export default function Cart() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         rows="3"
                         placeholder="Any special instructions for delivery (optional)"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Surgeon Name
+                      </label>
+                      <input
+                        type="text"
+                        value={surgeonName}
+                        onChange={(e) => setSurgeonName(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter surgeon name (optional)"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Hospital Name
+                      </label>
+                      <input
+                        type="text"
+                        value={hospitalName}
+                        onChange={(e) => setHospitalName(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter hospital name (optional)"
                       />
                     </div>
                   </div>
