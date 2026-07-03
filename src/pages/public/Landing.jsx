@@ -53,7 +53,6 @@ const [showDropdown, setShowDropdown] = useState(false);
 const [loadingSearch, setLoadingSearch] = useState(false);
 const [showMobileSearch, setShowMobileSearch] = useState(false);
 const [showMobileMenu, setShowMobileMenu] = useState(false);
-const [showMobileCerts, setShowMobileCerts] = useState(false);
 const [showMobileCategories, setShowMobileCategories] = useState(false);
 
 
@@ -302,7 +301,6 @@ const handleSearchSubmit = () => {
         onClick={() => {
           setShowMobileSearch(prev => !prev);
           setShowMobileMenu(false);
-          setShowMobileCerts(false);
         }}
         className="sm:hidden flex flex-col items-center hover:text-black transition"
       >
@@ -312,12 +310,7 @@ const handleSearchSubmit = () => {
 
       <button
         onClick={() => {
-          setShowMobileMenu(prev => {
-            if (prev) {
-              setShowMobileCerts(false);
-            }
-            return !prev;
-          });
+          setShowMobileMenu(prev => !prev);
           setShowMobileSearch(false);
         }}
         className="sm:hidden flex flex-col items-center hover:text-black transition"
@@ -490,55 +483,6 @@ const handleSearchSubmit = () => {
         >
           Contact
         </Link>
-      </div>
-
-      <button
-        type="button"
-        onClick={() => setShowMobileCerts(prev => !prev)}
-        className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left shadow-sm transition hover:border-cyan-200 hover:bg-cyan-50/40"
-        aria-expanded={showMobileCerts}
-      >
-        <span className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-50 text-cyan-600">
-            <ShieldCheck size={19} />
-          </span>
-          <span>
-            <span className="block text-sm font-bold text-slate-900">
-              Certifications
-            </span>
-            <span className="block text-xs text-slate-500">
-              Authorized distributor documents
-            </span>
-          </span>
-        </span>
-        {showMobileCerts ? (
-          <ChevronUp className="text-slate-500" size={20} />
-        ) : (
-          <ChevronDown className="text-slate-500" size={20} />
-        )}
-      </button>
-
-      <div
-        className={`overflow-hidden transition-all duration-500 ease-in-out ${
-          showMobileCerts ? "max-h-[560px] opacity-100 mt-4" : "max-h-0 opacity-0"
-        }`}
-      >
-        <div className="grid grid-cols-2 gap-3 rounded-2xl border border-slate-100 bg-white/70 p-3 shadow-inner">
-          <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
-            <img
-              src="/certificate/certificate.jpeg"
-              alt="Certification certificate 1"
-              className="aspect-[3/4] w-full rounded-lg object-cover"
-            />
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
-            <img
-              src="/certificate/certificate2.jpeg"
-              alt="Certification certificate 2"
-              className="aspect-[3/4] w-full rounded-lg object-cover"
-            />
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -797,82 +741,6 @@ lg:aspect-[1660/490]"
   </div>
 </section>
 
-
-
-{/* ================= CERTIFICATION ================= */}
-<section className="hidden sm:block py-20 bg-[#f8fafc]">
-  <div className="max-w-7xl mx-auto px-6">
-
-    <div className="grid lg:grid-cols-2 gap-14 items-center">
-
-      {/* LEFT CONTENT */}
-      <div>
-        <span className="text-cyan-600 font-bold tracking-[0.3em] text-xs uppercase">
-          Certification
-        </span>
-
-        <h2 className="mt-4 text-4xl font-black text-slate-900 leading-tight">
-          Authorized <span className="text-cyan-600">Distributor</span>
-        </h2>
-
-        <div className="w-20 h-1 bg-red-600 rounded-full mt-5 mb-7"></div>
-
-        <p className="text-gray-600 leading-relaxed text-lg">
-          Shymma Surgicals is an officially authorized distributor
-          of SIORA orthopedic implants and instrumentation products.
-          We ensure genuine products, trusted quality standards,
-          and reliable surgical solutions for healthcare professionals.
-        </p>
-
-        <div className="mt-8 space-y-4">
-
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-cyan-600"></div>
-            <p className="text-gray-700 font-medium">
-              Verified Distribution Partner
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-cyan-600"></div>
-            <p className="text-gray-700 font-medium">
-              Certified Orthopedic Implant Supplier
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-cyan-600"></div>
-            <p className="text-gray-700 font-medium">
-              Trusted Medical Equipment Provider
-            </p>
-          </div>
-
-        </div>
-      </div>
-
-      {/* RIGHT IMAGES */}
-      <div className="grid grid-cols-2 gap-5">
-        <div className="bg-white p-4 rounded-3xl shadow-2xl border border-gray-100 hover:scale-[1.02] transition duration-500">
-          <img
-            src="/certificate/certificate.jpeg"
-            alt="Certification certificate 1"
-            className="w-full rounded-2xl object-cover"
-          />
-        </div>
-
-        <div className="bg-white p-4 rounded-3xl shadow-2xl border border-gray-100 hover:scale-[1.02] transition duration-500">
-          <img
-            src="/certificate/certificate2.jpeg"
-            alt="Certification certificate 2"
-            className="w-full rounded-2xl object-cover"
-          />
-        </div>
-      </div>
-
-    </div>
-
-  </div>
-</section>
 
 
 

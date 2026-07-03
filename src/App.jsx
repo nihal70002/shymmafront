@@ -7,6 +7,9 @@ import Login from "./pages/public/Login";
 import ForgotPassword from "./pages/public/ForgotPassword";
 import ResetPassword from "./pages/public/ResetPassword";
 import Landing from "./pages/public/Landing";
+import Downloads from "./pages/public/Downloads";
+import About from "./pages/public/About";
+import Contact from "./pages/public/Contact";
 
 /* PRODUCTS (PUBLIC) */
 import Products from "./pages/public/Products";
@@ -51,6 +54,9 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/downloads" element={<Downloads />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
 
         {/* PUBLIC PRODUCT ROUTES (NO LOGIN) */}
         <Route element={<UserLayout />}>
